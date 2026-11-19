@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/spikes/">
+    <Project Path="spikes/RoslynLoad/RoslynLoad.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/CSR/CSR.csproj" />
+  </Folder>
+</Solution>
