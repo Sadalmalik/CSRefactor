@@ -1,0 +1,27 @@
+// Пример конфига csr metrics: csr metrics <папка> --config metrics.jsonc --project project.jsonc
+// Метрики - сведения, не находки: порог задает счет "выше порога" в сводке, код возврата не меняет
+{
+  // Размер топа по каждой метрике
+  "top": 10,
+
+  // Уровни: function, type, file. У метрики: "enabled" (по умолчанию true) и "threshold" (null - без порога)
+  "function": {
+    "cyclomatic": { "threshold": 10 },
+    "cognitive": { "threshold": 15 },
+    "lines": { "threshold": 60 },
+    "code-lines": { "threshold": null },
+    "nesting": { "threshold": 3 },
+    "parameters": { "threshold": 5 }
+  },
+  "type": {
+    "lines": { "threshold": null },
+    "code-lines": { "threshold": null },
+    "members": { "threshold": null },
+    "regions": { "enabled": false }
+  },
+  "file": {
+    "lines": { "threshold": 400 },
+    "code-lines": { "threshold": 316 },
+    "types": { "threshold": null }
+  }
+}

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Ядро: на вход синтаксическое дерево и параметры, на выход метрики и находки. Без консоли и файловой системы -->
+  <PropertyGroup>
+    <RootNamespace>CSR.Core</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CSR.Core.Tests" />
+  </ItemGroup>
+
+</Project>

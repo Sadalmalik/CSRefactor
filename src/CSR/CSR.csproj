@@ -11,4 +11,8 @@
     <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\CSR.Core\CSR.Core.csproj" />
+  </ItemGroup>
+
 </Project>
