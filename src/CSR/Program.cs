@@ -1,5 +1,5 @@
 using CSR.Commands;
-using CSR.Core.Config;
+using CSR.Reports.Config;
 
 namespace CSR
 {

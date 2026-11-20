@@ -30,7 +30,7 @@ namespace CSR.Core.Metrics
                 _ => null,
             };
 
-            ParameterListSyntax? parameters = Functions.GetParameters(function);
+            BaseParameterListSyntax? parameters = Functions.GetParameters(function);
             if (parameters == null)
                 return;
 

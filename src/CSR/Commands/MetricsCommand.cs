@@ -2,6 +2,8 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using CSR.Core.Config;
 using CSR.Core.Metrics;
+using CSR.Reports.Config;
+using CSR.Reports.Metrics;
 using Microsoft.CodeAnalysis.CSharp;
 
 namespace CSR.Commands
@@ -46,7 +48,8 @@ namespace CSR.Commands
 
             Output.Write(text, commandLine.GetOption("--out"));
             double seconds = stopwatch.Elapsed.TotalSeconds;
-            Console.Error.WriteLine($"csr metrics: файлов {files.Count}, функций {report.FunctionCount}, {seconds:F1} с");
+            int functions = report.FunctionCount;
+            Console.Error.WriteLine($"csr metrics: файлов {files.Count}, функций {functions}, {seconds:F1} с");
             return 0;
         }
 
@@ -66,7 +69,7 @@ namespace CSR.Commands
         private static MetricsOptions LoadOptions(CommandLine commandLine)
         {
             string? path = commandLine.GetOption("--config");
-            MetricsOptions options = path == null ? new MetricsOptions() : MetricsOptions.FromJson(ReadConfig(path));
+            MetricsOptions options = path == null ? new MetricsOptions() : MetricsConfig.Parse(ReadConfig(path));
 
             string? top = commandLine.GetOption("--top");
             if (top == null)
@@ -82,7 +85,7 @@ namespace CSR.Commands
         private static ProjectOptions LoadProject(CommandLine commandLine)
         {
             string? path = commandLine.GetOption("--project");
-            return path == null ? new ProjectOptions() : ProjectOptions.FromJson(ReadConfig(path));
+            return path == null ? new ProjectOptions() : ProjectConfig.Parse(ReadConfig(path));
         }
 
         private static string ReadConfig(string path)

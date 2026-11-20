@@ -124,6 +124,48 @@ namespace CSR.Core.Tests.Metrics
         }
 
         [Test]
+        public void Parameters_IndexerAccessorsCountIndexerParameters()
+        {
+            const string source = """
+                class Sample
+                {
+                    int this[int x, int y] { get => x; set { } }
+                    int this[string key] => 0;
+                }
+                """;
+            FileMetrics file = TestCode.Measure(source);
+            Assert.That(file.Functions.Select(function => function.Values[MetricKeys.Parameters]),
+                Is.EqualTo(new[] { 2, 2, 1 }));
+        }
+
+        [Test]
+        public void ExpressionBodiedPropertyAndIndexer_AreGetAccessors()
+        {
+            const string source = """
+                class Sample
+                {
+                    object m_Value;
+
+                    object Value => m_Value ?? new object();
+                    int this[int i] => i > 0 ? i : -i;
+                    int Plain { get; set; } = 1;
+                }
+                """;
+            FileMetrics file = TestCode.Measure(source);
+            string[] names = file.Functions.Select(function => $"{function.Kind} {function.Name}").ToArray();
+            Assert.That(names, Is.EqualTo(new[]
+            {
+                "accessor Sample.Value.get",
+                "accessor Sample.this[].get",
+                "accessor Sample.Plain.get",
+                "accessor Sample.Plain.set",
+            }));
+            Assert.That(file.Functions[0].Values[MetricKeys.Cyclomatic], Is.EqualTo(2));
+            Assert.That(file.Functions[1].Values[MetricKeys.Cognitive], Is.EqualTo(1));
+            Assert.That(file.Functions[1].Values[MetricKeys.Nesting], Is.EqualTo(0));
+        }
+
+        [Test]
         public void Parameters_AccessorIsZero()
         {
             const string source = "class Sample { int Value { get; set; } }";

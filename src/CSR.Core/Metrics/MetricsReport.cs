@@ -70,7 +70,7 @@ namespace CSR.Core.Metrics
             MetricsOptions options)
         {
             List<MetricItem> list = items.ToList();
-            List<int> values = list.Select(item => item.Values[metric.Key]).Order().ToList();
+            List<int> values = list.Select(item => item.Values[metric.Key]).OrderBy(value => value).ToList();
             int? threshold = options.GetThreshold(metric);
             List<MetricItem> top = list
                 .OrderByDescending(item => item.Values[metric.Key])
@@ -86,7 +86,7 @@ namespace CSR.Core.Metrics
                 P50 = Percentile(values, 0.5),
                 P90 = Percentile(values, 0.9),
                 P99 = Percentile(values, 0.99),
-                Max = values.Count == 0 ? 0 : values[^1],
+                Max = values.Count == 0 ? 0 : values[values.Count - 1],
                 Threshold = threshold,
                 AboveThreshold = threshold == null ? 0 : values.Count(value => value > threshold),
                 Top = top,

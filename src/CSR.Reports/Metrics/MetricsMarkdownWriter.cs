@@ -1,6 +1,7 @@
 using System.Text;
+using CSR.Core.Metrics;
 
-namespace CSR.Core.Metrics
+namespace CSR.Reports.Metrics
 {
     // Отчет для человека: сводная таблица перцентилей и топ по каждой метрике
     public static class MetricsMarkdownWriter

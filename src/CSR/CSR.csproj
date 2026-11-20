@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CSR.Core\CSR.Core.csproj" />
+    <ProjectReference Include="..\CSR.Reports\CSR.Reports.csproj" />
   </ItemGroup>
 
 </Project>

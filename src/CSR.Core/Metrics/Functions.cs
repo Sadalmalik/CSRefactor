@@ -3,12 +3,19 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CSR.Core.Metrics
 {
-    // Функция для метрик: метод, конструктор, деструктор, оператор, аксессор, локальная функция
+    // Функция для метрик: метод, конструктор, деструктор, оператор, аксессор, локальная функция,
+    // свойство и индексатор с телом-выражением (int X => ...) - как аксессор get
     // Лямбды и анонимные методы входят в объемлющую функцию, локальные функции считаются отдельно
     public static class Functions
     {
         public static bool IsFunction(SyntaxNode node)
-            => node is BaseMethodDeclarationSyntax or AccessorDeclarationSyntax or LocalFunctionStatementSyntax;
+        {
+            return node is BaseMethodDeclarationSyntax
+                or AccessorDeclarationSyntax
+                or LocalFunctionStatementSyntax
+                or PropertyDeclarationSyntax { ExpressionBody: not null }
+                or IndexerDeclarationSyntax { ExpressionBody: not null };
+        }
 
         public static IEnumerable<SyntaxNode> OwnNodes(SyntaxNode function)
             => function.DescendantNodes(node => node == function || !IsFunction(node));
@@ -26,6 +33,7 @@ namespace CSR.Core.Metrics
                 OperatorDeclarationSyntax => "operator",
                 ConversionOperatorDeclarationSyntax => "operator",
                 AccessorDeclarationSyntax => "accessor",
+                PropertyDeclarationSyntax or IndexerDeclarationSyntax => "accessor",
                 LocalFunctionStatementSyntax => "local-function",
                 _ => "unknown",
             };
@@ -42,17 +50,22 @@ namespace CSR.Core.Metrics
                 ConversionOperatorDeclarationSyntax conversion
                     => $"{conversion.ImplicitOrExplicitKeyword.Text} operator {conversion.Type}",
                 AccessorDeclarationSyntax accessor => GetOwnerName(accessor) + "." + accessor.Keyword.Text,
+                PropertyDeclarationSyntax property => property.Identifier.Text + ".get",
+                IndexerDeclarationSyntax => "this[].get",
                 LocalFunctionStatementSyntax local => local.Identifier.Text,
                 _ => "?",
             };
         }
 
-        public static ParameterListSyntax? GetParameters(SyntaxNode function)
+        // У аксессора индексатора - параметры индексатора, у аксессора свойства и события - нет
+        public static BaseParameterListSyntax? GetParameters(SyntaxNode function)
         {
             return function switch
             {
                 BaseMethodDeclarationSyntax method => method.ParameterList,
                 LocalFunctionStatementSyntax local => local.ParameterList,
+                IndexerDeclarationSyntax indexer => indexer.ParameterList,
+                AccessorDeclarationSyntax { Parent.Parent: IndexerDeclarationSyntax indexer } => indexer.ParameterList,
                 _ => null,
             };
         }

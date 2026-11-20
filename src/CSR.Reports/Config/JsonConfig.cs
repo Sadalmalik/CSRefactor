@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace CSR.Core.Config
+namespace CSR.Reports.Config
 {
     // Конфиги CSR - JSON с комментариями и запятыми после последнего элемента (.jsonc)
     public static class JsonConfig

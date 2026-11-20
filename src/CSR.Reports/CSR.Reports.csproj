@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Конфиги .jsonc и отчеты JSON и Markdown поверх ядра -->
+  <PropertyGroup>
+    <RootNamespace>CSR.Reports</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CSR.Core\CSR.Core.csproj" />
+  </ItemGroup>
+
+</Project>

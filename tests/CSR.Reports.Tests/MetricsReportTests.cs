@@ -1,8 +1,10 @@
 using System.Text.Json;
 using CSR.Core.Config;
 using CSR.Core.Metrics;
+using CSR.Reports.Config;
+using CSR.Reports.Metrics;
 
-namespace CSR.Core.Tests.Metrics
+namespace CSR.Reports.Tests
 {
     public class MetricsReportTests
     {
@@ -22,6 +24,11 @@ namespace CSR.Core.Tests.Metrics
             }
             """;
 
+        private const string FilePath = "Sample.cs";
+
+        private static FileMetrics Measure(string source)
+            => MetricsCalculator.Calculate(source, FilePath, new ProjectOptions().ParseOptions);
+
         private static MetricSummary Find(MetricsReport report, string id)
             => report.Metrics.Single(summary => summary.Metric.Id == id);
 
@@ -38,14 +45,14 @@ namespace CSR.Core.Tests.Metrics
         [Test]
         public void Build_SummaryThresholdAndTop()
         {
-            var options = MetricsOptions.FromJson("""
+            var options = MetricsConfig.Parse("""
                 {
                     // комментарий
                     "top": 2,
                     "function": { "cyclomatic": { "threshold": 1 } },
                 }
                 """);
-            MetricsReport report = MetricsReport.Build([TestCode.Measure(Source)], options);
+            MetricsReport report = MetricsReport.Build([Measure(Source)], options);
             MetricSummary cyclomatic = Find(report, "function.cyclomatic");
 
             Assert.That(cyclomatic.Count, Is.EqualTo(3));
@@ -59,10 +66,10 @@ namespace CSR.Core.Tests.Metrics
         [Test]
         public void Options_DisabledMetricAndNullThreshold()
         {
-            var options = MetricsOptions.FromJson("""
+            var options = MetricsConfig.Parse("""
                 { "function": { "parameters": { "enabled": false }, "nesting": { "threshold": null } } }
                 """);
-            MetricsReport report = MetricsReport.Build([TestCode.Measure(Source)], options);
+            MetricsReport report = MetricsReport.Build([Measure(Source)], options);
 
             Assert.That(report.Metrics.Any(summary => summary.Metric.Id == "function.parameters"), Is.False);
             Assert.That(Find(report, "function.nesting").Threshold, Is.Null);
@@ -74,7 +81,7 @@ namespace CSR.Core.Tests.Metrics
         [TestCase("""{ "function": { "nesting": { "max": 3 } } }""")]
         [TestCase("""{ "top": "ten" }""")]
         public void Options_InvalidConfig_Throws(string json)
-            => Assert.Throws<ConfigException>(() => MetricsOptions.FromJson(json));
+            => Assert.Throws<ConfigException>(() => MetricsConfig.Parse(json));
 
         [Test]
         public void Project_PreprocessorSymbolsAffectParsing()
@@ -88,7 +95,7 @@ namespace CSR.Core.Tests.Metrics
                 }
                 """;
             ProjectOptions withEditor = new();
-            ProjectOptions withoutEditor = ProjectOptions.FromJson("""{ "preprocessorSymbols": [] }""");
+            ProjectOptions withoutEditor = ProjectConfig.Parse("""{ "preprocessorSymbols": [] }""");
 
             FileMetrics editor = MetricsCalculator.Calculate(source, "a.cs", withEditor.ParseOptions);
             FileMetrics player = MetricsCalculator.Calculate(source, "a.cs", withoutEditor.ParseOptions);
@@ -99,7 +106,7 @@ namespace CSR.Core.Tests.Metrics
         [Test]
         public void Json_ContainsSummaryTopAndItems()
         {
-            MetricsReport report = MetricsReport.Build([TestCode.Measure(Source)], new MetricsOptions());
+            MetricsReport report = MetricsReport.Build([Measure(Source)], new MetricsOptions());
             using JsonDocument document = JsonDocument.Parse(MetricsJsonWriter.Write(report, includeItems: true));
             JsonElement root = document.RootElement;
 
@@ -114,7 +121,7 @@ namespace CSR.Core.Tests.Metrics
             Assert.That(first.GetProperty("line").GetInt32(), Is.EqualTo(5));
 
             JsonElement file = root.GetProperty("items")[0];
-            Assert.That(file.GetProperty("file").GetString(), Is.EqualTo(TestCode.FilePath));
+            Assert.That(file.GetProperty("file").GetString(), Is.EqualTo(FilePath));
             Assert.That(file.GetProperty("functions").GetArrayLength(), Is.EqualTo(3));
             Assert.That(file.GetProperty("types")[0].GetProperty("members").GetProperty("methods").GetInt32(),
                 Is.EqualTo(2));
@@ -123,7 +130,7 @@ namespace CSR.Core.Tests.Metrics
         [Test]
         public void Json_WithoutItems_HasNoItems()
         {
-            MetricsReport report = MetricsReport.Build([TestCode.Measure(Source)], new MetricsOptions());
+            MetricsReport report = MetricsReport.Build([Measure(Source)], new MetricsOptions());
             using JsonDocument document = JsonDocument.Parse(MetricsJsonWriter.Write(report, includeItems: false));
             Assert.That(document.RootElement.TryGetProperty("items", out _), Is.False);
         }
@@ -131,7 +138,7 @@ namespace CSR.Core.Tests.Metrics
         [Test]
         public void Markdown_SummaryAndEscapedTop()
         {
-            MetricsReport report = MetricsReport.Build([TestCode.Measure(Source)], new MetricsOptions());
+            MetricsReport report = MetricsReport.Build([Measure(Source)], new MetricsOptions());
             string markdown = MetricsMarkdownWriter.Write(report);
 
             Assert.That(markdown, Does.Contain("Файлов: 1, типов: 1, функций: 3."));

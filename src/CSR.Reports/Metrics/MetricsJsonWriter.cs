@@ -1,8 +1,9 @@
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using CSR.Core.Metrics;
 
-namespace CSR.Core.Metrics
+namespace CSR.Reports.Metrics
 {
     // Отчет для агентов: сводка, топ по каждой метрике и, по запросу, все элементы по файлам
     public static class MetricsJsonWriter
