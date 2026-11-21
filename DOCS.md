@@ -27,7 +27,7 @@
   - Раскладка кода столбиком: [`expression-arrow`](#expression-arrow), [`signature-wrap`](#signature-wrap), [`call-wrap`](#call-wrap), [`region-layout`](#region-layout), [`condition-wrap`](#condition-wrap), [`initializer-layout`](#initializer-layout), [`ternary-wrap`](#ternary-wrap)
 - [5. Признаки `arch`](#5-признаки-arch)
   - По одному файлу: [`type-branch`](#type-branch), [`behaviour-logic`](#behaviour-logic), [`index-api`](#index-api), [`static-data-methods`](#static-data-methods), [`project-mechanism`](#project-mechanism), [`numeric-constant`](#numeric-constant), [`numeric-literal`](#numeric-literal), [`tuple-type`](#tuple-type-arch), [`partial-file`](#partial-file), [`debug-draw`](#debug-draw), [`obsolete-reason`](#obsolete-reason), [`persisted-class`](#persisted-class)
-  - По решению: [`variant-flag`](#variant-flag), [`single-implementation`](#single-implementation), [`dead-member`](#dead-member), [`parameter-set`](#parameter-set)
+  - По решению: [`variant-flag`](#variant-flag), [`single-implementation`](#single-implementation), [`dead-member`](#dead-member), [`parameter-set`](#parameter-set), [`unraised-event`](#unraised-event), [`class-cohesion`](#class-cohesion)
 - [6. Метрики `metrics`](#6-метрики-metrics)
 
 ## Сводка
@@ -88,6 +88,8 @@
 | [`single-implementation`](#single-implementation) | интерфейс с одной реализацией | решение | `contractMasks`, `ignoreAttributes`, `ignoreMarkers` |
 | [`dead-member`](#dead-member) | мертвый код | решение | `accessibility`, `writeOnly`, `parameters`, `ignoreNames`, `dataAttributes`, `ignoreAttributes` |
 | [`parameter-set`](#parameter-set) | повторяющийся набор параметров | решение | `minParameters`, `minCalls`, `minForwarded` |
+| [`unraised-event`](#unraised-event) | событие без отправителя | решение | `eventTypes`, `raiseMethods`, `fieldEvents` |
+| [`class-cohesion`](#class-cohesion) | класс из несвязанных частей | решение | `minMethods`, `minPartSize`, `ignoreNames` |
 
 ## 1. Общее
 
@@ -97,7 +99,7 @@
 - Форматы вывода: `json` (по умолчанию, для агентов), `md` (для человека), `diff` (`fix`, `rename`), `text` (`refs`). `--out файл` пишет отчёт в файл вместо stdout. Сводка и служебные строки идут в stderr, отчёт — в stdout.
 - Коды возврата: `0` — успех (для `style`, `fix`, `arch` — нет находок уровня `error`); `1` — есть находки уровня `error` (`style`, `fix`, `arch`), отказ или новые ошибки компиляции (`rename`), сервер не запущен (`serve --status`, `--stop`); `2` — ошибка запуска (аргументы, конфиг, нет файла, символ не найден).
 - Режимы выборки находок: `file` — все находки файла; `changed-lines` — только на изменённых строках (`--diff`, `--scope`).
-- Конфиг нужен проверкам: `csr style` и `csr arch` без `--config` — код 2 («без конфига все проверки выключены»). Проверки движка нейтральны, что считать нарушением, задаёт конфиг (раздел [3](#3-конфиги)).
+- Конфиг нужен проверкам: проверки движка нейтральны, что считать нарушением, задаёт конфиг (раздел [3](#3-конфиги)). Без `--config` `csr style`, `csr fix` и `csr arch` ищут конфиги сами ([поиск конфигов](#где-искать-конфиги)); нет ни одного — код 2.
 
 ## 2. Команды
 
@@ -112,8 +114,8 @@ csr metrics <файлы | папки>... [--config metrics.jsonc] [--project pro
 
 | Опция | Назначение |
 |---|---|
-| `--config metrics.jsonc` | пороги, включение метрик, размер топа ([раздел 3](#metricsjsonc)) |
-| `--project project.jsonc` | символы препроцессора (по умолчанию `UNITY_EDITOR`) |
+| `--config metrics.jsonc` | пороги, включение метрик, размер топа ([раздел 3](#metricsjsonc)); без `--config` — [поиск](#где-искать-конфиги) |
+| `--project project.jsonc` | символы препроцессора (по умолчанию `UNITY_EDITOR`); без `--project` — [поиск](#где-искать-конфиги) |
 | `--format json \| md` | формат отчёта (по умолчанию `json`) |
 | `--top N` | размер топа по каждой метрике (по умолчанию 10) |
 | `--all` | в JSON — все функции и типы по файлам (ключ `items`) |
@@ -192,14 +194,14 @@ csr metrics <файлы | папки>... [--config metrics.jsonc] [--project pro
 Находки стиля по синтаксису каждого файла. Файлы только читаются.
 
 ```
-csr style <файлы | папки>... --config style.jsonc [--config ещё.jsonc]... [--project project.jsonc]
+csr style <файлы | папки>... [--config style.jsonc]... [--project project.jsonc]
           [--diff <ревизия | файл.diff>] [--scope file | changed-lines] [--format json | md] [--out файл]
 ```
 
 | Опция | Назначение |
 |---|---|
-| `--config style.jsonc` | проверки, уровни, метки правил, параметры; несколько `--config` накладываются по порядку ([слои](#слои-конфигов)) |
-| `--project project.jsonc` | символы препроцессора, методы логгера (нужны проверкам текстов логов) |
+| `--config style.jsonc` | проверки, уровни, метки правил, параметры; несколько `--config` накладываются по порядку ([слои](#слои-конфигов)); без `--config` — [поиск конфигов](#где-искать-конфиги) |
+| `--project project.jsonc` | символы препроцессора, методы логгера (нужны проверкам текстов логов); без `--project` — [поиск](#где-искать-конфиги) |
 | `--diff <ревизия \| файл.diff>` | изменённые строки: `git diff -U0` от ревизии или готовый файл диффа |
 | `--scope file \| changed-lines` | все находки файла или только на изменённых строках |
 | `--format json \| md` | формат отчёта (по умолчанию `json`) |
@@ -348,7 +350,7 @@ public class Other
 Применяет замены находок `csr style` (`replacement`) к файлам. Агент получает исправленный код и правит только то, что требует суждения.
 
 ```
-csr fix <файлы | папки>... --config style.jsonc [--config ещё.jsonc]... [--project project.jsonc]
+csr fix <файлы | папки>... [--config style.jsonc]... [--project project.jsonc]
         [--diff <ревизия | файл.diff>] [--scope file | changed-lines] [--checks a,b] [--hints]
         [--apply] [--format diff | json]
 ```
@@ -400,7 +402,7 @@ csr fix <файлы | папки>... --config style.jsonc [--config ещё.jsonc
 ````
 
 ````text
-csr fix: исправлено 4 в 1 файлах, без записи (--apply - записать); осталось находок 0 (error 0), 0,1 с
+csr fix: исправлено 4 в 1 файлах, без записи (--apply - записать); осталось находок 0 (error 0), 0,2 с
   explicit-private (S23): 3
   null-check (-): 1
 ````
@@ -440,15 +442,15 @@ csr fix: исправлено 4 в 1 файлах, без записи (--apply 
 Архитектурные признаки: находка — повод решить, а не ошибка. Режим и конфиг отдельные от `style`; формат конфига тот же ([раздел 3](#3-конфиги)).
 
 ```
-csr arch <файлы | папки>... --config arch.jsonc [--config ещё.jsonc]... [--project project.jsonc]
+csr arch <файлы | папки>... [--config arch.jsonc]... [--project project.jsonc]
          [--diff <ревизия | файл.diff>] [--scope file | changed-lines] [--format json | md] [--out файл]
-csr arch --solution <файл .sln | .slnx | .csproj> [--projects <маска>]... --config arch.jsonc...
+csr arch --solution <файл .sln | .slnx | .csproj> [--projects <маска>]... [--config arch.jsonc]...
          [--project project.jsonc] [--format json | md] [--out файл] [--no-server]
 ```
 
-- Опции `--config`, `--project`, `--diff`, `--scope`, `--format`, `--out` — как у `csr style`. `--project` дополнительно задаёт механизмы проекта для признака [`project-mechanism`](#project-mechanism).
+- Опции `--config`, `--project`, `--diff`, `--scope`, `--format`, `--out` — как у `csr style`; без `--config` и `--project` — тот же [поиск конфигов](#где-искать-конфиги) (`arch.jsonc`; в режиме решения поиск идёт от папки решения). `--project` дополнительно задаёт механизмы проекта для признака [`project-mechanism`](#project-mechanism).
 - **Режим файлов** (аргументы — файлы и папки): признаки по синтаксису одного файла, решение не загружается.
-- **Режим решения** (`--solution`): решение загружается слоем `CSR.Workspace` (или берётся у живого [`csr serve`](#csr-serve)); признаки по одному файлу идут по документам выбранных проектов, признаки по решению ([`variant-flag`](#variant-flag), [`single-implementation`](#single-implementation), [`dead-member`](#dead-member), [`parameter-set`](#parameter-set)) — по их компиляциям. `--projects` — маски имён проектов (`*` — любые символы; несколько объединяются; без `--projects` — все проекты). В отчёте `scope` — `solution`. `--no-server` — загрузить решение в процессе, не обращаясь к серверу. Признаки по решению в режиме файлов не запускаются: находок по ним нет.
+- **Режим решения** (`--solution`): решение загружается слоем `CSR.Workspace` (или берётся у живого [`csr serve`](#csr-serve)); признаки по одному файлу идут по документам выбранных проектов, признаки по решению ([`variant-flag`](#variant-flag), [`single-implementation`](#single-implementation), [`dead-member`](#dead-member), [`parameter-set`](#parameter-set), [`unraised-event`](#unraised-event), [`class-cohesion`](#class-cohesion)) — по их компиляциям. `--projects` — маски имён проектов (`*` — любые символы; несколько объединяются; без `--projects` — все проекты). В отчёте `scope` — `solution`. `--no-server` — загрузить решение в процессе, не обращаясь к серверу. Признаки по решению в режиме файлов не запускаются: находок по ним нет.
 - Ссылки признаков по решению считаются только внутри выбранных проектов: член, которым пользуется проект вне `--projects`, Lua или рефлексия, попадёт в находки.
 - **Вывод JSON:** `files`, `scope`, `summary[]` (`check`, `rule`, `severity`, `count`, `question`) и `findings[]` (`file`, `line`, `endLine`, `column`, `check`, `rule`, `severity`, `message`). Замен у находок нет. `question` — вопрос-решение признака.
 - Коды возврата — как у `style`.
@@ -471,17 +473,19 @@ csr arch --solution <файл .sln | .slnx | .csproj> [--projects <маска>].
 - 31: `type-branch` A1 (warning) - switch по типам: Circle, Square
 ````
 
-Пример режима решения (`csr arch --solution Demo/Demo.csproj --config config.jsonc --format md`; проект из девяти файлов, четыре признака по решению; stderr — ход загрузки):
+Пример режима решения (`csr arch --solution Demo/Demo.csproj --config config.jsonc --format md`; проект из одиннадцати файлов, шесть признаков по решению; stderr — ход загрузки):
 
 ````markdown
 # Архитектура
 
-Файлов: 9, находок: 8, режим: solution.
+Файлов: 11, находок: 12, режим: solution.
 
 | Признак | Правило | Уровень | Находок | Что решить |
 |---|---|---|---:|---|
-| `dead-member` |  | warning | 5 | Удалить вместе с местами записи, если код в задаче; если вне задачи - записать отдельной задачей |
+| `dead-member` |  | warning | 6 | Удалить вместе с местами записи, если код в задаче; если вне задачи - записать отдельной задачей |
 | `single-implementation` |  | warning | 1 | Интерфейс - точка расширения или граница подсистемы? Если нет - убрать, оставив класс; если да - контракт-комментарий |
+| `unraised-event` |  | warning | 2 | Отправитель потерян или событие устарело? Устарело - удалить вместе с обработчиками; потерян - вернуть отправку |
+| `class-cohesion` |  | hint | 1 | Части - разные задачи? Если да - вынести часть в свой класс; если нет - оставить |
 | `parameter-set` |  | hint | 1 | Собрать набор в структуру аргументов (...Args)? Методы остаются на месте |
 | `variant-flag` |  | hint | 1 | Флаг заменяет вариант поведения? Тогда - метод базы или интерфейса, который вариант реализует сам |
 
@@ -491,6 +495,12 @@ csr arch --solution <файл .sln | .slnx | .csproj> [--projects <маска>].
 - 5: `dead-member` (warning) - поле 'Counter.m_Unused' не используется
 - 7: `dead-member` (warning) - параметр 'scale' метода 'Counter.Add' не читается
 - 14: `dead-member` (warning) - метод 'Counter.Clear' не используется
+
+## `Demo/Events.cs`
+
+- 5: `unraised-event` (warning) - событие 'DoorOpened' никто не поднимает; обрабатывают: DoorListener
+- 20: `dead-member` (warning) - параметр 'handler' метода 'EventBus.Subscribe' не читается
+- 28: `unraised-event` (warning) - событие 'Door.Jammed' нигде не поднимается; подписок: 1
 
 ## `Demo/Render.cs`
 
@@ -507,13 +517,17 @@ csr arch --solution <файл .sln | .slnx | .csproj> [--projects <маска>].
 ## `Demo/Storage.cs`
 
 - 1: `single-implementation` (warning) - интерфейс 'IStorage' - одна реализация: 'FileStorage' (Storage.cs)
+
+## `Demo/Toolbox.cs`
+
+- 1: `class-cohesion` (hint) - 'Toolbox': несвязанных частей 2 (методов 12): 1) Widen, Narrow, Scale, Measure и еще 2 | поля m_Width; 2) Add, Remove, Sum, Count и еще 2 | поля m_Total
 ````
 
 ````text
 csr: загрузка C:\work\Demo\Demo.csproj (сервер не запущен; csr serve держит решение загруженным)
-csr: решение загружено: проектов 1, документов 12
-csr: загрузка 1,3 с
-csr arch: проектов 1, файлов 9, находок 8, 1,2 с
+csr: решение загружено: проектов 1, документов 14
+csr: загрузка 1,8 с
+csr arch: проектов 1, файлов 11, находок 12, 1,4 с
 ````
 
 Фильтр по путям: `paths` и `excludePaths` — маски путей файлов (`*` — любые символы, без учёта регистра), в виде, как путь показан в отчёте. Маска `Common/*` ловит `Common/Core.cs` в текущей папке; `*/Common/*` — `src/Common/Core.cs`, но не `Common/Core.cs` без префикса.
@@ -536,9 +550,9 @@ csr refs <символ> [--solution файл] [--format json | text] [--no-serve
 
 ````text
 csr: загрузка C:\work\Demo\Demo.csproj (сервер не запущен; csr serve держит решение загруженным)
-csr: решение загружено: проектов 1, документов 12
-csr: загрузка 1,2 с
-csr refs: ссылок 1 в 1 файлах, 1,3 с
+csr: решение загружено: проектов 1, документов 14
+csr: загрузка 1,4 с
+csr refs: ссылок 1 в 1 файлах, 1,5 с
 # Counter.Add(int, int) (method): ссылок 1
 Counter.cs:7:16: объявление: public int Add(int value, int scale)
 Program.cs:6:17: counter.Add(1, 2);
@@ -589,7 +603,7 @@ csr rename <символ> <новое имя> [--solution файл] [--config re
 | Опция | Назначение |
 |---|---|
 | `--solution файл` | `.sln`, `.slnx` или `.csproj` (по умолчанию — ближайшее решение вверх по папкам) |
-| `--config refactor.jsonc` | атрибуты сериализации проекта, где и что искать в строках ([раздел 3](#refactorjsonc)) |
+| `--config refactor.jsonc` | атрибуты сериализации проекта, где и что искать в строках ([раздел 3](#refactorjsonc)); без `--config` — `.csr/refactor.jsonc` от папки решения вверх, иначе `config/refactor.jsonc` рядом с `csr.exe` |
 | `--format diff \| json` | `diff` (по умолчанию) — дифф в stdout, сводка в stderr; `json` — всё в stdout |
 | `--apply` | записать файлы |
 | `--migrate` | сохранить старое имя для данных: `[FormerlySerializedAs]` (Unity), имя в `[JsonProperty]` / `[DataMember]` |
@@ -695,23 +709,23 @@ csr serve --list
 ````text
 > csr serve Demo/Demo.csproj --detach
 решение: C:\work\Demo\Demo.csproj
-процесс: 33564
+процесс: 12056
 канал: csr-0e5da4c7633b
-проектов: 1, документов: 12, загрузка 1,2 с, перезагрузок 0
+проектов: 1, документов: 12, загрузка 1,3 с, перезагрузок 0
 csr serve: запущен за 1,7 с; журнал: %LOCALAPPDATA%\csr\servers\0e5da4c7633b.log
 > csr serve --list
-33564	2026-11-21 16:26	C:\work\Demo\Demo.csproj
+12056	2026-11-21 16:32	C:\work\Demo\Demo.csproj
 > csr serve Demo/Demo.csproj --status
 решение: C:\work\Demo\Demo.csproj
-процесс: 33564
+процесс: 12056
 канал: csr-0e5da4c7633b
-проектов: 1, документов: 12, загрузка 1,2 с, перезагрузок 0
+проектов: 1, документов: 12, загрузка 1,3 с, перезагрузок 0
 > csr refs Profile.Level --solution Demo/Demo.csproj --format text
 # Profile.Level (field): ссылок 2
 Profile.cs:9:16: объявление: public int Level;
 Program.cs:20:17: profile.Level++;
 Program.cs:21:40: return profile.Score + profile.Level;
-csr refs: ссылок 2 в 1 файлах, 1,2 с
+csr refs: ссылок 2 в 1 файлах, 1,3 с
 > csr serve Demo/Demo.csproj --stop
 csr serve: остановлен
 ````
@@ -727,6 +741,8 @@ csr serve: остановлен
 | `project.jsonc` | общие сведения о проекте для `metrics`, `style`, `fix`, `arch` | `examples/project.example.jsonc` |
 | `metrics.jsonc` | пороги и топ `csr metrics` | `examples/metrics.example.jsonc` |
 | `refactor.jsonc` | `csr rename`: сериализация, поиск строк | `examples/refactor.example.jsonc` |
+
+Имя файла важно для [поиска конфигов](#где-искать-конфиги): без `--config` и `--project` `csr` ищет файл именно с этим именем.
 
 ### `style.jsonc` и `arch.jsonc`
 
@@ -924,7 +940,74 @@ public class Report
 
 ### Где искать конфиги
 
-Сейчас `csr` сам конфиги не ищет: путь к каждому задаётся опциями `--config` и `--project` (`--config` у `rename` — `refactor.jsonc`). Конфиг по умолчанию рядом с `csr.exe` и порядок поиска проектного конфига появятся вместе с установщиком; этот раздел обновится.
+Если `--config` или `--project` заданы, используются только они: `--config` — слои по порядку, как перечислены. Без них `csr` ищет конфиги сам. Два места:
+
+- **По умолчанию** — папка `config` рядом с `csr.exe`: `config/style.jsonc`, `config/arch.jsonc`, `config/project.jsonc`, `config/metrics.jsonc`, `config/refactor.jsonc`. Туда её кладёт установщик ([README.md](README.md#установка), параметр `-Configs`).
+- **Проектный** — папка `.csr` с файлами тех же имён: `.csr/style.jsonc` и т. д. Поиск идёт от папки цели вверх: папка первого аргумента (у файла — его папка; у `csr arch --solution` и `csr rename` — папка решения). Берётся ближайшая `.csr`, где есть нужный файл. Поиск останавливается на корне репозитория — папке с `.git` (она проверяется последней), выше не идёт.
+
+Как места сочетаются:
+
+| Конфиг | Без `--config` / `--project` |
+|---|---|
+| `style.jsonc` (`style`, `fix`), `arch.jsonc` (`arch`) | два слоя: сначала по умолчанию, затем проектный (накладывается сверху: [слои](#слои-конфигов)); если нашёлся только один — он один |
+| `project.jsonc`, `metrics.jsonc`, `refactor.jsonc` | не накладываются: проектный, иначе по умолчанию; нет ни одного — значения встроенные |
+
+Не нашёлся ни один слой `style.jsonc` или `arch.jsonc` — код 2 с перечислением, где искали. Типовое разделение: личные правила — в `config` рядом с `csr.exe` (общие для всех проектов), отличия проекта — в `.csr` в репозитории.
+
+Пример. Репозиторий (есть `.git`): `.csr/style.jsonc` в корне, код в `src/Demo.cs`. Слой по умолчанию (`config/style.jsonc` рядом с `csr.exe`):
+
+```jsonc
+// config/style.jsonc рядом с csr.exe: слой по умолчанию
+{
+  "checks": {
+    "explicit-private": { "severity": "warning", "rule": "S23" },
+    "null-check": { "severity": "warning", "rule": "I5", "prefer": "pattern" }
+  }
+}
+```
+
+Проектный слой `.csr/style.jsonc`:
+
+```jsonc
+{
+  "checks": {
+    "null-check": { "severity": "error", "prefer": "equality" }
+  }
+}
+```
+
+Файл `src/Demo.cs`:
+
+```csharp
+public class Report
+{
+    int m_Count;
+
+    public bool Has(object item)
+    {
+        return item is null;
+    }
+}
+```
+
+`csr style src --format md` из корня репозитория (без `--config`): слой по умолчанию задал `explicit-private` и метку `I5`, проектный слой сменил форму `null-check` на `equality` и уровень на `error`:
+
+````markdown
+- 3: `explicit-private` S23 (warning) - нет явного 'private'
+  ```csharp
+      private int m_Count;
+  ```
+- 7: `null-check` I5 (error) - 'null' -> '== null'
+  ```csharp
+          return item == null;
+  ```
+````
+
+Тот же файл вне репозитория с `.csr` — применяется только слой по умолчанию. Если нет ни слоя по умолчанию, ни `.csr`:
+
+````text
+csr: не задан --config, нет .csr/style.jsonc в папке цели или выше и config/style.jsonc рядом с csr.exe
+````
 
 ## 4. Проверки `style`
 
@@ -1386,7 +1469,7 @@ public class Report
   "«": "\"",
   "»": "\"",
   "→": "->",
-  "×": "x",
+  "×": "*",
   "≈": "~",
   "≤": "<=",
   "≥": ">="
@@ -1455,9 +1538,9 @@ public class Report
   ```csharp
           Log.Info("Size <= limit");
   ```
-- 14: `comment-typography` C14 (warning) - типографские знаки: '×' -> 'x'
+- 14: `comment-typography` C14 (warning) - типографские знаки: '×' -> '*'
   ```csharp
-          return "Report x 2";
+          return "Report * 2";
   ```
 ````
 
@@ -1477,7 +1560,7 @@ public class Report
 
     public override string ToString()
     {
-        return "Report x 2";
+        return "Report * 2";
     }
 }
 ```
@@ -1741,7 +1824,7 @@ public class Report
 
 #### `log-call-wrap`
 
-Вызов метода логгера (`logger.methods` из `project.jsonc`) в несколько строк либо в одну строку длиннее `maxLength`. Допустим перенос всех аргументов на следующую строку после `(`.
+Вызов метода логгера (`logger.methods` из `project.jsonc`) в несколько строк либо в одну строку длиннее `maxLength`. Допустим перенос всех аргументов на следующую строку после `(`. Длинный текст делится на части по строкам: части — строковые литералы и интерполяции, `+` в конце строки, каждая следующая часть с новой строки; другие переносы в вызове — находка. Если после деления весь текст помещается в `maxLength` одной строкой, находка требует записать его без склейки.
 
 **Замена:** нет. Сначала сокращается текст сообщения, затем переносится аргумент — решает агент.
 
@@ -1789,6 +1872,12 @@ public class Report
         Log.Info("Processed " + count + " elements in the current pass");
         Log.Info(
             "Finished");
+        Log.Info(
+            "Processed the whole batch of elements in the current pass " +
+            "and stored the result");
+        Log.Info(
+            "Processed " +
+            "elements");
     }
 }
 ```
@@ -1798,6 +1887,7 @@ public class Report
 ````markdown
 - 6-8: `log-call-wrap` (warning) - вызов лога не в одну строку
 - 9: `log-call-wrap` (warning) - лог в строке длиннее 60: 73 - сократить текст
+- 15-17: `log-call-wrap` (warning) - текст лога помещается в строку - одной строкой без склейки
 ````
 
 `csr fix` код не меняет: у находок нет замены.
@@ -1805,11 +1895,12 @@ public class Report
 **Ограничения**
 
 - Без `logger.methods` проверка ничего не находит.
-- `maxLength: 0` (по умолчанию) отключает проверку длины.
+- `maxLength: 0` (по умолчанию) отключает проверку длины и проверку «помещается в строку».
+- Текст, разделённый по строкам, не считается конкатенацией и для `message-text`.
 
 #### `message-text`
 
-Текст вызова логгера (`logger.methods`) или исключения в `throw new …Exception(…)`: склейка строк через `+` вместо интерполяции `$"…"`; точка в конце текста.
+Текст вызова логгера (`logger.methods`) или исключения в `throw new …Exception(…)`: склейка строк через `+` вместо интерполяции `$"…"`; точка в конце текста. Текст, разделённый по строкам (части — строковые литералы и интерполяции, `+` в конце строки, каждая следующая часть с новой строки), — не конкатенация.
 
 **Замена:** есть у части находок. Замена убирает точку в конце текста. Склейку в интерполяцию проверка не переписывает.
 
@@ -1857,6 +1948,9 @@ public class Report
         Log.Info("Processed " + count + " elements");
         Log.Warning($"Bad name {name}.");
         throw new InvalidOperationException("Bad state.");
+        Log.Info(
+            "Processed the whole batch " +
+            "of elements");
     }
 }
 ```
@@ -1887,6 +1981,9 @@ public class Report
         Log.Info("Processed " + count + " elements");
         Log.Warning($"Bad name {name}");
         throw new InvalidOperationException("Bad state");
+        Log.Info(
+            "Processed the whole batch " +
+            "of elements");
     }
 }
 ```
@@ -1896,6 +1993,7 @@ public class Report
 **Ограничения**
 
 - Склейка — находка без замены.
+- Разделённый по строкам текст (`"…" +` и следующая часть на новой строке) не находка.
 - `exceptions: false` отключает проверку исключений.
 
 ### Идиомы и типы
@@ -2467,7 +2565,8 @@ public class Report
 
 **Ограничения**
 
-- Не проверяются: `bool` (его правит `bool-local-type`), числовые типы, `object`, nullable-типы, объявление без инициализатора, инициализатор `null`, `default`, `stackalloc`, `[]`, лямбда, тернарник с `null`, `new` другого типа (объявлен базовый тип), `const`, несколько переменных в объявлении.
+- Не проверяются: `bool` (его правит `bool-local-type`), числовые типы, `object`, nullable-типы, объявление без инициализатора, инициализатор `null`, `default`, `stackalloc`, `[]`, лямбда, `new` другого типа (объявлен базовый тип), `const`, несколько переменных в объявлении.
+- Тернарник — только если тип каждой ветки виден в коде и равен объявленному (`new T`, приведение, `as T`, строковый литерал): ветки неизвестных типов (`null`, вызов, поле) могут быть разных типов, с `var` такой код не собирается.
 - Переменная, которой дальше присваивается новое значение, не трогается: тип мог быть выбран под него. Передача как `out` / `ref` после объявления — тоже присваивание; `in` — чтение.
 - Переменная `foreach`, тип элемента которой в `foreachExplicitTypes` (необобщённый `IEnumerable`, например `Transform`), остаётся с явным типом.
 
@@ -2980,9 +3079,9 @@ public class Report
 
 #### `signature-wrap`
 
-Сигнатура не в форме столбиком: однострочная длиннее `max` или с `minParameters` и больше параметрами; перенос посреди списка (первый параметр в строке имени); `)` на отдельной строке.
+Сигнатура не в форме столбиком: однострочная длиннее `max` или с `minParameters` и больше параметрами; перенос посреди списка (первый параметр в строке имени); `)` на отдельной строке; `: base(…)` или `where` в строке `)` у сигнатуры столбиком.
 
-**Замена:** есть. Замена: перенос после `(`, параметр на строку с отступом +4, `)` на строке последнего параметра; `: base(…)` и `: this(…)` — отдельной строкой (`initializerOnOwnLine`).
+**Замена:** есть. Замена: перенос после `(`, параметр на строку с отступом +4, `)` на строке последнего параметра; `: base(…)` и `: this(…)` (`initializerOnOwnLine`) и каждое ограничение `where` — отдельной строкой +4.
 
 **Параметры**
 
@@ -3021,6 +3120,18 @@ public class Report
     {
         return first + second + third;
     }
+
+    public T Make<T>(int count, string name) where T : class
+    {
+        return null;
+    }
+
+    public T Build<T>(
+        int count,
+        string name) where T : class
+    {
+        return null;
+    }
 }
 ```
 
@@ -3042,6 +3153,13 @@ public class Report
           int first,
           int second,
           int third)
+  ```
+- 23-25: `signature-wrap` F21 (warning) - ': base' или 'where' в строке ')' - отдельной строкой
+  ```csharp
+      public T Build<T>(
+          int count,
+          string name)
+          where T : class
   ```
 ````
 
@@ -3070,6 +3188,19 @@ public class Report
         int third)
     {
         return first + second + third;
+    }
+
+    public T Make<T>(int count, string name) where T : class
+    {
+        return null;
+    }
+
+    public T Build<T>(
+        int count,
+        string name)
+        where T : class
+    {
+        return null;
     }
 }
 ```
@@ -3609,7 +3740,7 @@ public class Report
 
 У любого признака есть параметры `paths` и `excludePaths` (маски путей файлов, `*` — любые символы, без учёта регистра; по умолчанию пустые: `paths` пустой — все файлы), а также `severity`, `rule`, `enabled`. В таблицах ниже они не повторяются.
 
-Примеры файловых признаков запускались командой `csr arch Demo.cs --config config.jsonc [--project project.jsonc]`, признаков по решению — `csr arch --solution Demo/Demo.csproj --config config.jsonc` на одном проекте из девяти файлов (код — в подразделах).
+Примеры файловых признаков запускались командой `csr arch Demo.cs --config config.jsonc [--project project.jsonc]`, признаков по решению — `csr arch --solution Demo/Demo.csproj --config config.jsonc` на одном проекте из одиннадцати файлов (код — в подразделах).
 
 ### По одному файлу
 
@@ -4436,7 +4567,7 @@ public class Profile
 
 ### По решению (`--solution`)
 
-Проект примеров: `Demo.csproj` и девять файлов `.cs` (`Counter`, `Program`, `Render`, `Settings`, `Slot`, `Storage`, `UseA`, `UseB`, `UseC`); перед запуском выполнен `dotnet restore`. Вывод каждого подраздела — один общий запуск `csr arch --solution Demo/Demo.csproj`, из отчёта оставлены находки своего признака.
+Проект примеров: `Demo.csproj` и одиннадцать файлов `.cs` (`Counter`, `Events`, `Program`, `Render`, `Settings`, `Slot`, `Storage`, `Toolbox`, `UseA`, `UseB`, `UseC`); перед запуском выполнен `dotnet restore`. Вывод каждого подраздела — один общий запуск `csr arch --solution Demo/Demo.csproj`, из отчёта оставлены находки своего признака.
 
 Файл `Demo.csproj`:
 
@@ -4719,6 +4850,10 @@ public class Slot
 - 7: `dead-member` (warning) - параметр 'scale' метода 'Counter.Add' не читается
 - 14: `dead-member` (warning) - метод 'Counter.Clear' не используется
 
+## `Demo/Events.cs`
+
+- 20: `dead-member` (warning) - параметр 'handler' метода 'EventBus.Subscribe' не читается
+
 ## `Demo/Slot.cs`
 
 - 8: `dead-member` (warning) - поле 'Slot.m_Capacity' только записывается: мест 1 (сохраняется: удаление - с миграцией)
@@ -4794,6 +4929,220 @@ public class Renderer
 **Ограничения**
 
 - Работает только в режиме `--solution`. `minForwarded: 0` — не требовать передачи по цепочке.
+
+#### `unraised-event`
+
+Событие без отправителя по выбранным проектам. Тип события — наследник базы или интерфейса из `eventTypes` — нигде не создаётся: нет `new`, `default(T)`, фабрики `T.Create()` и вызова метода из `raiseMethods` с типом события в аргументе типа (`Raise<T>()`), а обработчики есть или нет. Событие C# (`event`-поле), которое не поднимается в своём типе (нет вызова и чтения), но на которое подписываются (`fieldEvents`).
+
+**Область:** по решению (`--solution`). **Вопрос-решение:** Отправитель потерян или событие устарело? Устарело - удалить вместе с обработчиками; потерян - вернуть отправку
+
+**Параметры**
+
+| Параметр | Значения | По умолчанию | Описание |
+|---|---|---|---|
+| `eventTypes` | список строк | `["IEvent", "IEvent<*>"]` | маски баз и интерфейсов типа события |
+| `raiseMethods` | список строк | `["Raise*"]` | маски методов, которые поднимают событие по аргументу типа |
+| `fieldEvents` | `true` / `false` | `true` | искать события C# (event), на которые подписываются |
+
+**Пример**
+
+В примере `DoorClosed` создаётся через `EventBus.Raise<DoorClosed>()`, `DoorOpened` — нигде; событие `Door.Jammed` не поднимается, на него подписан `DoorListener`.
+
+Конфиг:
+
+```jsonc
+{ "checks": { "unraised-event": { "severity": "warning" } } }
+```
+
+Файл `Events.cs`:
+
+```csharp
+public interface IEvent
+{
+}
+
+public class DoorOpened : IEvent
+{
+}
+
+public class DoorClosed : IEvent
+{
+}
+
+public static class EventBus
+{
+    public static void Raise<T>()
+        where T : IEvent
+    {
+    }
+
+    public static void Subscribe<T>(Action<T> handler)
+        where T : IEvent
+    {
+    }
+}
+
+public class Door
+{
+    public event Action Jammed;
+
+    public void Close()
+    {
+        EventBus.Raise<DoorClosed>();
+    }
+}
+
+public class DoorListener
+{
+    public void Attach(Door door)
+    {
+        EventBus.Subscribe<DoorOpened>(_ => { });
+        EventBus.Subscribe<DoorClosed>(_ => { });
+        door.Jammed += OnJammed;
+    }
+
+    private void OnJammed()
+    {
+    }
+}
+```
+
+Находки (`--format md`):
+
+````markdown
+## `Demo/Events.cs`
+
+- 5: `unraised-event` (warning) - событие 'DoorOpened' никто не поднимает; обрабатывают: DoorListener
+- 28: `unraised-event` (warning) - событие 'Door.Jammed' нигде не поднимается; подписок: 1
+````
+
+
+**Ограничения**
+
+- Работает только в режиме `--solution`.
+- Не ищутся: абстрактные типы событий и базы других типов, `override` и `abstract` события.
+
+#### `class-cohesion`
+
+Класс-комбайн: крупный класс (`partial` — все файлы), методы и свойства которого распадаются на части, не связанные вызовами и общими полями (связные компоненты графа «член — член, который он использует»; мера LCOM4). Находка — от двух частей по `minPartSize` методов; в сообщении у каждой части — методы, поля, регионы и внешние потребители.
+
+**Область:** по решению (`--solution`). **Вопрос-решение:** Части - разные задачи? Если да - вынести часть в свой класс; если нет - оставить
+
+**Параметры**
+
+| Параметр | Значения | По умолчанию | Описание |
+|---|---|---|---|
+| `minMethods` | целое число | `12` | методов в классе, от которых он проверяется |
+| `minPartSize` | целое число | `3` | методов в части, чтобы она считалась |
+| `ignoreNames` | список строк | список из 12 значений (ниже) | маски методов, которые не связывают части (инициализация, очистка) |
+
+<details>
+<summary>Значение `ignoreNames` по умолчанию</summary>
+
+```json
+["Awake", "Start", "OnEnable", "OnDisable", "OnDestroy", "OnValidate", "Reset", "Dispose", "Clear", "Init", "Initialize", "ToString"]
+```
+
+</details>
+
+**Пример**
+
+В примере `Toolbox` — 12 методов в двух частях по шесть, каждая работает со своим полем.
+
+Конфиг:
+
+```jsonc
+{ "checks": { "class-cohesion": { "severity": "hint" } } }
+```
+
+Файл `Toolbox.cs`:
+
+```csharp
+public class Toolbox
+{
+    private int m_Width;
+    private int m_Total;
+
+    public void Widen()
+    {
+        m_Width++;
+    }
+
+    public void Narrow()
+    {
+        m_Width--;
+    }
+
+    public void Scale()
+    {
+        Widen();
+        Narrow();
+    }
+
+    public int Measure()
+    {
+        return m_Width;
+    }
+
+    public void Fit()
+    {
+        m_Width = Measure();
+    }
+
+    public void Stretch()
+    {
+        m_Width *= 2;
+        Fit();
+    }
+
+    public void Add()
+    {
+        m_Total++;
+    }
+
+    public void Remove()
+    {
+        m_Total--;
+    }
+
+    public void Sum()
+    {
+        Add();
+        Remove();
+    }
+
+    public int Count()
+    {
+        return m_Total;
+    }
+
+    public void Fold()
+    {
+        m_Total = Count();
+    }
+
+    public void Collapse()
+    {
+        m_Total = 0;
+        Fold();
+    }
+}
+```
+
+Находки (`--format md`):
+
+````markdown
+## `Demo/Toolbox.cs`
+
+- 1: `class-cohesion` (hint) - 'Toolbox': несвязанных частей 2 (методов 12): 1) Widen, Narrow, Scale, Measure и еще 2 | поля m_Width; 2) Add, Remove, Sum, Count и еще 2 | поля m_Total
+````
+
+
+**Ограничения**
+
+- Работает только в режиме `--solution`.
+- Конструкторы и методы из `ignoreNames` (инициализация, очистка: трогают все поля) в связях не участвуют; свойства связывают, но в размер части не входят (класс данных — группы свойств вокруг полей).
+- Классы и структуры меньше `minMethods` методов не проверяются.
 
 
 ## 6. Метрики `metrics`
