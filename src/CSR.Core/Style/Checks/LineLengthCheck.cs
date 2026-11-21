@@ -1,10 +1,11 @@
+using CSR.Core.Checks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 
 namespace CSR.Core.Style.Checks
 {
-    public class LineLengthCheck : StyleCheck
+    public class LineLengthCheck : SyntaxCheck
     {
         private static readonly CheckParameter[] AllParameters =
         [

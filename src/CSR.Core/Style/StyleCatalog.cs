@@ -1,3 +1,4 @@
+using CSR.Core.Checks;
 using CSR.Core.Style.Checks;
 
 namespace CSR.Core.Style
@@ -5,7 +6,7 @@ namespace CSR.Core.Style
     // Все проверки движка; конфиг включает их по имени
     public static class StyleCatalog
     {
-        public static readonly IReadOnlyList<StyleCheck> All =
+        public static readonly IReadOnlyList<SyntaxCheck> All =
         [
             new LineLengthCheck(),
             new DirectiveColumnCheck(),
@@ -29,19 +30,7 @@ namespace CSR.Core.Style
             new CustomDelegateCheck(),
         ];
 
-        public static StyleCheck? Find(string name)
+        public static SyntaxCheck? Find(string name)
             => All.FirstOrDefault(check => check.Name == name);
-
-        // Конфигурация проверки с параметрами по умолчанию
-        public static CheckConfiguration Configure(StyleCheck check, Severity severity, string? rule = null)
-        {
-            return new CheckConfiguration
-            {
-                Check = check,
-                Severity = severity,
-                Rule = rule,
-                Settings = new CheckSettings(check.Parameters),
-            };
-        }
     }
 }

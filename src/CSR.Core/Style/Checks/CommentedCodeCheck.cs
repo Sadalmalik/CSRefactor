@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using CSR.Core.Checks;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 
@@ -7,7 +8,7 @@ namespace CSR.Core.Style.Checks
     // Закомментированный код: комментарий //, который разбирается как операторы или члены C#.
     // Кандидат - строка с признаком кода (; { } в конце, ключевое слово оператора в начале);
     // подряд идущие строки, которые вместе разбираются как код, - одна находка
-    public class CommentedCodeCheck : StyleCheck
+    public class CommentedCodeCheck : SyntaxCheck
     {
         private static readonly Regex StatementStart = new(
             @"^(if|else|for|foreach|while|do|switch|case|return|var|using|break|continue|throw|yield)\b",

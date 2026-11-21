@@ -2,8 +2,8 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using CSR.Core.Arch;
-using CSR.Core.Style;
-using CSR.Reports.Style;
+using CSR.Core.Checks;
+using CSR.Reports.Checks;
 
 namespace CSR.Reports.Arch
 {
@@ -16,7 +16,7 @@ namespace CSR.Reports.Arch
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
         };
 
-        public static string Write(StyleReport report)
+        public static string Write(CheckReport report)
         {
             using var stream = new MemoryStream();
             using (var writer = new Utf8JsonWriter(stream, Options))
@@ -26,7 +26,7 @@ namespace CSR.Reports.Arch
                 writer.WriteString("scope", report.Scope);
 
                 writer.WriteStartArray("summary");
-                foreach (var group in StyleJsonWriter.Summarize(report))
+                foreach (var group in report.Summarize())
                 {
                     writer.WriteStartObject();
                     writer.WriteString("check", group.Check);
@@ -76,14 +76,14 @@ namespace CSR.Reports.Arch
     // Отчет arch для человека: сводка с вопросами, затем находки по файлам и строкам
     public static class ArchMarkdownWriter
     {
-        public static string Write(StyleReport report)
+        public static string Write(CheckReport report)
         {
             var builder = new StringBuilder();
             builder.AppendLine("# Архитектура");
             builder.AppendLine();
             builder.AppendLine($"Файлов: {report.FileCount}, находок: {report.Findings.Count}, режим: {report.Scope}.");
 
-            var summary = StyleJsonWriter.Summarize(report);
+            var summary = report.Summarize();
             if (summary.Count > 0)
             {
                 builder.AppendLine();

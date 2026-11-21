@@ -1,3 +1,4 @@
+using CSR.Core.Checks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -5,7 +6,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace CSR.Core.Style.Checks
 {
     // Тип локальной с булевым инициализатором (сравнение, && / ||, !, true / false, is): bool или var
-    public class BoolLocalTypeCheck : StyleCheck
+    public class BoolLocalTypeCheck : SyntaxCheck
     {
         private static readonly CheckParameter[] AllParameters =
         [

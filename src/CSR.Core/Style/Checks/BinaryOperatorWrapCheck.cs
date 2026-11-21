@@ -1,9 +1,10 @@
+using CSR.Core.Checks;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CSR.Core.Style.Checks
 {
     // Место бинарного оператора при переносе выражения: в начале строки продолжения или в конце строки
-    public class BinaryOperatorWrapCheck : StyleCheck
+    public class BinaryOperatorWrapCheck : SyntaxCheck
     {
         private static readonly CheckParameter[] AllParameters =
         [

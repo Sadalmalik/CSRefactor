@@ -1,3 +1,4 @@
+using CSR.Core.Checks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -8,7 +9,7 @@ namespace CSR.Core.Style.Checks
     // Модификатор private у членов класса и структуры: явно или не писать.
     // Не проверяются: члены интерфейсов, явные реализации интерфейса, статические конструкторы, деструкторы,
     // partial-методы без модификатора доступа
-    public class ExplicitPrivateCheck : StyleCheck
+    public class ExplicitPrivateCheck : SyntaxCheck
     {
         private const string Field = "field";
         private const string Method = "method";

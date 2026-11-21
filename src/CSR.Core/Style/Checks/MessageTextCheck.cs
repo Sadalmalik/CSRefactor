@@ -1,3 +1,4 @@
+using CSR.Core.Checks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -7,7 +8,7 @@ namespace CSR.Core.Style.Checks
 {
     // Текст лога и исключения: конкатенация вместо интерполяции, точка в конце.
     // Лог - вызов метода логгера из project.jsonc; исключение - new *Exception(...) в throw
-    public class MessageTextCheck : StyleCheck
+    public class MessageTextCheck : SyntaxCheck
     {
         private static readonly CheckParameter[] AllParameters =
         [

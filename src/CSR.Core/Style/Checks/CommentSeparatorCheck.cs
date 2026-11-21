@@ -1,9 +1,10 @@
 using System.Text.RegularExpressions;
+using CSR.Core.Checks;
 
 namespace CSR.Core.Style.Checks
 {
     // Комментарий-разделитель: серия знаков в начале комментария (// --- Section ---, // =====)
-    public class CommentSeparatorCheck : StyleCheck
+    public class CommentSeparatorCheck : SyntaxCheck
     {
         private static readonly CheckParameter[] AllParameters =
         [

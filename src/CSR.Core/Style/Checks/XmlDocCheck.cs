@@ -1,3 +1,4 @@
+using CSR.Core.Checks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
@@ -5,7 +6,7 @@ using Microsoft.CodeAnalysis.Text;
 namespace CSR.Core.Style.Checks
 {
     // Документационный комментарий /// или /** */; замена - удаление его строк
-    public class XmlDocCheck : StyleCheck
+    public class XmlDocCheck : SyntaxCheck
     {
         public override string Name
             => "xml-doc";

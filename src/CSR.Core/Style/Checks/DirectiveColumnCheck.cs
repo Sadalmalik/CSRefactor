@@ -1,10 +1,11 @@
+using CSR.Core.Checks;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
 namespace CSR.Core.Style.Checks
 {
     // Директива препроцессора не с колонки 0
-    public class DirectiveColumnCheck : StyleCheck
+    public class DirectiveColumnCheck : SyntaxCheck
     {
         private static readonly CheckParameter[] AllParameters =
         [

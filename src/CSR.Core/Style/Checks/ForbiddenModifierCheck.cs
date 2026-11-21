@@ -1,10 +1,11 @@
+using CSR.Core.Checks;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
 namespace CSR.Core.Style.Checks
 {
     // Запрещенные модификаторы и их сочетания у типов и членов: sealed, private protected, protected internal
-    public class ForbiddenModifierCheck : StyleCheck
+    public class ForbiddenModifierCheck : SyntaxCheck
     {
         private static readonly CheckParameter[] AllParameters =
         [

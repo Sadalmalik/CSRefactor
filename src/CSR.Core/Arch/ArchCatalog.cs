@@ -1,5 +1,4 @@
 using CSR.Core.Arch.Checks;
-using CSR.Core.Style;
 
 namespace CSR.Core.Arch
 {
@@ -27,8 +26,5 @@ namespace CSR.Core.Arch
         // Вопрос признака по имени; null - имя не из каталога
         public static string? GetQuestion(string name)
             => Find(name)?.Question;
-
-        public static CheckConfiguration Configure(ArchCheck check, Severity severity, string? rule = null)
-            => StyleCatalog.Configure(check, severity, rule);
     }
 }

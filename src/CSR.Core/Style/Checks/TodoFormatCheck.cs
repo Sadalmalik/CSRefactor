@@ -1,9 +1,10 @@
 using System.Text.RegularExpressions;
+using CSR.Core.Checks;
 
 namespace CSR.Core.Style.Checks
 {
     // Формат TODO: // TODO: <что сделать>, без автора, даты и номера задачи
-    public class TodoFormatCheck : StyleCheck
+    public class TodoFormatCheck : SyntaxCheck
     {
         private static readonly Regex Marker = new(@"^(todo|fixme)\b\s*(\([^)]*\))?\s*:?\s*",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);

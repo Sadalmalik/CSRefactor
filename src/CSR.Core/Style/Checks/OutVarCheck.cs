@@ -1,3 +1,4 @@
+using CSR.Core.Checks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -5,7 +6,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace CSR.Core.Style.Checks
 {
     // Объявление переменной в out-аргументе: out var x или out T x; непрочитанная переменная -> out _
-    public class OutVarCheck : StyleCheck
+    public class OutVarCheck : SyntaxCheck
     {
         private static readonly CheckParameter[] AllParameters =
         [

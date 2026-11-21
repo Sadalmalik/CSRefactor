@@ -1,3 +1,4 @@
+using CSR.Core.Checks;
 using CSR.Core.Config;
 using CSR.Core.Style;
 using Microsoft.CodeAnalysis.CSharp;
@@ -13,12 +14,12 @@ namespace CSR.Core.Tests.Style
 
         public static List<Finding> Run(string check, string source, Action<CheckSettings>? configure = null)
         {
-            var configuration = StyleCatalog.Configure(StyleCatalog.Find(check)!, Severity.Error, "R1");
+            var configuration = CheckConfiguration.Create(StyleCatalog.Find(check)!, Severity.Error, "R1");
             configure?.Invoke(configuration.Settings);
-            var options = new StyleOptions();
+            var options = new CheckOptions();
             options.Checks.Add(configuration);
             var tree = CSharpSyntaxTree.ParseText(source, DefaultProject.ParseOptions, "Sample.cs");
-            return StyleAnalyzer.Analyze(tree, options, DefaultProject);
+            return SyntaxAnalyzer.Analyze(tree, options, DefaultProject);
         }
 
         // Тело метода в классе: строки тела начинаются с 7-й строки файла, отступ тела - как в body

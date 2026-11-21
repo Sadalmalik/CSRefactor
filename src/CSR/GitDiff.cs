@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Text;
-using CSR.Core.Style;
+using CSR.Core.Checks;
 using CSR.Reports.Style;
 
 namespace CSR

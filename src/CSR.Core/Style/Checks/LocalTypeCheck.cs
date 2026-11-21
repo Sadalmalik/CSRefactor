@@ -1,3 +1,4 @@
+using CSR.Core.Checks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -12,7 +13,7 @@ namespace CSR.Core.Style.Checks
     // const, несколько переменных; foreach - кроме типов из foreachExplicitTypes
     // (необобщенный IEnumerable без семантики не отличить).
     // prefer explicit: var -> находка без замены, кроме инициализатора, где тип виден (new T, приведение, as)
-    public class LocalTypeCheck : StyleCheck
+    public class LocalTypeCheck : SyntaxCheck
     {
         private static readonly HashSet<SyntaxKind> SkippedPredefined =
         [

@@ -1,9 +1,9 @@
 using System.Text.Json;
+using CSR.Core.Checks;
 using CSR.Core.Config;
-using CSR.Core.Style;
 using CSR.Reports.Arch;
+using CSR.Reports.Checks;
 using CSR.Reports.Config;
-using CSR.Reports.Style;
 using Microsoft.CodeAnalysis.CSharp;
 
 namespace CSR.Reports.Tests.Arch
@@ -32,12 +32,12 @@ namespace CSR.Reports.Tests.Arch
             }
             """;
 
-        private static StyleReport Analyze(StyleOptions options)
+        private static CheckReport Analyze(CheckOptions options)
         {
             var project = new ProjectOptions();
             var tree = CSharpSyntaxTree.ParseText(Source, project.ParseOptions, "Sample.cs");
-            var findings = StyleAnalyzer.Analyze(tree, options, project);
-            return new StyleReport { FileCount = 1, Scope = "file", Findings = findings };
+            var findings = SyntaxAnalyzer.Analyze(tree, options, project);
+            return new CheckReport { FileCount = 1, Scope = "file", Findings = findings };
         }
 
         [Test]

@@ -1,3 +1,4 @@
+using CSR.Core.Checks;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CSR.Core.Style.Checks
@@ -5,7 +6,7 @@ namespace CSR.Core.Style.Checks
     // Вызов логгера - одной строкой; допустим перенос всех аргументов на следующую строку после '('.
     // Однострочный вызов в строке длиннее maxLength - находка: сначала сократить текст, затем перенести аргумент.
     // Методы логгера - в project.jsonc
-    public class LogCallWrapCheck : StyleCheck
+    public class LogCallWrapCheck : SyntaxCheck
     {
         private static readonly CheckParameter[] AllParameters =
         [

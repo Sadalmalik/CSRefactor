@@ -1,23 +1,11 @@
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using CSR.Core.Style;
+using CSR.Core.Checks;
+using CSR.Reports.Checks;
 
 namespace CSR.Reports.Style
 {
-    public class StyleReport
-    {
-        public required int FileCount { get; init; }
-
-        // file или changed-lines
-        public required string Scope { get; init; }
-
-        public required IReadOnlyList<Finding> Findings { get; init; }
-
-        public bool HasErrors
-            => Findings.Any(finding => finding.Severity == Severity.Error);
-    }
-
     // Отчет для агентов: находки и сводка по проверкам
     public static class StyleJsonWriter
     {
@@ -27,7 +15,7 @@ namespace CSR.Reports.Style
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
         };
 
-        public static string Write(StyleReport report)
+        public static string Write(CheckReport report)
         {
             using var stream = new MemoryStream();
             using (var writer = new Utf8JsonWriter(stream, Options))
@@ -37,7 +25,7 @@ namespace CSR.Reports.Style
                 writer.WriteString("scope", report.Scope);
 
                 writer.WriteStartArray("summary");
-                foreach (var group in Summarize(report))
+                foreach (var group in report.Summarize())
                 {
                     writer.WriteStartObject();
                     writer.WriteString("check", group.Check);
@@ -58,22 +46,6 @@ namespace CSR.Reports.Style
             }
 
             return Encoding.UTF8.GetString(stream.ToArray());
-        }
-
-        public static List<CheckSummary> Summarize(StyleReport report)
-        {
-            return report.Findings
-                .GroupBy(finding => finding.Check)
-                .Select(group => new CheckSummary
-                {
-                    Check = group.Key,
-                    Rule = group.First().Rule,
-                    Severity = group.First().Severity,
-                    Count = group.Count(),
-                })
-                .OrderByDescending(summary => summary.Severity)
-                .ThenBy(summary => summary.Check, StringComparer.Ordinal)
-                .ToList();
         }
 
         private static void WriteFinding(Utf8JsonWriter writer, Finding finding)
@@ -107,28 +79,17 @@ namespace CSR.Reports.Style
         }
     }
 
-    public class CheckSummary
-    {
-        public required string Check { get; init; }
-
-        public string? Rule { get; init; }
-
-        public required Severity Severity { get; init; }
-
-        public required int Count { get; init; }
-    }
-
     // Отчет для человека: сводка, затем находки по файлам и строкам
     public static class StyleMarkdownWriter
     {
-        public static string Write(StyleReport report)
+        public static string Write(CheckReport report)
         {
             var builder = new StringBuilder();
             builder.AppendLine("# Стиль");
             builder.AppendLine();
             builder.AppendLine($"Файлов: {report.FileCount}, находок: {report.Findings.Count}, режим: {report.Scope}.");
 
-            var summary = StyleJsonWriter.Summarize(report);
+            var summary = report.Summarize();
             if (summary.Count > 0)
             {
                 builder.AppendLine();

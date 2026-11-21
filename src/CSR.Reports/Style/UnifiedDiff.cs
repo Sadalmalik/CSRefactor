@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using CSR.Core.Style;
+using CSR.Core.Checks;
 
 namespace CSR.Reports.Style
 {

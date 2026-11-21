@@ -1,10 +1,11 @@
+using CSR.Core.Checks;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CSR.Core.Style.Checks
 {
     // Кортеж-тип в сигнатуре (результат, параметр), поле, свойство, событие.
     // Кортежи в теле метода, в инициализаторах и деконструкция не проверяются
-    public class TupleTypeCheck : StyleCheck
+    public class TupleTypeCheck : SyntaxCheck
     {
         public override string Name
             => "tuple-type";

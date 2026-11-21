@@ -1,11 +1,11 @@
 using CSR.Core.Config;
 using Microsoft.CodeAnalysis;
 
-namespace CSR.Core.Style
+namespace CSR.Core.Checks
 {
-    public static class StyleAnalyzer
+    public static class SyntaxAnalyzer
     {
-        public static List<Finding> Analyze(SyntaxTree tree, StyleOptions options, ProjectOptions project)
+        public static List<Finding> Analyze(SyntaxTree tree, CheckOptions options, ProjectOptions project)
         {
             var findings = new List<Finding>();
             foreach (var configuration in options.Checks)

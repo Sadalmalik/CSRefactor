@@ -1,4 +1,4 @@
-using CSR.Core.Style;
+using CSR.Core.Checks;
 using static CSR.Core.Tests.Arch.ArchTestCode;
 
 namespace CSR.Core.Tests.Arch

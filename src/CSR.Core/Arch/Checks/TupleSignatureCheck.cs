@@ -1,4 +1,4 @@
-using CSR.Core.Style;
+using CSR.Core.Checks;
 using CSR.Core.Style.Checks;
 
 namespace CSR.Core.Arch.Checks

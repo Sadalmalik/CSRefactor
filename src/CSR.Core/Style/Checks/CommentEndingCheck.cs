@@ -1,9 +1,10 @@
+using CSR.Core.Checks;
 using Microsoft.CodeAnalysis.Text;
 
 namespace CSR.Core.Style.Checks
 {
     // Конец однострочного комментария // (точка) и буквы, которые заменяются (параметр letters)
-    public class CommentEndingCheck : StyleCheck
+    public class CommentEndingCheck : SyntaxCheck
     {
         private static readonly Dictionary<string, string> DefaultLetters = new()
         {

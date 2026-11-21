@@ -1,3 +1,4 @@
+using CSR.Core.Checks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -5,7 +6,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace CSR.Core.Style.Checks
 {
     // Форма проверки на null: x == null / x != null или x is null / x is not null
-    public class NullCheckCheck : StyleCheck
+    public class NullCheckCheck : SyntaxCheck
     {
         private static readonly CheckParameter[] AllParameters =
         [

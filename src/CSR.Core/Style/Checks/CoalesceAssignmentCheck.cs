@@ -1,3 +1,4 @@
+using CSR.Core.Checks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -6,7 +7,7 @@ namespace CSR.Core.Style.Checks
 {
     // if (x == null) x = value; -> x ??= value;
     // Без семантики: у объектов Unity (сравнение с null перегружено) ??= не годится - уровень находки задает конфиг
-    public class CoalesceAssignmentCheck : StyleCheck
+    public class CoalesceAssignmentCheck : SyntaxCheck
     {
         public override string Name
             => "coalesce-assignment";

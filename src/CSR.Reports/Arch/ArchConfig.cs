@@ -1,5 +1,5 @@
 using CSR.Core.Arch;
-using CSR.Core.Style;
+using CSR.Core.Checks;
 using CSR.Reports.Config;
 
 namespace CSR.Reports.Arch
@@ -8,12 +8,12 @@ namespace CSR.Reports.Arch
     // Признак, которого нет в конфиге, выключен; конфиги накладываются по порядку
     public static class ArchConfig
     {
-        public static void Apply(string json, StyleOptions options)
-            => StyleConfig.Apply(json, options, ArchCatalog.All);
+        public static void Apply(string json, CheckOptions options)
+            => CheckConfig.Apply(json, options, ArchCatalog.All);
 
-        public static StyleOptions Parse(string json)
+        public static CheckOptions Parse(string json)
         {
-            var options = new StyleOptions();
+            var options = new CheckOptions();
             Apply(json, options);
             return options;
         }

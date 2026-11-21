@@ -2,11 +2,11 @@ using CSR.Core.Config;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-namespace CSR.Core.Style
+namespace CSR.Core.Checks
 {
-    // Проверка стиля по синтаксису одного файла. Нейтральна: что считать нарушением, задают параметры и конфиг;
-    // ID правил гайдов в движке нет
-    public abstract class StyleCheck
+    // Проверка по синтаксису одного файла - общий движок режимов style и arch. Нейтральна: что считать нарушением,
+    // задают параметры и конфиг; ID правил гайдов в движке нет
+    public abstract class SyntaxCheck
     {
         public abstract string Name { get; }
 
@@ -21,16 +21,28 @@ namespace CSR.Core.Style
     // Включенная проверка: уровень, метка правила и параметры
     public class CheckConfiguration
     {
-        public required StyleCheck Check { get; init; }
+        public required SyntaxCheck Check { get; init; }
 
         public required Severity Severity { get; set; }
 
         public string? Rule { get; set; }
 
         public required CheckSettings Settings { get; init; }
+
+        // Конфигурация проверки с параметрами по умолчанию
+        public static CheckConfiguration Create(SyntaxCheck check, Severity severity, string? rule = null)
+        {
+            return new CheckConfiguration
+            {
+                Check = check,
+                Severity = severity,
+                Rule = rule,
+                Settings = new CheckSettings(check.Parameters),
+            };
+        }
     }
 
-    public class StyleOptions
+    public class CheckOptions
     {
         public List<CheckConfiguration> Checks { get; } = new();
     }

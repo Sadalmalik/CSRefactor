@@ -1,7 +1,7 @@
 using System.Diagnostics;
-using CSR.Core.Style;
+using CSR.Core.Checks;
 using CSR.Reports.Arch;
-using CSR.Reports.Style;
+using CSR.Reports.Checks;
 
 namespace CSR.Commands
 {
@@ -54,7 +54,7 @@ namespace CSR.Commands
             var stopwatch = Stopwatch.StartNew();
             var filter = scope == "changed-lines" ? changed : null;
             var findings = StyleCommand.Analyze(files, options, project, filter);
-            var report = new StyleReport { FileCount = files.Count, Scope = scope, Findings = findings };
+            var report = new CheckReport { FileCount = files.Count, Scope = scope, Findings = findings };
             var text = format == "md" ? ArchMarkdownWriter.Write(report) : ArchJsonWriter.Write(report);
             Output.Write(text, commandLine.GetOption("--out"));
 
@@ -63,13 +63,13 @@ namespace CSR.Commands
             return report.HasErrors ? 1 : 0;
         }
 
-        private static StyleOptions LoadOptions(CommandLine commandLine)
+        private static CheckOptions LoadOptions(CommandLine commandLine)
         {
             var paths = commandLine.GetOptions("--config");
             if (paths.Count == 0)
                 throw new UsageException("не задан --config: без конфига все признаки выключены");
 
-            var options = new StyleOptions();
+            var options = new CheckOptions();
             foreach (var path in paths)
                 ArchConfig.Apply(StyleCommand.ReadConfig(path), options);
 

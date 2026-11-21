@@ -1,6 +1,6 @@
 using CSR.Core.Arch;
+using CSR.Core.Checks;
 using CSR.Core.Config;
-using CSR.Core.Style;
 using Microsoft.CodeAnalysis.CSharp;
 
 namespace CSR.Core.Tests.Arch
@@ -12,12 +12,12 @@ namespace CSR.Core.Tests.Arch
         public static List<Finding> Run(string check, string source, Action<CheckSettings>? configure = null,
             string path = "Sample.cs")
         {
-            var configuration = ArchCatalog.Configure(ArchCatalog.Find(check)!, Severity.Warning, "R1");
+            var configuration = CheckConfiguration.Create(ArchCatalog.Find(check)!, Severity.Warning, "R1");
             configure?.Invoke(configuration.Settings);
-            var options = new StyleOptions();
+            var options = new CheckOptions();
             options.Checks.Add(configuration);
             var tree = CSharpSyntaxTree.ParseText(source, Project.ParseOptions, path);
-            return StyleAnalyzer.Analyze(tree, options, Project);
+            return SyntaxAnalyzer.Analyze(tree, options, Project);
         }
 
         // Тело метода в классе: строки тела начинаются с 5-й строки файла

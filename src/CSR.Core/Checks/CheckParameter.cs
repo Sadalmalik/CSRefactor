@@ -1,4 +1,4 @@
-namespace CSR.Core.Style
+namespace CSR.Core.Checks
 {
     public enum ParameterKind
     {

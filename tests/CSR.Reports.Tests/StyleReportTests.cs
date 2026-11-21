@@ -1,6 +1,7 @@
 using System.Text.Json;
+using CSR.Core.Checks;
 using CSR.Core.Config;
-using CSR.Core.Style;
+using CSR.Reports.Checks;
 using CSR.Reports.Config;
 using CSR.Reports.Style;
 using Microsoft.CodeAnalysis.CSharp;
@@ -31,11 +32,11 @@ namespace CSR.Reports.Tests
             }
             """;
 
-        private static List<Finding> Analyze(StyleOptions options)
+        private static List<Finding> Analyze(CheckOptions options)
         {
             var project = new ProjectOptions();
             var tree = CSharpSyntaxTree.ParseText(Source, project.ParseOptions, "Sample.cs");
-            return StyleAnalyzer.Analyze(tree, options, project);
+            return SyntaxAnalyzer.Analyze(tree, options, project);
         }
 
         [Test]
@@ -115,7 +116,7 @@ namespace CSR.Reports.Tests
         public void Json_FindingsAndSummary()
         {
             var findings = Analyze(StyleConfig.Parse(Config));
-            var report = new StyleReport { FileCount = 1, Scope = "file", Findings = findings };
+            var report = new CheckReport { FileCount = 1, Scope = "file", Findings = findings };
             using var document = JsonDocument.Parse(StyleJsonWriter.Write(report));
             var root = document.RootElement;
 
@@ -131,7 +132,7 @@ namespace CSR.Reports.Tests
         public void Markdown_ByFileAndLine()
         {
             var findings = Analyze(StyleConfig.Parse(Config));
-            var report = new StyleReport { FileCount = 1, Scope = "file", Findings = findings };
+            var report = new CheckReport { FileCount = 1, Scope = "file", Findings = findings };
             var markdown = StyleMarkdownWriter.Write(report);
 
             Assert.That(markdown, Does.Contain("Файлов: 1, находок: 2, режим: file."));

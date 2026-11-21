@@ -1,4 +1,5 @@
 using System.Text;
+using CSR.Core.Checks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -7,7 +8,7 @@ using Microsoft.CodeAnalysis.Text;
 namespace CSR.Core.Style.Checks
 {
     // Типографские знаки в комментариях, в текстах логов, атрибутов-подсказок и ToString
-    public class CommentTypographyCheck : StyleCheck
+    public class CommentTypographyCheck : SyntaxCheck
     {
         private static readonly Dictionary<string, string> DefaultReplacements = new()
         {

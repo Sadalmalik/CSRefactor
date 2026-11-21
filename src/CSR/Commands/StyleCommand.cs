@@ -1,7 +1,8 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using CSR.Core.Checks;
 using CSR.Core.Config;
-using CSR.Core.Style;
+using CSR.Reports.Checks;
 using CSR.Reports.Config;
 using CSR.Reports.Style;
 using Microsoft.CodeAnalysis.CSharp;
@@ -56,7 +57,7 @@ namespace CSR.Commands
             var stopwatch = Stopwatch.StartNew();
             var filter = scope == "changed-lines" ? changed : null;
             var findings = Analyze(files, options, project, filter);
-            var report = new StyleReport { FileCount = files.Count, Scope = scope, Findings = findings };
+            var report = new CheckReport { FileCount = files.Count, Scope = scope, Findings = findings };
             var text = format == "md" ? StyleMarkdownWriter.Write(report) : StyleJsonWriter.Write(report);
             Output.Write(text, commandLine.GetOption("--out"));
 
@@ -65,7 +66,7 @@ namespace CSR.Commands
             return report.HasErrors ? 1 : 0;
         }
 
-        internal static List<Finding> Analyze(List<string> files, StyleOptions options, ProjectOptions project,
+        internal static List<Finding> Analyze(List<string> files, CheckOptions options, ProjectOptions project,
             Dictionary<string, ChangedLines>? filter)
         {
             var results = new ConcurrentBag<List<Finding>>();
@@ -78,12 +79,12 @@ namespace CSR.Commands
                 .ToList();
         }
 
-        private static List<Finding> AnalyzeFile(string file, StyleOptions options, ProjectOptions project,
+        private static List<Finding> AnalyzeFile(string file, CheckOptions options, ProjectOptions project,
             Dictionary<string, ChangedLines>? filter)
         {
             var source = File.ReadAllText(file);
             var tree = CSharpSyntaxTree.ParseText(source, project.ParseOptions, SourceFiles.GetDisplayPath(file));
-            var findings = StyleAnalyzer.Analyze(tree, options, project);
+            var findings = SyntaxAnalyzer.Analyze(tree, options, project);
             if (filter == null)
                 return findings;
 
@@ -91,13 +92,13 @@ namespace CSR.Commands
             return findings.Where(lines.Intersects).ToList();
         }
 
-        private static StyleOptions LoadOptions(CommandLine commandLine)
+        private static CheckOptions LoadOptions(CommandLine commandLine)
         {
             var paths = commandLine.GetOptions("--config");
             if (paths.Count == 0)
                 throw new UsageException("не задан --config: без конфига все проверки выключены");
 
-            var options = new StyleOptions();
+            var options = new CheckOptions();
             foreach (var path in paths)
                 StyleConfig.Apply(ReadConfig(path), options);
 
