@@ -26,6 +26,28 @@ namespace CSR.Core.Tests.Style
                 "private static int s_Count;",
                 "private bool CheckHazard(int point) => point > 0;",
             }));
+            Assert.That(findings.Select(finding => (finding.Line, finding.EndLine)), Is.EqualTo(new[]
+            {
+                (4, 4), (5, 5), (6, 6),
+            }), "строка с атрибутом не входит в находку: замена - одна строка");
+        }
+
+        [Test]
+        public void ExplicitPrivate_MultilineMethod_ReplacesSignatureLineOnly()
+        {
+            const string source = """
+                public class Sample
+                {
+                    static void Add(int[] items, int item)
+                    {
+                        items[0] = item;
+                    }
+                }
+                """;
+            var finding = Run("explicit-private", source).Single();
+            Assert.That((finding.Line, finding.EndLine), Is.EqualTo((3, 3)));
+            var expected = "    private static void Add(int[] items, int item)";
+            Assert.That(finding.Replacement, Is.EqualTo(new[] { expected }));
         }
 
         [Test]

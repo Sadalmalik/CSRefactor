@@ -46,21 +46,24 @@ namespace CSR.Core.Style.Checks
             foreach (var trivia in context.Root.DescendantTrivia())
             {
                 if (IsComment(trivia))
-                    Check(context, trivia.Span, replacements);
+                    Check(context, trivia.Span, replacements, null);
             }
 
             foreach (var token in context.Root.DescendantTokens())
             {
                 if (IsStringText(token) && IsCheckedString(context, token))
-                    Check(context, token.Span, replacements);
+                    Check(context, token.Span, replacements, token);
             }
         }
 
-        private static void Check(CheckContext context, TextSpan span, IReadOnlyDictionary<string, string> replacements)
+        // literal: строковый литерал - кавычки замены экранируются по его виду; null - комментарий
+        private static void Check(CheckContext context, TextSpan span, IReadOnlyDictionary<string, string> replacements,
+            SyntaxToken? literal)
         {
             var text = context.Text.ToString(span);
             var changes = new List<TextChange>();
             var found = new StringBuilder();
+            bool replaceable = true;
             foreach (var pair in replacements)
             {
                 var index = text.IndexOf(pair.Key, StringComparison.Ordinal);
@@ -70,7 +73,9 @@ namespace CSR.Core.Style.Checks
                 found.Append(found.Length == 0 ? "" : ", ").Append($"'{pair.Key}' -> '{pair.Value}'");
                 while (index >= 0)
                 {
-                    changes.Add(new TextChange(new TextSpan(span.Start + index, pair.Key.Length), pair.Value));
+                    var value = literal == null ? pair.Value : EscapeQuotes(literal.Value, pair.Value);
+                    replaceable &= value != null;
+                    changes.Add(new TextChange(new TextSpan(span.Start + index, pair.Key.Length), value ?? ""));
                     index = text.IndexOf(pair.Key, index + pair.Key.Length, StringComparison.Ordinal);
                 }
             }
@@ -79,7 +84,46 @@ namespace CSR.Core.Style.Checks
                 return;
 
             changes.Sort((a, b) => a.Span.Start.CompareTo(b.Span.Start));
-            context.Report(changes[0].Span, $"типографские знаки: {found}", context.ReplaceInLines(changes));
+            var replacement = replaceable ? context.ReplaceInLines(changes) : null;
+            context.Report(changes[0].Span, $"типографские знаки: {found}", replacement);
+        }
+
+        // Кавычка замены внутри литерала: \" в обычной строке, "" в verbatim (@); в raw-строке кавычка рядом
+        // с разделителем ломает литерал - замены нет (null), правит агент
+        private static string? EscapeQuotes(SyntaxToken literal, string value)
+        {
+            if (!value.Contains("\""))
+                return value;
+
+            if (IsRawString(literal))
+                return null;
+
+            return value.Replace("\"", IsVerbatimString(literal) ? "\"\"" : "\\\"");
+        }
+
+        private static bool IsRawString(SyntaxToken literal)
+        {
+            if (literal.IsKind(SyntaxKind.InterpolatedStringTextToken))
+                return GetInterpolatedStart(literal).Contains("\"\"\"");
+
+            return literal.IsKind(SyntaxKind.SingleLineRawStringLiteralToken)
+                || literal.IsKind(SyntaxKind.MultiLineRawStringLiteralToken);
+        }
+
+        // @"...", $@"...", @$"..."
+        private static bool IsVerbatimString(SyntaxToken literal)
+        {
+            if (literal.IsKind(SyntaxKind.InterpolatedStringTextToken))
+                return GetInterpolatedStart(literal).Contains("@");
+
+            return literal.Text.StartsWith("@", StringComparison.Ordinal);
+        }
+
+        // Начало интерполированной строки: $", $@", $"""
+        private static string GetInterpolatedStart(SyntaxToken literal)
+        {
+            var expression = literal.Parent?.Parent as InterpolatedStringExpressionSyntax;
+            return expression?.StringStartToken.Text ?? "";
         }
 
         private static bool IsComment(SyntaxTrivia trivia)

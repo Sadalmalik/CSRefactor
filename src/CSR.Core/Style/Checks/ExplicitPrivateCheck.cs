@@ -52,7 +52,8 @@ namespace CSR.Core.Style.Checks
                 {
                     var start = GetDeclarationStart(member);
                     var span = new TextSpan(start, 0);
-                    context.Report(member.Span, "нет явного 'private'", context.ReplaceInLines(span, "private "));
+                    // находка - на строке начала объявления (без атрибутов): замена - только эта строка
+                    context.Report(span, "нет явного 'private'", context.ReplaceInLines(span, "private "));
                     continue;
                 }
 

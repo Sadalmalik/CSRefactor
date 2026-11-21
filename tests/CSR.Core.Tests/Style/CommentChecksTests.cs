@@ -101,6 +101,40 @@ namespace CSR.Core.Tests.Style
             Assert.That(Run("comment-typography", source).Single().Line, Is.EqualTo(3));
         }
 
+        [Test]
+        public void Typography_QuotesInLiterals_Escaped()
+        {
+            const string source = """
+                public class Sample
+                {
+                    [Tooltip("Кисть «Типы» — клетки")]
+                    private float m_Speed;
+
+                    private void Method(int count)
+                    {
+                        Debug.Log("Кисть «Типы»");
+                        Debug.Log($"Клеток {count} в «Типы»");
+                        Debug.Log(@"Путь «C:\Data»");
+                        Debug.Log($@"Путь «{count}»");
+                        Debug.Log(\"\"\"Кисть «Типы»\"\"\");
+                    }
+                }
+                """;
+            var replacements = Run("comment-typography", source.Replace("\\\"", "\""))
+                .Select(finding => finding.Replacement?.Single().Trim())
+                .ToList();
+            Assert.That(replacements, Is.EqualTo(new[]
+            {
+                "[Tooltip(\"Кисть \\\"Типы\\\" - клетки\")]",
+                "Debug.Log(\"Кисть \\\"Типы\\\"\");",
+                "Debug.Log($\"Клеток {count} в \\\"Типы\\\"\");",
+                "Debug.Log(@\"Путь \"\"C:\\Data\"\"\");",
+                "Debug.Log($@\"Путь \"\"{count}»\");",
+                "Debug.Log($@\"Путь «{count}\"\"\");",
+                null,
+            }), "интерполяция - два текстовых токена, две находки; raw-строка - без замены");
+        }
+
 #endregion
 
 #region comment-ending
