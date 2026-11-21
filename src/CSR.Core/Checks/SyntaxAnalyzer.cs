@@ -32,14 +32,15 @@ namespace CSR.Core.Checks
                 m_Lines.Add(line);
         }
 
+        // Строка (с 1) изменена
+        public bool Contains(int line)
+            => IsWholeFile || m_Lines.Contains(line);
+
         public bool Intersects(Finding finding)
         {
-            if (IsWholeFile)
-                return true;
-
             for (int line = finding.Line; line <= finding.EndLine; line++)
             {
-                if (m_Lines.Contains(line))
+                if (Contains(line))
                     return true;
             }
 

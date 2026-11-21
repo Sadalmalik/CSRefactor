@@ -140,6 +140,15 @@ namespace CSR.Reports.Tests
             Assert.That(markdown, Does.Contain("- 5: `null-check` I12 (warning)"));
         }
 
+        [Test]
+        public void ChangedLines_ContainsLine()
+        {
+            var lines = new ChangedLines();
+            lines.Add(3, 2);
+            Assert.That(new[] { 2, 3, 4, 5 }.Select(lines.Contains), Is.EqualTo(new[] { false, true, true, false }));
+            Assert.That(new ChangedLines { IsWholeFile = true }.Contains(100), Is.True);
+        }
+
         private static bool Changed(ChangedLines lines, int line)
         {
             var finding = new Finding
