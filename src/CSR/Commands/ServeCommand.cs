@@ -3,7 +3,7 @@ using CSR.Workspace.Server;
 
 namespace CSR.Commands
 {
-    // csr serve: процесс держит решение загруженным; refs и rename находят его сами по пути решения
+    // csr serve: процесс держит решение загруженным; refs, rename, move и arch --solution находят его сами по пути решения
     public static class ServeCommand
     {
         public const string Usage = """

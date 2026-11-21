@@ -14,7 +14,8 @@
 | `csr arch` | архитектурные признаки по конфигу: находка — повод решить, у признака — вопрос; по файлам и по решению |
 | `csr refs` | все ссылки на символ по решению |
 | `csr rename` | семантическое переименование с защитой сериализуемых имён |
-| `csr serve` | держит решение загруженным: `refs`, `rename` и `arch --solution` отвечают за доли секунды |
+| `csr move` | перенос типа в свой файл; для Unity `.meta` переносится вместе с файлом |
+| `csr serve` | держит решение загруженным: `refs`, `rename`, `move` и `arch --solution` отвечают за доли секунды |
 
 В разработке: `csr format` — форматирование только изменённых строк (Roslyn `Formatter` и свои правила).
 
@@ -23,7 +24,7 @@
 ## Требования
 
 - .NET SDK 10 или новее.
-- Для загрузки старых `.csproj` (Unity) — MSBuild из Visual Studio или Build Tools. Нужен только `refs`, `rename`, `serve` и `arch --solution`.
+- Для загрузки старых `.csproj` (Unity) — MSBuild из Visual Studio или Build Tools. Нужен только `refs`, `rename`, `move`, `serve` и `arch --solution`.
 
 ## Установка
 
@@ -75,11 +76,12 @@ csr fix src --config style.jsonc --diff HEAD --apply
 csr arch --solution My.sln --config arch.jsonc --format md
 csr refs Namespace.Type.Method --solution My.sln --format text
 csr rename Namespace.Type.OldName NewName --solution My.sln
+csr move Namespace.Type --solution My.sln
 ```
 
 - `csr style` по изменённым строкам: `--diff HEAD` (находки только в строках, изменённых от ревизии).
 - `csr fix` без `--apply` печатает дифф и ничего не пишет.
-- Код возврата: `0` — успех, `1` — есть находки уровня `error` (для `rename` — отказ или новые ошибки компиляции), `2` — ошибка запуска.
+- Код возврата: `0` — успех, `1` — есть находки уровня `error` (для `rename` и `move` — отказ или новые ошибки компиляции), `2` — ошибка запуска.
 
 ## Документация
 

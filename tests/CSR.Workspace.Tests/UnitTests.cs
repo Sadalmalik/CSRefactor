@@ -75,7 +75,7 @@ namespace CSR.Workspace.Tests
 
             var diff = TextDiff.Build("f.cs", before, before.WithChanges(change), [change]);
 
-            Assert.That(diff, Is.EqualTo("--- a/f.cs\n+++ b/f.cs\n@@ -1,4 +1,5 @@\n a\n-b\n+new\n+b\n c\n \n"));
+            Assert.That(diff, Is.EqualTo("--- a/f.cs\n+++ b/f.cs\n@@ -1,4 +1,5 @@\n a\n+new\n b\n c\n \n"));
         }
 
         [Test]

@@ -15,7 +15,8 @@ namespace CSR
               arch     архитектурные признаки по конфигу: находки-решения с вопросом
               refs     все ссылки на символ по решению
               rename   семантическое переименование с защитой сериализуемых имён; без --apply - только дифф
-              serve    держать решение загруженным для refs и rename
+              move     перенос типа в свой файл (.meta Unity - вместе с файлом); без --apply - только дифф
+              serve    держать решение загруженным для refs, rename, move и arch --solution
 
             В разработке:
               format   форматирование изменённых строк
@@ -41,6 +42,7 @@ namespace CSR
                     "arch" => ArchCommand.Run(args.Skip(1)),
                     "refs" => RefsCommand.Run(args.Skip(1)),
                     "rename" => RenameCommand.Run(args.Skip(1)),
+                    "move" => MoveCommand.Run(args.Skip(1)),
                     "serve" => ServeCommand.Run(args.Skip(1)),
                     _ => throw new UsageException($"команда '{args[0]}' не реализована"),
                 };
@@ -72,6 +74,7 @@ namespace CSR
                 "arch" => ArchCommand.Usage,
                 "refs" => RefsCommand.Usage,
                 "rename" => RenameCommand.Usage,
+                "move" => MoveCommand.Usage,
                 "serve" => ServeCommand.Usage,
                 _ => Usage,
             };

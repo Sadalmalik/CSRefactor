@@ -1,4 +1,5 @@
 using CSR.Workspace.Loading;
+using CSR.Workspace.Refactor;
 using CSR.Workspace.References;
 using CSR.Workspace.Symbols;
 using Microsoft.CodeAnalysis;
@@ -71,7 +72,7 @@ namespace CSR.Workspace.Rename
                 new SymbolRenameOptions(),
                 newName,
                 cancellation);
-            var changes = await CollectChangesAsync(solution, renamed, loaded.Root, cancellation);
+            var changes = await FileChanges.CollectAsync(solution, renamed, loaded.Root, cancellation);
             var renameTime = stopwatch.Elapsed;
             var compile = settings.Verify
                 ? await CompileCheck.RunAsync(solution, renamed, loaded.Root, cancellation)
@@ -109,8 +110,7 @@ namespace CSR.Workspace.Rename
             if (plan.Solution == null)
                 throw new InvalidOperationException("в плане нет правок");
 
-            foreach (var change in plan.Changes)
-                File.WriteAllText(change.Path, change.After.ToString(), DetectEncoding(change.Path));
+            FileChanges.Apply(plan.Changes);
 
             loaded.Update(plan.Solution);
         }
@@ -176,43 +176,6 @@ namespace CSR.Workspace.Rename
             return found;
         }
 
-        private static async Task<List<FileChange>> CollectChangesAsync(
-            Solution before,
-            Solution after,
-            string root,
-            CancellationToken cancellation)
-        {
-            var changes = new List<FileChange>();
-            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var documents = after.GetChanges(before)
-                .GetProjectChanges()
-                .SelectMany(project => project.GetChangedDocuments(onlyGetDocumentsWithTextChanges: true));
-            foreach (var documentId in documents)
-            {
-                var original = before.GetDocument(documentId)!;
-                if (original.FilePath == null || !seen.Add(original.FilePath))
-                    continue;
-
-                var changed = after.GetDocument(documentId)!;
-                var beforeText = await original.GetTextAsync(cancellation);
-                var afterText = await changed.GetTextAsync(cancellation);
-                var textChanges = (await changed.GetTextChangesAsync(original, cancellation))
-                    .OrderBy(change => change.Span.Start)
-                    .ToList();
-                var file = SourceLocations.GetRelativePath(root, original.FilePath);
-                changes.Add(new FileChange
-                {
-                    Path = original.FilePath,
-                    File = file,
-                    Before = beforeText,
-                    After = afterText,
-                    Diff = TextDiff.Build(file, beforeText, afterText, textChanges),
-                });
-            }
-
-            return changes.OrderBy(change => change.File, StringComparer.Ordinal).ToList();
-        }
-
         private static List<string> GetNotes(ISymbol symbol, string root)
         {
             var notes = new List<string>();
@@ -234,22 +197,6 @@ namespace CSR.Workspace.Rename
                 notes.Add(SerializableTypeNote);
 
             return notes;
-        }
-
-        private static System.Text.Encoding DetectEncoding(string path)
-        {
-            var preamble = new byte[3];
-            using (var stream = File.OpenRead(path))
-            {
-                var read = stream.Read(preamble, 0, 3);
-                if (read >= 2 && preamble[0] == 0xFF && preamble[1] == 0xFE)
-                    return System.Text.Encoding.Unicode;
-
-                if (read == 3 && preamble[0] == 0xEF && preamble[1] == 0xBB && preamble[2] == 0xBF)
-                    return new System.Text.UTF8Encoding(true);
-            }
-
-            return new System.Text.UTF8Encoding(false);
         }
     }
 }

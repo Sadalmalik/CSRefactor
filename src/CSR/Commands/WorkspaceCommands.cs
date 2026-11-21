@@ -6,7 +6,7 @@ using CSR.Workspace.Symbols;
 
 namespace CSR.Commands
 {
-    // Команды над загруженным решением (refs, rename): через живой csr serve этого решения, иначе загрузка
+    // Команды над загруженным решением (refs, rename, move, arch): через живой csr serve этого решения, иначе загрузка
     // решения в процессе. Одна и та же обработка - в CLI и на сервере (Execute)
     public static class WorkspaceCommands
     {
@@ -58,6 +58,7 @@ namespace CSR.Commands
                 {
                     "refs" => await RefsCommand.ExecuteAsync(context, request.Arguments, cancellation),
                     "rename" => await RenameCommand.ExecuteAsync(context, request.Arguments, cancellation),
+                    "move" => await MoveCommand.ExecuteAsync(context, request.Arguments, cancellation),
                     "arch" => await ArchCommand.ExecuteAsync(context, request.Arguments, cancellation),
                     _ => throw new UsageException($"команда '{request.Command}' не работает с решением"),
                 };

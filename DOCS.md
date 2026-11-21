@@ -17,6 +17,7 @@
   - [`csr arch`](#csr-arch)
   - [`csr refs`](#csr-refs)
   - [`csr rename`](#csr-rename)
+  - [`csr move`](#csr-move)
   - [`csr serve`](#csr-serve)
 - [3. Конфиги](#3-конфиги)
 - [4. Проверки `style`](#4-проверки-style)
@@ -93,7 +94,7 @@
 
 ## 1. Общее
 
-- Вызов: `csr <команда> [аргументы] [опции]`; `csr help [команда]` — справка. Команды `metrics`, `style`, `fix` и `arch` без `--solution` читают файлы и разбирают их по синтаксису, решение не загружается. Команды `refs`, `rename`, `serve` и `arch --solution` загружают решение Roslyn (`MSBuildWorkspace`) и пользуются семантикой.
+- Вызов: `csr <команда> [аргументы] [опции]`; `csr help [команда]` — справка. Команды `metrics`, `style`, `fix` и `arch` без `--solution` читают файлы и разбирают их по синтаксису, решение не загружается. Команды `refs`, `rename`, `move`, `serve` и `arch --solution` загружают решение Roslyn (`MSBuildWorkspace`) и пользуются семантикой.
 - Файлы и папки: в аргументах — `.cs` файлы и папки; папки обходятся рекурсивно, `bin`, `obj` и скрытые папки (имя начинается с точки) пропускаются. Нет такого файла или папки — код возврата 2.
 - Пути в отчётах — относительно текущей папки, если файл внутри неё, иначе полные; разделитель `/`. Маски `paths` и `excludePaths` признаков `arch` применяются к пути в том же виде.
 - Форматы вывода: `json` (по умолчанию, для агентов), `md` (для человека), `diff` (`fix`, `rename`), `text` (`refs`). `--out файл` пишет отчёт в файл вместо stdout. Сводка и служебные строки идут в stderr, отчёт — в stdout.
@@ -688,9 +689,130 @@ csr rename: Profile.Score -> Points: отказ: имя сериализуетс
  
 ````
 
+### `csr move`
+
+Перенос типа верхнего уровня в свой файл: имя файла — имя типа. По умолчанию — только дифф на stdout (пути от папки решения, применим `git apply`), сводка в stderr; запись файлов — только с `--apply`.
+
+```
+csr move <тип> [--to файл.cs] [--solution файл] [--format diff | json] [--apply] [--force] [--no-verify] [--no-server]
+```
+
+| Опция | Назначение |
+|---|---|
+| `тип` | как в [`csr refs`](#csr-refs): `Namespace.Type` или `файл.cs:строка[:колонка]` |
+| `--to файл.cs` | файл назначения (от текущей папки); по умолчанию — `<Тип>.cs` в папке исходного файла |
+| `--solution файл` | `.sln`, `.slnx` или `.csproj` (по умолчанию — ближайшее решение вверх по папкам) |
+| `--format diff \| json` | `diff` (по умолчанию) — дифф в stdout, сводка в stderr; `json` — всё в stdout |
+| `--apply` | записать файлы |
+| `--force` | с `--apply`: записать при новых ошибках компиляции |
+| `--no-verify` | не компилировать затронутые проекты до и после |
+| `--no-server` | загрузить решение в процессе |
+
+- **Тип не один в файле:** новый файл получает директивы `using` исходного файла, нужные типу (пространства имён его типов, методов расширения, в том числе неявных — `foreach`, `await`, запросы LINQ, инициализаторы коллекций; `using static`, псевдонимы), и те же объявления пространств имён. Из исходного файла убираются строки типа вместе с его комментариями и атрибутами и директивы `using`, которые были нужны только ему; на стыке остаётся не больше одной пустой строки. Текст типа не переформатируется: строки переносятся как есть.
+- **Тип один в файле** — файл переносится целиком без правок текста; `.meta` Unity рядом переносится вместе с ним, GUID сохраняется (ссылки ассетов на скрипт не теряются). В диффе — заголовки переноса git (`rename from` / `rename to`).
+- **Отказ с причиной:** вложенный тип (перенос меняет его имя и доступ), `partial`-тип в нескольких объявлениях, тип из метаданных, файл назначения уже есть, файл назначения вне папки проекта (проект его не увидит), тип уже в файле со своим именем. Символ — не тип: код 2.
+- **Замечания:** проект перечисляет файлы явно (`<Compile Include>`, старые `.csproj` Unity) — Unity пересоздаст `.csproj`, иначе добавить файл вручную; наследник `UnityEngine.Object` в новом файле — `.meta` создаст Unity при импорте.
+- **Проверка компиляцией** — как у [`csr rename`](#csr-rename); `--apply` не пишет при новых ошибках, `--force` — записать всё равно. Кодировка и BOM исходного файла сохраняются, новый файл — в той же кодировке.
+- Коды возврата: `0` — дифф готов или записан, `1` — отказ, новые ошибки компиляции или запись не выполнена, `2` — ошибка запуска.
+
+Пример. Файл `Shapes.cs`:
+
+```csharp
+using System.Text;
+
+namespace Demo
+{
+    public class Circle
+    {
+        public double Radius;
+
+        public double Area
+            => System.Math.PI * Radius * Radius;
+    }
+
+    // Подписи фигур для отчета
+    public static class Labels
+    {
+        public static string Describe(Circle circle)
+            => new StringBuilder("circle ").Append(circle.Radius).ToString();
+    }
+}
+```
+
+`csr move Demo.Labels --solution Demo/Demo.csproj`: `using System.Text` нужен только `Labels` — уходит вместе с ним:
+
+````diff
+--- /dev/null
++++ b/Labels.cs
+@@ -0,0 +1,11 @@
++using System.Text;
++
++namespace Demo
++{
++    // Подписи фигур для отчета
++    public static class Labels
++    {
++        public static string Describe(Circle circle)
++            => new StringBuilder("circle ").Append(circle.Radius).ToString();
++    }
++}
+--- a/Shapes.cs
++++ b/Shapes.cs
+@@ -1,5 +1,3 @@
+-using System.Text;
+-
+ namespace Demo
+ {
+     public class Circle
+@@ -9,12 +7,5 @@
+         public double Area
+             => System.Math.PI * Radius * Radius;
+     }
+-
+-    // Подписи фигур для отчета
+-    public static class Labels
+-    {
+-        public static string Describe(Circle circle)
+-            => new StringBuilder("circle ").Append(circle.Radius).ToString();
+-    }
+ }
+ 
+````
+
+````text
+csr move: Demo.Labels -> Labels.cs: файлов 2, без записи (--apply - записать)
+  компиляция: проектов 1, ошибок до 0, после 0, новых 0 (0,2 с)
+````
+
+Тип один в файле `Figures.cs` с `.meta` рядом (`csr move Demo.Square --solution Demo/Demo.csproj`):
+
+````text
+diff --git a/Figures.cs b/Square.cs
+similarity index 100%
+rename from Figures.cs
+rename to Square.cs
+diff --git a/Figures.cs.meta b/Square.cs.meta
+similarity index 100%
+rename from Figures.cs.meta
+rename to Square.cs.meta
+````
+
+````text
+csr move: Demo.Square -> Square.cs: файлов 2, без записи (--apply - записать)
+  замечание: Unity: .meta переносится вместе с файлом, GUID сохраняется
+  замечание: в файле нет других типов: файл переносится целиком
+  компиляция: проектов 1, ошибок до 0, после 0, новых 0 (0,4 с)
+````
+
+Отказ (`csr move Demo.Circle --to Demo/Figures.cs`):
+
+````text
+csr move: Demo.Circle -> Figures.cs: отказ: файл Figures.cs уже есть
+````
+
 ### `csr serve`
 
-Процесс держит решение загруженным: открытие большого решения Unity — около 30 с на каждый вызов, через сервер `refs` — доли секунды. `refs`, `rename` и `arch --solution` находят живой сервер решения сами (именованный канал текущего пользователя, имя — по пути решения); `--no-server` — загрузить решение в процессе.
+Процесс держит решение загруженным: открытие большого решения Unity — около 30 с на каждый вызов, через сервер `refs` — доли секунды. `refs`, `rename`, `move` и `arch --solution` находят живой сервер решения сами (именованный канал текущего пользователя, имя — по пути решения); `--no-server` — загрузить решение в процессе.
 
 ```
 csr serve [решение] [--idle минуты] [--detach] [--log файл]

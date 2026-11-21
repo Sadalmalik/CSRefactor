@@ -18,7 +18,13 @@ namespace CSR.Workspace.Rename
             if (changes.Count == 0)
                 return "";
 
-            var blocks = GetBlocks(before, changes);
+            var blocks = GetBlocks(before, changes)
+                .Select(block => Trim(before, after, block))
+                .Where(block => block.OldStart < block.OldEnd || block.NewStart < block.NewEnd)
+                .ToList();
+            if (blocks.Count == 0)
+                return "";
+
             var output = new StringBuilder();
             output.Append($"--- a/{path}\n+++ b/{path}\n");
             var index = 0;
@@ -33,6 +39,47 @@ namespace CSR.Workspace.Rename
             }
 
             return output.ToString();
+        }
+
+        // Новый файл: все строки добавлены
+        public static string BuildAdded(string path, SourceText text)
+        {
+            var output = new StringBuilder();
+            var lines = GetLines(text);
+            output.Append($"--- /dev/null\n+++ b/{path}\n@@ -0,0 +{FormatRange(0, lines.Count)} @@\n");
+            foreach (var line in lines)
+                output.Append('+').Append(line).Append('\n');
+
+            return output.ToString();
+        }
+
+        // Удаленный файл: все строки удалены
+        public static string BuildRemoved(string path, SourceText text)
+        {
+            var output = new StringBuilder();
+            var lines = GetLines(text);
+            output.Append($"--- a/{path}\n+++ /dev/null\n@@ -{FormatRange(0, lines.Count)} +0,0 @@\n");
+            foreach (var line in lines)
+                output.Append('-').Append(line).Append('\n');
+
+            return output.ToString();
+        }
+
+        // Перенос файла без правок текста - заголовок переноса git
+        public static string BuildRenamed(string oldPath, string path)
+        {
+            return $"diff --git a/{oldPath} b/{path}\nsimilarity index 100%\n"
+                + $"rename from {oldPath}\nrename to {path}\n";
+        }
+
+        // Строки текста; последняя пустая строка после завершающего перевода строки не считается
+        private static List<string> GetLines(SourceText text)
+        {
+            var lines = text.Lines.Select(line => line.ToString()).ToList();
+            if (lines.Count > 0 && lines[^1].Length == 0)
+                lines.RemoveAt(lines.Count - 1);
+
+            return lines;
         }
 
         // Блок - строки [OldStart, OldEnd) старого текста заменены строками [NewStart, NewEnd) нового;
@@ -66,6 +113,23 @@ namespace CSR.Workspace.Rename
 
             return blocks;
         }
+
+        // Правка не по границам строк (дифф текста Roslyn) захватывает одинаковые строки на краях блока
+        private static Block Trim(SourceText before, SourceText after, Block block)
+        {
+            while (block.OldStart < block.OldEnd && block.NewStart < block.NewEnd
+                && IsSameLine(before, block.OldStart, after, block.NewStart))
+                block = block with { OldStart = block.OldStart + 1, NewStart = block.NewStart + 1 };
+
+            while (block.OldStart < block.OldEnd && block.NewStart < block.NewEnd
+                && IsSameLine(before, block.OldEnd - 1, after, block.NewEnd - 1))
+                block = block with { OldEnd = block.OldEnd - 1, NewEnd = block.NewEnd - 1 };
+
+            return block;
+        }
+
+        private static bool IsSameLine(SourceText before, int oldLine, SourceText after, int newLine)
+            => before.Lines[oldLine].ToString() == after.Lines[newLine].ToString();
 
         private static void AppendHunk(
             StringBuilder output,

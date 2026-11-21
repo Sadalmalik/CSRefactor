@@ -134,5 +134,36 @@ namespace CSR.Workspace.Tests
             Assert.That(result.ExitCode, Is.Zero, result.Error);
             Assert.That(result.Output, Does.Contain("+        private int m_Value;"));
         }
+
+        [Test]
+        public void Move_PreviewRefuseApply()
+        {
+            using var sample = SampleSolution.Create();
+            var solution = sample.SolutionPath;
+
+            var preview = Cli.Run("move", "Sample.Items.Item", "--solution", solution, "--no-server");
+            var refused = Cli.Run("move", "Sample.Items.Inventory", "--solution", solution, "--no-server");
+            var notType = Cli.Run("move", "Sample.Items.Inventory.Add", "--solution", solution, "--no-server");
+            var applied = Cli.Run(
+                "move",
+                "Sample.Units.IDamageable",
+                "--solution",
+                solution,
+                "--no-server",
+                "--apply",
+                "--format",
+                "json");
+
+            Assert.That(preview.ExitCode, Is.Zero, preview.Error);
+            Assert.That(preview.Output, Does.Contain("--- /dev/null\n+++ b/Game/Item.cs\n"));
+            Assert.That(File.Exists(sample.GetPath("Game/Item.cs")), Is.False);
+            Assert.That(refused.ExitCode, Is.EqualTo(1));
+            Assert.That(refused.Error, Does.Contain("отказ: тип уже в файле со своим именем"));
+            Assert.That(notType.ExitCode, Is.EqualTo(2));
+            Assert.That(applied.ExitCode, Is.Zero, applied.Error);
+            Assert.That(applied.Output, Does.Contain("\"status\": \"applied\""));
+            Assert.That(File.ReadAllText(sample.GetPath("Game/IDamageable.cs")), Does.Contain("interface IDamageable"));
+            Assert.That(File.ReadAllText(sample.GetPath("Game/Player.cs")), Does.Not.Contain("interface IDamageable"));
+        }
     }
 }

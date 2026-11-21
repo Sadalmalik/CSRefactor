@@ -1,22 +1,8 @@
+using CSR.Workspace.Refactor;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
 
 namespace CSR.Workspace.Rename
 {
-    public class FileChange
-    {
-        public required string Path { get; init; }
-
-        // Путь относительно корня решения, разделитель '/'
-        public required string File { get; init; }
-
-        public required SourceText Before { get; init; }
-
-        public required SourceText After { get; init; }
-
-        public required string Diff { get; init; }
-    }
-
     // Результат rename без записи: правки, причины отказа, места для ручной проверки
     public class RenamePlan
     {
