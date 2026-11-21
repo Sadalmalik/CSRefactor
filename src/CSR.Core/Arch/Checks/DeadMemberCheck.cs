@@ -6,7 +6,9 @@ namespace CSR.Core.Arch.Checks
 {
     // Мертвый код по выбранным проектам: член без ссылок, поле или свойство, которое только записывается,
     // параметр, который не читается. Не ищутся: override, virtual, abstract, реализации интерфейсов, сообщения движка
-    // и члены с атрибутами из ignoreAttributes (сериализация, тесты, вызов движком), члены перечислений, конструкторы
+    // и члены с атрибутами из ignoreAttributes (тесты, вызов движком), члены перечислений, конструкторы.
+    // Данные (члены с атрибутами из dataAttributes и поля типа с таким атрибутом) заполняет загрузка или инспектор:
+    // для них ищется только запись без чтения в коде - мертвые данные в сохранении, удаление с миграцией.
     // и операторы. Видимость - accessibility: public по умолчанию не ищется (потребители могут быть вне решения)
     public class DeadMemberCheck : SolutionCheck
     {
@@ -21,8 +23,9 @@ namespace CSR.Core.Arch.Checks
                 "OnValidate", "Reset", "OnGUI", "OnDrawGizmos*", "OnTrigger*", "OnCollision*", "OnMouse*",
                 "OnApplication*", "OnBecame*", "OnAnimator*", "OnParticle*", "OnTransform*", "OnRender*",
                 "OnBefore*", "OnAfter*", "GetEnumerator", "Dispose", "Deconstruct", "Main"),
+            CheckParameter.Strings("dataAttributes", "атрибуты сериализации: ищется только запись без чтения",
+                "SerializeField", "Serializable", "SerializeReference", "JsonProperty", "DataMember"),
             CheckParameter.Strings("ignoreAttributes", "члены и типы с этими атрибутами не ищутся",
-                "SerializeField", "Serializable", "SerializeReference", "JsonProperty", "DataMember",
                 "Test*", "SetUp", "TearDown", "OneTime*", "MenuItem", "ContextMenu", "RuntimeInitializeOnLoadMethod",
                 "InitializeOnLoad*", "UsedImplicitly", "Preserve", "DllImport", "Obsolete"),
         ];
@@ -44,6 +47,7 @@ namespace CSR.Core.Arch.Checks
             var accessibility = context.Settings.GetStrings("accessibility");
             var ignoredNames = NameMask.Get(context.Settings.GetStrings("ignoreNames"));
             var ignoredAttributes = NameMask.Get(context.Settings.GetStrings("ignoreAttributes"));
+            var dataAttributes = NameMask.Get(context.Settings.GetStrings("dataAttributes"));
             foreach (var declared in context.Index.Types)
             {
                 var type = declared.Symbol;
@@ -51,14 +55,17 @@ namespace CSR.Core.Arch.Checks
                     || HasAttribute(type, ignoredAttributes))
                     continue;
 
+                bool isSerialized = HasAttribute(type, dataAttributes);
+
                 foreach (var member in type.GetMembers())
                 {
                     context.Cancellation.ThrowIfCancellationRequested();
                     if (member.IsImplicitlyDeclared || !member.Locations.Any(location => location.IsInSource))
                         continue;
 
+                    bool isData = (isSerialized && member is IFieldSymbol) || HasAttribute(member, dataAttributes);
                     if (IsCandidate(member, accessibility, ignoredNames, ignoredAttributes))
-                        CheckMember(context, member);
+                        CheckMember(context, member, isData);
 
                     if (member is IMethodSymbol method && context.Settings.GetBool("parameters")
                         && IsParameterCandidate(context, method, ignoredNames, ignoredAttributes))
@@ -67,22 +74,26 @@ namespace CSR.Core.Arch.Checks
             }
         }
 
-        private static void CheckMember(SolutionCheckContext context, ISymbol member)
+        private static void CheckMember(SolutionCheckContext context, ISymbol member, bool isData)
         {
             var references = context.Index.GetReferences(member)
                 .Where(reference => !IsInside(reference.Node, member))
                 .ToList();
             var name = $"{member.ContainingType.Name}.{member.Name}";
             var location = member.Locations.First(candidate => candidate.IsInSource);
-            if (references.Count == 0)
+            if (references.Count == 0 && !isData)
             {
                 context.Report(location, $"{GetKind(member)} '{name}' не используется");
                 return;
             }
 
             bool isValue = member is IFieldSymbol or IPropertySymbol;
-            if (isValue && context.Settings.GetBool("writeOnly") && !references.Any(reference => reference.IsRead))
-                context.Report(location, $"{GetKind(member)} '{name}' только записывается: мест {references.Count}");
+            if (!isValue || references.Count == 0 || !context.Settings.GetBool("writeOnly")
+                || references.Any(reference => reference.IsRead))
+                return;
+
+            var saved = isData ? " (сохраняется: удаление - с миграцией)" : "";
+            context.Report(location, $"{GetKind(member)} '{name}' только записывается: мест {references.Count}{saved}");
         }
 
         private static void CheckParameters(SolutionCheckContext context, IMethodSymbol method)

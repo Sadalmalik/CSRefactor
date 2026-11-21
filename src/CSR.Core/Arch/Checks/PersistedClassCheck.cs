@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace CSR.Core.Arch.Checks
 {
     // Сохраняемый класс (члены с атрибутами из saveAttributes): есть конструкторы, но нет пустого для
-    // десериализации; производное свойство (только get с телом) помечено к сохранению; поле-кэш (cacheNames)
+    // десериализации (структура и конструктор с атрибутом из constructorAttributes - норма); производное свойство (только get с телом) помечено к сохранению; поле-кэш (cacheNames)
     // без атрибута исключения (ignoreAttributes). По синтаксису одного файла: атрибуты - по имени
     public class PersistedClassCheck : ArchCheck
     {
@@ -16,6 +16,8 @@ namespace CSR.Core.Arch.Checks
             CheckParameter.Strings("saveAttributes", "атрибуты сохранения члена", "JsonProperty", "DataMember"),
             CheckParameter.Strings("ignoreAttributes", "атрибуты явного исключения из сохранения",
                 "JsonIgnore", "NonSerialized", "IgnoreDataMember"),
+            CheckParameter.Strings("constructorAttributes", "атрибуты конструктора десериализации",
+                "JsonConstructor"),
             CheckParameter.Strings("cacheNames", "маски имен полей-кэшей и производных значений (без m_, _)",
                 "*Cache*", "*Cached*"),
         ];
@@ -43,7 +45,8 @@ namespace CSR.Core.Arch.Checks
                 if (type is InterfaceDeclarationSyntax || !type.Members.Any(member => HasAttribute(member, save)))
                     continue;
 
-                CheckConstructors(context, type);
+                if (type is not StructDeclarationSyntax)
+                    CheckConstructors(context, type);
                 foreach (var member in type.Members)
                 {
                     if (member is PropertyDeclarationSyntax property && HasAttribute(property, save)
@@ -66,8 +69,10 @@ namespace CSR.Core.Arch.Checks
                 .OfType<ConstructorDeclarationSyntax>()
                 .Where(constructor => !constructor.Modifiers.Any(SyntaxKind.StaticKeyword))
                 .ToList();
+            var marked = context.Settings.GetStrings("constructorAttributes");
             bool hasEmpty = constructors.Any(constructor => constructor.ParameterList.Parameters.Count == 0);
-            if (constructors.Count == 0 || hasEmpty)
+            bool hasMarked = constructors.Any(constructor => HasAttribute(constructor, marked));
+            if (constructors.Count == 0 || hasEmpty || hasMarked)
                 return;
 
             var name = type.Identifier.Text;

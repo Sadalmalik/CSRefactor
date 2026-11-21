@@ -151,6 +151,35 @@ namespace CSR.Core.Tests.Arch
             Assert.That(findings, Is.Empty);
         }
 
+        [Test]
+        public void DeadMember_SerializableType_FieldsSkippedMethodsChecked()
+        {
+            const string source = """
+                [System.Serializable]
+                public class Handler
+                {
+                    internal int Data;
+
+                    internal int Saved;
+
+                    internal int GetState() => 0;
+
+                    internal void Fill() => Saved = 1;
+                }
+
+                public class User
+                {
+                    public void Run(Handler handler) => handler.Fill();
+                }
+                """;
+            var findings = Analyze([Compile("Game", "Handler.cs", source)], "dead-member");
+            Assert.That(findings.Select(finding => finding.Message), Is.EqualTo(new[]
+            {
+                "поле 'Handler.Saved' только записывается: мест 1 (сохраняется: удаление - с миграцией)",
+                "метод 'Handler.GetState' не используется",
+            }));
+        }
+
 #endregion
 
 #region parameter-set
@@ -242,6 +271,23 @@ namespace CSR.Core.Tests.Arch
                     private float m_Cache;
 
                     public Runtime(int value) { }
+                }
+
+                public struct Reference
+                {
+                    [JsonProperty]
+                    private int m_Id;
+
+                    public Reference(int id) { m_Id = id; }
+                }
+
+                public class Marked
+                {
+                    [JsonProperty]
+                    private int m_Id;
+
+                    [JsonConstructor]
+                    public Marked(int id) { m_Id = id; }
                 }
                 """;
             Assert.That(ArchTestCode.Run("persisted-class", source), Is.Empty);
