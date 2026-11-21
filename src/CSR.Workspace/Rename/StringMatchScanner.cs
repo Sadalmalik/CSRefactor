@@ -23,6 +23,8 @@ namespace CSR.Workspace.Rename
 
         // Файлы больше maxFileSizeKb не читались
         public required int SkippedFiles { get; init; }
+
+        public required TimeSpan Time { get; init; }
     }
 
     // Имя целым словом в строковых литералах C# (nameof - не строка, его правит Renamer)
@@ -40,14 +42,20 @@ namespace CSR.Workspace.Rename
             SyntaxKind.Utf8MultiLineRawStringLiteralToken,
         ];
 
+        // unityAssets: просматривать и ассеты Unity (RefactorOptions.UnityExtensions)
         public static async Task<StringScan> ScanAsync(Solution solution, string root, string name,
-            RefactorOptions options, CancellationToken cancellation = default)
+            RefactorOptions options, bool unityAssets, CancellationToken cancellation = default)
         {
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             var pattern = new Regex($@"(?<![\p{{L}}\p{{Nd}}_]){Regex.Escape(name)}(?![\p{{L}}\p{{Nd}}_])",
                 RegexOptions.CultureInvariant);
             var matches = new ConcurrentBag<StringMatch>();
             await ScanLiteralsAsync(solution, root, name, pattern, matches, cancellation);
-            var files = ScanFiles(root, name, pattern, options, matches, cancellation);
+            var extensions = new HashSet<string>(options.StringExtensions, StringComparer.OrdinalIgnoreCase);
+            if (unityAssets)
+                extensions.UnionWith(options.UnityExtensions);
+
+            var files = ScanFiles(root, name, pattern, extensions, options, matches, cancellation);
             var ordered = matches
                 .OrderBy(match => match.Kind, StringComparer.Ordinal)
                 .ThenBy(match => match.File, StringComparer.Ordinal)
@@ -60,6 +68,7 @@ namespace CSR.Workspace.Rename
                 Total = ordered.Count,
                 ScannedFiles = files.Scanned,
                 SkippedFiles = files.Skipped,
+                Time = stopwatch.Elapsed,
             };
         }
 
@@ -103,10 +112,9 @@ namespace CSR.Workspace.Rename
             });
         }
 
-        private static FileCounts ScanFiles(string root, string name, Regex pattern,
+        private static FileCounts ScanFiles(string root, string name, Regex pattern, HashSet<string> extensions,
             RefactorOptions options, ConcurrentBag<StringMatch> matches, CancellationToken cancellation)
         {
-            var extensions = new HashSet<string>(options.StringExtensions, StringComparer.OrdinalIgnoreCase);
             if (extensions.Count == 0)
                 return new FileCounts(0, 0);
 

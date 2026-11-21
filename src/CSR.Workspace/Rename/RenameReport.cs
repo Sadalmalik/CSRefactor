@@ -40,6 +40,7 @@ namespace CSR.Workspace.Rename
                     writer.WriteStringValue(change.File);
                 writer.WriteEndArray();
                 writer.WriteString("diff", plan.Diff);
+                writer.WriteNumber("renameSeconds", Math.Round(plan.RenameTime.TotalSeconds, 1));
                 WriteStrings(writer, plan.Strings);
                 writer.WriteStartArray("notes");
                 foreach (var note in plan.Notes)
@@ -71,6 +72,9 @@ namespace CSR.Workspace.Rename
                     text.Append($"    {match.File}:{match.Line}:{match.Column}: {match.Text}\n");
             }
 
+            if (plan.Solution != null)
+                text.Append(GetTimeText(plan));
+
             if (plan.Strings is { SkippedFiles: > 0 })
                 text.Append($"  не просмотрено файлов больше лимита: {plan.Strings.SkippedFiles}\n");
 
@@ -87,6 +91,16 @@ namespace CSR.Workspace.Rename
             }
 
             return text.ToString();
+        }
+
+        private static string GetTimeText(RenamePlan plan)
+        {
+            var rename = plan.RenameTime.TotalSeconds;
+            if (plan.Strings is not { } strings)
+                return $"  время: переименование {rename:F1} с\n";
+
+            var seconds = strings.Time.TotalSeconds;
+            return $"  время: переименование {rename:F1} с, строки {seconds:F1} с (файлов {strings.ScannedFiles})\n";
         }
 
         private static string GetStatusText(RenamePlan plan, RenameStatus status)
@@ -145,6 +159,7 @@ namespace CSR.Workspace.Rename
             writer.WriteNumber("total", strings.Total);
             writer.WriteNumber("scannedFiles", strings.ScannedFiles);
             writer.WriteNumber("skippedFiles", strings.SkippedFiles);
+            writer.WriteNumber("seconds", Math.Round(strings.Time.TotalSeconds, 1));
             writer.WriteStartArray("matches");
             foreach (var match in strings.Matches)
             {

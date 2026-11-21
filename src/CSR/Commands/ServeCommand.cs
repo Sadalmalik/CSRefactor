@@ -61,8 +61,16 @@ namespace CSR.Commands
 
         private static int Serve(string solution, TimeSpan idle, string? logPath)
         {
-            using var log = logPath == null ? null : new StreamWriter(logPath, true);
-            var writer = log ?? Console.Error;
+            using var log = logPath == null ? null : new StreamWriter(logPath, true) { AutoFlush = true };
+            if (log != null)
+            {
+                // Отдельный процесс (--detach) пишет только в журнал: его stdout и stderr никто не читает
+                var synchronized = TextWriter.Synchronized(log);
+                Console.SetOut(synchronized);
+                Console.SetError(synchronized);
+            }
+
+            var writer = Console.Error;
             var loaded = WorkspaceCommands.Load(solution);
             using var cancellation = new CancellationTokenSource();
             Console.CancelKeyPress += (_, e) =>
@@ -80,10 +88,12 @@ namespace CSR.Commands
         {
             var log = Path.GetFullPath(logPath ?? ServerRegistry.GetLogPath(solution));
             Directory.CreateDirectory(Path.GetDirectoryName(log)!);
+            // Через оболочку: процесс без UseShellExecute наследует дескрипторы вызывающего, в том числе его
+            // stdout, и оболочка агента ждала бы конца вывода, пока жив сервер. Вывод сервера - в журнал
             var info = new ProcessStartInfo(Environment.ProcessPath!)
             {
-                UseShellExecute = false,
-                CreateNoWindow = true,
+                UseShellExecute = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
             };
             var minutes = ((int)idle.TotalMinutes).ToString();
             foreach (var argument in new[] { "serve", solution, "--idle", minutes, "--log", log })

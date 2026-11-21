@@ -16,4 +16,14 @@
     <ProjectReference Include="..\CSR.Workspace\CSR.Workspace.csproj" />
   </ItemGroup>
 
+  <!-- BuildHost Roslyn запускается отдельным процессом из папок BuildHost-* рядом с csr.exe:
+       в однофайловую сборку (PublishSingleFile) его файлы не упаковываются -->
+  <Target Name="ExcludeBuildHostFromSingleFile" AfterTargets="ComputeResolvedFilesToPublishList">
+    <ItemGroup>
+      <ResolvedFileToPublish Condition="$([System.String]::Copy('%(ResolvedFileToPublish.RelativePath)').StartsWith('BuildHost-'))">
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
+
 </Project>

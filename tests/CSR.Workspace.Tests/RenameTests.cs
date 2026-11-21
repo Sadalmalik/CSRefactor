@@ -29,6 +29,7 @@ namespace CSR.Workspace.Tests
             Assert.That(plan.Diff, Does.Contain("-            => m_Plain;\n+            => m_Value;\n"));
             Assert.That(plan.Compile!.NewErrors, Is.Empty);
             Assert.That(plan.Strings!.Total, Is.Zero);
+            Assert.That(plan.Strings.ScannedFiles, Is.EqualTo(1), "только Scripts/player.lua, без ассетов Unity");
         }
 
         [Test]
@@ -112,7 +113,8 @@ namespace CSR.Workspace.Tests
             Assert.That(plan.Diff, Does.Contain(attributes));
             Assert.That(plan.Diff, Does.Contain("+        private float m_Velocity = 5;\n"));
             Assert.That(plan.Compile!.NewErrors, Is.Empty);
-            var files = plan.Strings!.Matches.Where(match => match.Kind == "file").Select(match => match.File);
+            Assert.That(plan.Strings!.ScannedFiles, Is.EqualTo(2), "player.lua и Player.prefab");
+            var files = plan.Strings.Matches.Where(match => match.Kind == "file").Select(match => match.File);
             Assert.That(files, Is.EquivalentTo(new[] { "Assets/Player.prefab", "Scripts/player.lua" }));
         }
 

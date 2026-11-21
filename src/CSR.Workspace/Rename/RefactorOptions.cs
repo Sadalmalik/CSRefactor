@@ -11,8 +11,12 @@ namespace CSR.Workspace.Rename
         public List<string> SerializationAttributes { get; set; } = [];
 
         // Расширения файлов, где ищутся строковые совпадения имени (кроме .cs - там только литералы)
-        public List<string> StringExtensions { get; set; } =
-            [".lua", ".json", ".yaml", ".yml", ".xml", ".prefab", ".asset", ".unity"];
+        public List<string> StringExtensions { get; set; } = [".lua", ".json", ".yaml", ".yml", ".xml"];
+
+        // Ассеты Unity (YAML): просматриваются, только если имя может быть в сериализованных данных -
+        // сериализуемое поле, тип UnityEngine.Object или [Serializable], публичный метод компонента (UnityEvent).
+        // На amb это гигабайты: просмотр всех ассетов на каждое переименование - около 9 с
+        public List<string> UnityExtensions { get; set; } = [".prefab", ".asset", ".unity"];
 
         // Папки поиска относительно корня решения; пусто - корень решения
         public List<string> StringRoots { get; set; } = [];
@@ -27,7 +31,8 @@ namespace CSR.Workspace.Rename
     }
 
     // refactor.jsonc: { "serialization": { "attributes": [...] },
-    //   "strings": { "extensions": [...], "roots": [...], "exclude": [...], "maxFileSizeKb": N, "maxMatches": N } }
+    //   "strings": { "extensions": [...], "unityExtensions": [...], "roots": [...], "exclude": [...],
+    //     "maxFileSizeKb": N, "maxMatches": N } }
     public static class RefactorConfig
     {
         public static RefactorOptions Parse(string json)
@@ -76,6 +81,9 @@ namespace CSR.Workspace.Rename
                 {
                     case "extensions":
                         options.StringExtensions = JsonConfig.ReadStrings(property.Value, path);
+                        break;
+                    case "unityExtensions":
+                        options.UnityExtensions = JsonConfig.ReadStrings(property.Value, path);
                         break;
                     case "roots":
                         options.StringRoots = JsonConfig.ReadStrings(property.Value, path);

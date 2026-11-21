@@ -59,14 +59,18 @@ namespace CSR.Workspace.Rename
                 target = await RefindAsync(solution, migration, symbol, cancellation);
             }
 
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             var renamed = await Renamer.RenameSymbolAsync(working, target, new SymbolRenameOptions(), newName,
                 cancellation);
             var changes = await CollectChangesAsync(solution, renamed, loaded.Root, cancellation);
-            var strings = settings.ScanStrings
-                ? await StringMatchScanner.ScanAsync(solution, loaded.Root, symbol.Name, options, cancellation)
-                : null;
+            var renameTime = stopwatch.Elapsed;
             var compile = settings.Verify
                 ? await CompileCheck.RunAsync(solution, renamed, loaded.Root, cancellation)
+                : null;
+            var unityAssets = IsInUnityData(symbol, serialized);
+            var strings = settings.ScanStrings
+                ? await StringMatchScanner.ScanAsync(solution, loaded.Root, symbol.Name, options, unityAssets,
+                    cancellation)
                 : null;
             return new RenamePlan
             {
@@ -77,6 +81,7 @@ namespace CSR.Workspace.Rename
                 Serialized = serialized,
                 Migrated = settings.Migrate,
                 Changes = changes,
+                RenameTime = renameTime,
                 Strings = strings,
                 Compile = compile,
                 Notes = GetNotes(symbol, loaded.Root),
@@ -94,6 +99,22 @@ namespace CSR.Workspace.Rename
                 File.WriteAllText(change.Path, change.After.ToString(), DetectEncoding(change.Path));
 
             loaded.Update(plan.Solution);
+        }
+
+        // Имя может храниться в ассетах Unity: сериализуемое поле, тип UnityEngine.Object или [Serializable]
+        // ([SerializeReference] хранит имя типа), публичный метод компонента (UnityEvent хранит имя метода)
+        private static bool IsInUnityData(ISymbol symbol, IReadOnlyList<SerializedName> serialized)
+        {
+            if (serialized.Any(name => name.Kind is SerializedKind.UnityField or SerializedKind.UnityMessage))
+                return true;
+
+            return symbol switch
+            {
+                INamedTypeSymbol type => type.IsSerializable || SerializationGuard.DerivesFrom(type, UnityObject),
+                IMethodSymbol method => method.DeclaredAccessibility == Accessibility.Public
+                    && SerializationGuard.DerivesFrom(method.ContainingType, UnityObject),
+                _ => false,
+            };
         }
 
         private static ISymbol GetRenameTarget(ISymbol symbol)

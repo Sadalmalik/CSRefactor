@@ -103,8 +103,8 @@ namespace CSR.Workspace.Loading
     }
 
     // Загрузка решения или проекта через MSBuildWorkspace (BuildHost Roslyn 5).
-    // Если в решении есть проекты старого формата (Unity), сборка идет с obj в кэше CSR и через теневую
-    // копию решения: рядом с кодом проекта ничего не пишется
+    // Если в решении есть проекты старого формата (Unity), сборка идет с obj и папкой вывода в кэше CSR
+    // и через теневую копию решения: рядом с кодом проекта ничего не пишется
     public static class SolutionLoader
     {
         public static async Task<LoadedSolution> LoadAsync(string path, CancellationToken cancellation = default)
@@ -123,8 +123,12 @@ namespace CSR.Workspace.Loading
             {
                 var cache = CachePaths.ForSolution(fullPath);
                 var obj = Path.Combine(cache, "obj") + Path.DirectorySeparatorChar;
+                var bin = Path.Combine(cache, "bin") + Path.DirectorySeparatorChar;
                 properties["BaseIntermediateOutputPath"] = obj;
                 properties["IntermediateOutputPath"] = obj;
+                // PrepareForBuild создает папку вывода: у Unity это Temp\Bin\Debug\<проект> рядом с кодом
+                properties["OutputPath"] = bin;
+                properties["OutDir"] = bin;
                 if (isSolution)
                     openPath = SolutionFile.WriteShadow(fullPath, cache);
             }

@@ -34,6 +34,9 @@ namespace CSR.Workspace.Rename
 
         public IReadOnlyList<FileChange> Changes { get; init; } = [];
 
+        // Переименование в памяти и дифф, без поиска строк и компиляции
+        public TimeSpan RenameTime { get; init; }
+
         public StringScan? Strings { get; init; }
 
         public CompileResult? Compile { get; init; }

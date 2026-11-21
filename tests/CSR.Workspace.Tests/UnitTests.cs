@@ -110,13 +110,14 @@ namespace CSR.Workspace.Tests
                   "serialization": { "attributes": ["Game.Saved"] },
                   "strings": {
                     "extensions": [".lua"], "roots": ["Assets"], "exclude": ["Cache"],
-                    "maxFileSizeKb": 10, "maxMatches": 5,
+                    "maxFileSizeKb": 10, "maxMatches": 5, "unityExtensions": [".unity"],
                   },
                 }
                 """);
 
             Assert.That(options.SerializationAttributes, Is.EqualTo(new[] { "Game.Saved" }));
             Assert.That(options.StringExtensions, Is.EqualTo(new[] { ".lua" }));
+            Assert.That(options.UnityExtensions, Is.EqualTo(new[] { ".unity" }));
             Assert.That(options.StringRoots, Is.EqualTo(new[] { "Assets" }));
             Assert.That(options.StringExclude, Is.EqualTo(new[] { "Cache" }));
             Assert.That(options.MaxFileSizeKb, Is.EqualTo(10));
