@@ -94,6 +94,10 @@ csr style <файлы | папки>... --config style.jsonc [--config ещё.jso
 | `explicit-private` | `private` у членов класса | `prefer`: `explicit` / `implicit`, `members` |
 | `forbidden-modifier` | запрещённые модификаторы (`sealed`, `private protected`, …) | `modifiers` |
 | `custom-delegate` | свой `delegate` вместо `Action` / `Func` | — |
+| `expression-arrow` | место `=>` у члена с телом-выражением: в конце строки; у свойства — не с новой строки; у метода — строка длиннее `max` (замена — перенос `=>` на следующую строку +4) | `properties`: `next-line` / `any`, `methods`: `fit` / `next-line` / `any`, `max` |
+| `signature-wrap` | сигнатура не столбиком: однострочная длиннее `max` или с `minParameters`+ параметрами, перенос посреди списка, `)` на отдельной строке (замена — параметр на строку +4, `: base(…)` отдельной строкой) | `max`, `minParameters`, `initializerOnOwnLine` |
+| `call-wrap` | длинный вызов в одну строку, перенос посреди списка аргументов (замена — аргумент на строку +4; вложенный — следующим проходом `csr fix`); не трогает условия `if` / `while`, логгер, многострочные аргументы | `max` |
+| `region-layout` | пустые строки вокруг `#region` / `#endregion`: внутри, между регионами, до члена вне региона; у `{` и `}` типа — вплотную | `inside`, `between`, `outside` |
 
 Методы логгера для `log-call-wrap`, `message-text` и `comment-typography` — в `project.jsonc` (`logger.methods`, маски с `*`). Пример конфига — `examples/style.example.jsonc`.
 

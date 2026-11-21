@@ -28,6 +28,10 @@ namespace CSR.Core.Style
             new ExplicitPrivateCheck(),
             new ForbiddenModifierCheck(),
             new CustomDelegateCheck(),
+            new ExpressionArrowCheck(),
+            new SignatureWrapCheck(),
+            new CallWrapCheck(),
+            new RegionLayoutCheck(),
         ];
 
         public static SyntaxCheck? Find(string name)
