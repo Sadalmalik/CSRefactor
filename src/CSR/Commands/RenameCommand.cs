@@ -101,7 +101,7 @@ namespace CSR.Commands
         }
 
         // Явный --config (от папки вызова), иначе .csr/refactor.jsonc от папки решения, иначе config/ у csr.exe
-        private static RefactorOptions LoadOptions(string? path, WorkspaceContext context)
+        internal static RefactorOptions LoadOptions(string? path, WorkspaceContext context)
         {
             var found = ConfigFiles.Find(path, "refactor.jsonc", context.Solution.Root);
             if (found == null)

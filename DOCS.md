@@ -692,16 +692,19 @@ csr rename: Profile.Score -> Points: отказ: имя сериализуетс
 
 ### `csr move`
 
-Перенос типа верхнего уровня в свой файл: имя файла — имя типа. По умолчанию — только дифф на stdout (пути от папки решения, применим `git apply`), сводка в stderr; запись файлов — только с `--apply`.
+Перенос типа верхнего уровня в свой файл (имя файла — имя типа) или члена в другой тип. По умолчанию — только дифф на stdout (пути от папки решения, применим `git apply`), сводка в stderr; запись файлов — только с `--apply`.
 
 ```
 csr move <тип> [--to файл.cs] [--solution файл] [--format diff | json] [--apply] [--force] [--no-verify] [--no-server]
+csr move <член> --to <тип> [--config refactor.jsonc] [опции как выше]
 ```
 
 | Опция | Назначение |
 |---|---|
-| `тип` | как в [`csr refs`](#csr-refs): `Namespace.Type` или `файл.cs:строка[:колонка]` |
-| `--to файл.cs` | файл назначения (от текущей папки); по умолчанию — `<Тип>.cs` в папке исходного файла |
+| `тип`, `член` | как в [`csr refs`](#csr-refs): `Namespace.Type[.Member]` или `файл.cs:строка[:колонка]` |
+| `--to файл.cs` | для типа: файл назначения (от текущей папки); по умолчанию — `<Тип>.cs` в папке исходного файла |
+| `--to тип` | для члена: тип-приёмник, `Namespace.Type` (класс или структура в коде решения) |
+| `--config refactor.jsonc` | для члена: атрибуты сериализации проекта, как у [`csr rename`](#csr-rename) |
 | `--solution файл` | `.sln`, `.slnx` или `.csproj` (по умолчанию — ближайшее решение вверх по папкам) |
 | `--format diff \| json` | `diff` (по умолчанию) — дифф в stdout, сводка в stderr; `json` — всё в stdout |
 | `--apply` | записать файлы |
@@ -709,9 +712,11 @@ csr move <тип> [--to файл.cs] [--solution файл] [--format diff | json
 | `--no-verify` | не компилировать затронутые проекты до и после |
 | `--no-server` | загрузить решение в процессе |
 
+#### Перенос типа в свой файл
+
 - **Тип не один в файле:** новый файл получает директивы `using` исходного файла, нужные типу (пространства имён его типов, методов расширения, в том числе неявных — `foreach`, `await`, запросы LINQ, инициализаторы коллекций; `using static`, псевдонимы), и те же объявления пространств имён. Из исходного файла убираются строки типа вместе с его комментариями и атрибутами и директивы `using`, которые были нужны только ему; на стыке остаётся не больше одной пустой строки. Текст типа не переформатируется: строки переносятся как есть.
 - **Тип один в файле** — файл переносится целиком без правок текста; `.meta` Unity рядом переносится вместе с ним, GUID сохраняется (ссылки ассетов на скрипт не теряются). В диффе — заголовки переноса git (`rename from` / `rename to`).
-- **Отказ с причиной:** вложенный тип (перенос меняет его имя и доступ), `partial`-тип в нескольких объявлениях, тип из метаданных, файл назначения уже есть, файл назначения вне папки проекта (проект его не увидит), тип уже в файле со своим именем. Символ — не тип: код 2.
+- **Отказ с причиной:** вложенный тип (перенос меняет его имя и доступ), `partial`-тип в нескольких объявлениях, тип из метаданных или из сгенерированного кода, файл назначения уже есть, файл назначения вне папки проекта (проект его не увидит), тип уже в файле со своим именем. Символ — не тип: код 2.
 - **Замечания:** проект перечисляет файлы явно (`<Compile Include>`, старые `.csproj` Unity) — Unity пересоздаст `.csproj`, иначе добавить файл вручную; наследник `UnityEngine.Object` в новом файле — `.meta` создаст Unity при импорте.
 - **Проверка компиляцией** — как у [`csr rename`](#csr-rename); `--apply` не пишет при новых ошибках, `--force` — записать всё равно. Кодировка и BOM исходного файла сохраняются, новый файл — в той же кодировке.
 - Коды возврата: `0` — дифф готов или записан, `1` — отказ, новые ошибки компиляции или запись не выполнена, `2` — ошибка запуска.
@@ -809,6 +814,131 @@ csr move: Demo.Square -> Square.cs: файлов 2, без записи (--apply
 
 ````text
 csr move: Demo.Circle -> Figures.cs: отказ: файл Figures.cs уже есть
+````
+
+#### Перенос члена в другой тип
+
+- **Статический член** (метод, свойство, поле, константа): ссылки получают квалификатор приёмника (`Pricing.Rate()` → `Inventory.Rate()`, `Rate()` в исходном типе → `Inventory.Rate()`); имя приёмника — кратчайшее в месте ссылки, с пространством имён, если оно не подключено. В теле члена ссылки на статические члены и вложенные типы исходного типа получают его квалификатор.
+- **Метод экземпляра** — только с единственным параметром типа-приёмника: приёмник есть в каждом месте вызова (аргумент). Вызов `M(a, p)` или `x.M(a, p)` становится `p.M(a)` (сложный аргумент — в скобках); в теле `p.X` → `X`, `p` → `this`; параметр убирается из сигнатуры.
+- Строки члена с его комментариями и атрибутами переносятся как есть, отступ — как у членов приёмника; член ставится в конец приёмника. Директивы `using` исходного файла, нужные члену, добавляются в файл приёмника; ставшие лишними в исходном файле убираются.
+- **Отказ с причиной:** поле экземпляра (данные объекта), свойство экземпляра, сериализуемые данные (как в [`csr rename`](#csr-rename): `[SerializeField]`, `[JsonProperty]`, атрибуты из конфига) — перенос между типами потерял бы их; метод экземпляра без единственного параметра типа-приёмника; метод экземпляра используется не только вызовом (группа методов, делегат); член использует экземпляр исходного типа (`this`, `base`, члены экземпляра без квалификатора) или его `private`-члены; `private`-член используется вне себя; `override`, `virtual`, `abstract`, реализация интерфейса; `partial`-член; поле в объявлении с несколькими переменными; директивы препроцессора в члене; в приёмнике уже есть член с этим именем; исходный тип или приёмник обобщённый; приёмник — не класс и не структура; член, приёмник или ссылка на член — в сгенерированном коде (генератор пересоздаст код со старым типом).
+
+Пример. Файл `Geometry.cs` (`Circle` — в `Shapes.cs` из примера выше):
+
+```csharp
+namespace Demo
+{
+    public static class Geometry
+    {
+        public const double Tau = 6.283185307179586;
+
+        public static double Circumference(Circle circle)
+            => Tau * circle.Radius;
+    }
+
+    public class Painter
+    {
+        public string Outline(Circle circle, string color)
+        {
+            var length = Geometry.Circumference(circle);
+            return $"{color}: {length:F1}, r={circle.Radius}";
+        }
+
+        public string Draw(Circle circle)
+            => Outline(circle, "black");
+    }
+}
+```
+
+Статический метод (`csr move Demo.Geometry.Circumference --to Demo.Circle --solution Demo/Demo.csproj`): вызов получает квалификатор `Circle`, в теле `Tau` — квалификатор `Geometry`:
+
+````diff
+--- a/Geometry.cs
++++ b/Geometry.cs
+@@ -3,16 +3,13 @@
+     public static class Geometry
+     {
+         public const double Tau = 6.283185307179586;
+-
+-        public static double Circumference(Circle circle)
+-            => Tau * circle.Radius;
+     }
+ 
+     public class Painter
+     {
+         public string Outline(Circle circle, string color)
+         {
+-            var length = Geometry.Circumference(circle);
++            var length = Circle.Circumference(circle);
+             return $"{color}: {length:F1}, r={circle.Radius}";
+         }
+ 
+--- a/Shapes.cs
++++ b/Shapes.cs
+@@ -8,6 +8,9 @@
+ 
+         public double Area
+             => System.Math.PI * Radius * Radius;
++
++        public static double Circumference(Circle circle)
++            => Geometry.Tau * circle.Radius;
+     }
+ 
+     // Подписи фигур для отчета
+````
+
+````text
+csr move: Demo.Geometry.Circumference -> Demo.Circle: файлов 2, без записи (--apply - записать)
+  компиляция: проектов 1, ошибок до 0, после 0, новых 0 (0,1 с)
+````
+
+Метод экземпляра с параметром типа-приёмника (`csr move Demo.Painter.Outline --to Demo.Circle`): параметр `circle` становится `this`, вызов `Outline(circle, "black")` — `circle.Outline("black")`:
+
+````diff
+--- a/Geometry.cs
++++ b/Geometry.cs
+@@ -10,14 +10,8 @@
+ 
+     public class Painter
+     {
+-        public string Outline(Circle circle, string color)
+-        {
+-            var length = Geometry.Circumference(circle);
+-            return $"{color}: {length:F1}, r={circle.Radius}";
+-        }
+-
+         public string Draw(Circle circle)
+-            => Outline(circle, "black");
++            => circle.Outline("black");
+     }
+ }
+ 
+--- a/Shapes.cs
++++ b/Shapes.cs
+@@ -8,6 +8,12 @@
+ 
+         public double Area
+             => System.Math.PI * Radius * Radius;
++
++        public string Outline(string color)
++        {
++            var length = Geometry.Circumference(this);
++            return $"{color}: {length:F1}, r={Radius}";
++        }
+     }
+ 
+     // Подписи фигур для отчета
+````
+
+````text
+csr move: Demo.Painter.Outline -> Demo.Circle: файлов 2, без записи (--apply - записать)
+  компиляция: проектов 1, ошибок до 0, после 0, новых 0 (0,1 с)
+````
+
+Поле экземпляра (`csr move Demo.Report.m_Lines --to Demo.Circle`):
+
+````text
+csr move: Demo.Report.m_Lines -> Demo.Circle: отказ: поле экземпляра - данные объекта, не переносится
 ````
 
 ### `csr extract`

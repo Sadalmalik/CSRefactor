@@ -154,17 +154,55 @@ namespace CSR.Workspace.Rename
                 for (; oldLine < block.OldStart; oldLine++)
                     output.Append(' ').Append(before.Lines[oldLine].ToString()).Append('\n');
 
-                for (var line = block.OldStart; line < block.OldEnd; line++)
-                    output.Append('-').Append(before.Lines[line].ToString()).Append('\n');
-
-                for (var line = block.NewStart; line < block.NewEnd; line++)
-                    output.Append('+').Append(after.Lines[line].ToString()).Append('\n');
+                AppendBlock(output, before, after, block);
 
                 oldLine = block.OldEnd;
             }
 
             for (; oldLine < oldEnd; oldLine++)
                 output.Append(' ').Append(before.Lines[oldLine].ToString()).Append('\n');
+        }
+
+        // Строки блока: общие строки старого и нового (наибольшая общая подпоследовательность) - без изменений,
+        // остальные - удалены и добавлены
+        private static void AppendBlock(StringBuilder output, SourceText before, SourceText after, Block block)
+        {
+            var removed = Enumerable.Range(block.OldStart, block.OldEnd - block.OldStart)
+                .Select(line => before.Lines[line].ToString())
+                .ToList();
+            var added = Enumerable.Range(block.NewStart, block.NewEnd - block.NewStart)
+                .Select(line => after.Lines[line].ToString())
+                .ToList();
+            var common = new int[removed.Count + 1, added.Count + 1];
+            for (var i = removed.Count - 1; i >= 0; i--)
+            {
+                for (var j = added.Count - 1; j >= 0; j--)
+                {
+                    common[i, j] = removed[i] == added[j]
+                        ? common[i + 1, j + 1] + 1
+                        : Math.Max(common[i + 1, j], common[i, j + 1]);
+                }
+            }
+
+            var oldIndex = 0;
+            var newIndex = 0;
+            while (oldIndex < removed.Count || newIndex < added.Count)
+            {
+                if (oldIndex < removed.Count && newIndex < added.Count && removed[oldIndex] == added[newIndex])
+                {
+                    output.Append(' ').Append(removed[oldIndex++]).Append('\n');
+                    newIndex++;
+                }
+                else if (newIndex == added.Count
+                    || oldIndex < removed.Count && common[oldIndex + 1, newIndex] >= common[oldIndex, newIndex + 1])
+                {
+                    output.Append('-').Append(removed[oldIndex++]).Append('\n');
+                }
+                else
+                {
+                    output.Append('+').Append(added[newIndex++]).Append('\n');
+                }
+            }
         }
 
         private static string FormatRange(int start, int count)

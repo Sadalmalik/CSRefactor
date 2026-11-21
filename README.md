@@ -14,7 +14,7 @@
 | `csr arch` | архитектурные признаки по конфигу: находка — повод решить, у признака — вопрос; по файлам и по решению |
 | `csr refs` | все ссылки на символ по решению |
 | `csr rename` | семантическое переименование с защитой сериализуемых имён |
-| `csr move` | перенос типа в свой файл; для Unity `.meta` переносится вместе с файлом |
+| `csr move` | перенос типа в свой файл (для Unity `.meta` — вместе с файлом) или члена в другой тип |
 | `csr extract` | извлечение метода из строк файла: входы — параметры, выход — возврат |
 | `csr serve` | держит решение загруженным: `refs`, `rename`, `move`, `extract` и `arch --solution` отвечают за доли секунды |
 
@@ -78,6 +78,7 @@ csr arch --solution My.sln --config arch.jsonc --format md
 csr refs Namespace.Type.Method --solution My.sln --format text
 csr rename Namespace.Type.OldName NewName --solution My.sln
 csr move Namespace.Type --solution My.sln
+csr move Namespace.Type.Method --to Namespace.Other --solution My.sln
 csr extract src/File.cs:40-52 NewMethod --solution My.sln
 ```
 

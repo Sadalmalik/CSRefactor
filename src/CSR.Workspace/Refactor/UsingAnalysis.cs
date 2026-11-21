@@ -17,10 +17,16 @@ namespace CSR.Workspace.Refactor
 
     public static class UsingAnalysis
     {
-        public static UsingUsage Collect(SemanticModel model, IEnumerable<SyntaxNode> nodes)
+        // excluded - узел, который не учитывается (переносимый член внутри остального кода)
+        public static UsingUsage Collect(
+            SemanticModel model,
+            IEnumerable<SyntaxNode> nodes,
+            SyntaxNode? excluded = null)
         {
             var usage = new UsingUsage();
-            foreach (var node in nodes.SelectMany(root => root.DescendantNodesAndSelf(descendIntoTrivia: true)))
+            var all = nodes.SelectMany(
+                root => root.DescendantNodesAndSelf(node => node != excluded, descendIntoTrivia: true));
+            foreach (var node in all.Where(node => node != excluded))
             {
                 switch (node)
                 {

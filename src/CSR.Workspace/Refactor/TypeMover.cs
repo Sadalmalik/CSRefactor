@@ -34,8 +34,11 @@ namespace CSR.Workspace.Refactor
             var reference = type.DeclaringSyntaxReferences[0];
             var declaration = (MemberDeclarationSyntax)await reference.GetSyntaxAsync(cancellation);
             var solution = loaded.Current;
-            var document = solution.GetDocument(declaration.SyntaxTree)!;
-            var source = document.FilePath!;
+            var document = solution.GetDocument(declaration.SyntaxTree);
+            if (document is null or SourceGeneratedDocument || document.FilePath == null)
+                return RefactorPlan.Refuse(Command, subject, target ?? type.Name + ".cs", "тип в сгенерированном коде");
+
+            var source = document.FilePath;
             var targetPath = target == null
                 ? Path.Combine(Path.GetDirectoryName(source)!, type.Name + ".cs")
                 : Path.GetFullPath(Path.Combine(workingDirectory, target));

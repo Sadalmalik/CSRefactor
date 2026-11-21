@@ -112,7 +112,7 @@ namespace CSR.Workspace.Tests
 
             Assert.That(plan.SerializationRefused, Is.False);
             Assert.That(plan.Diff, Does.Contain("+using UnityEngine.Serialization;\n"));
-            var attributes = "+        [FormerlySerializedAs(\"m_Speed\")]\n+        [SerializeField]";
+            var attributes = "+        [FormerlySerializedAs(\"m_Speed\")]\n         [SerializeField]";
             Assert.That(plan.Diff, Does.Contain(attributes));
             Assert.That(plan.Diff, Does.Contain("+        private float m_Velocity = 5;\n"));
             Assert.That(plan.Compile!.NewErrors, Is.Empty);

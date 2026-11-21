@@ -167,6 +167,36 @@ namespace CSR.Workspace.Tests
         }
 
         [Test]
+        public void Move_MemberAcrossProjectsWithUsings()
+        {
+            using var sample = SampleSolution.Create();
+            var solution = sample.SolutionPath;
+
+            var noTarget = Cli.Run("move", "Sample.Tools.Report.Describe", "--solution", solution, "--no-server");
+            var applied = Cli.Run(
+                "move",
+                "Sample.Tools.Report.Describe",
+                "--to",
+                "Sample.Items.Inventory",
+                "--solution",
+                solution,
+                "--no-server",
+                "--apply");
+
+            Assert.That(noTarget.ExitCode, Is.EqualTo(2));
+            Assert.That(noTarget.Error, Does.Contain("нужен --to"));
+            Assert.That(applied.ExitCode, Is.Zero, applied.Error);
+            var inventory = File.ReadAllText(sample.GetPath("Game/Inventory.cs"));
+            Assert.That(inventory, Does.StartWith("using Sample.Units;"));
+            Assert.That(
+                inventory,
+                Does.Contain("public static string Describe(Inventory inventory, IDamageable target)"));
+            var report = File.ReadAllText(sample.GetPath("Game.Tools/Report.cs"));
+            Assert.That(report, Does.Not.Contain("using Sample.Units;"));
+            Assert.That(report, Does.Not.Contain("Describe"));
+        }
+
+        [Test]
         public void Extract_FindsSolutionFromFileRange()
         {
             using var sample = SampleSolution.Create();
