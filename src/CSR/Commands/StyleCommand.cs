@@ -65,7 +65,7 @@ namespace CSR.Commands
             return report.HasErrors ? 1 : 0;
         }
 
-        private static List<Finding> Analyze(List<string> files, StyleOptions options, ProjectOptions project,
+        internal static List<Finding> Analyze(List<string> files, StyleOptions options, ProjectOptions project,
             Dictionary<string, ChangedLines>? filter)
         {
             var results = new ConcurrentBag<List<Finding>>();
@@ -104,13 +104,13 @@ namespace CSR.Commands
             return options;
         }
 
-        private static ProjectOptions LoadProject(CommandLine commandLine)
+        internal static ProjectOptions LoadProject(CommandLine commandLine)
         {
             var path = commandLine.GetOption("--project");
             return path == null ? new ProjectOptions() : ProjectConfig.Parse(ReadConfig(path));
         }
 
-        private static string ReadConfig(string path)
+        internal static string ReadConfig(string path)
         {
             if (!File.Exists(path))
                 throw new UsageException($"нет файла конфига: {path}");

@@ -1,0 +1,26 @@
+// Пример конфига csr arch: csr arch <папка> --config arch.jsonc --project project.jsonc
+// Признак - не ошибка, а повод решить: в отчете у признака вопрос, у находки - что сработало.
+// Признак, которого нет в конфиге, выключен. У признака: "severity" (error | warning | hint), "rule" - метка правила
+// вашего гайда, "enabled": false - выключить в следующем слое, "paths" / "excludePaths" - маски путей файлов
+// (* - любые символы), остальное - параметры. Список признаков и параметров - README
+{
+  "checks": {
+    // Ветвление по конкретному типу - только в общем коде
+    "type-branch": { "severity": "warning", "rule": "ARCH-1", "paths": ["*/Common/*"], "asCast": true },
+    // Логика в компоненте сцены; редакторный и тестовый код не проверяется
+    "behaviour-logic": {
+      "severity": "hint",
+      "baseTypes": ["MonoBehaviour"],
+      "maxMethods": 2,
+      "excludePaths": ["*/Editor/*", "*/Tests/*"]
+    },
+    "index-api": { "severity": "warning", "names": ["cell", "node", "area", "block"], "minOutInts": 2 },
+    "static-data-methods": { "severity": "warning", "minMethods": 3, "minShare": 60 },
+    "numeric-constant": { "severity": "hint" },
+    "numeric-literal": { "severity": "hint", "neutral": ["0", "1", "-1", "2", "0.5", "1e-*", "0.00*"] },
+    "tuple-type": { "severity": "warning" },
+    "partial-file": { "severity": "warning", "aspects": ["Gizmos", "g"], "minFields": 1, "minMethods": 5 },
+    "debug-draw": { "severity": "warning", "drawMethods": ["Debug.DrawLine", "Debug.DrawRay"] },
+    "obsolete-reason": { "severity": "warning" }
+  }
+}

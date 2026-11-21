@@ -9,6 +9,10 @@ namespace CSR.Reports.Config
     public static class StyleConfig
     {
         public static void Apply(string json, StyleOptions options)
+            => Apply(json, options, StyleCatalog.All);
+
+        // Разбор checks по заданному каталогу проверок: тем же форматом читается arch.jsonc
+        public static void Apply(string json, StyleOptions options, IReadOnlyList<StyleCheck> catalog)
         {
             using var document = JsonConfig.Parse(json);
             var root = document.RootElement;
@@ -20,7 +24,7 @@ namespace CSR.Reports.Config
 
                 JsonConfig.RequireObject(property.Value, "checks");
                 foreach (var check in property.Value.EnumerateObject())
-                    ApplyCheck(options, check.Name, check.Value);
+                    ApplyCheck(options, catalog, check.Name, check.Value);
             }
         }
 
@@ -31,9 +35,10 @@ namespace CSR.Reports.Config
             return options;
         }
 
-        private static void ApplyCheck(StyleOptions options, string name, JsonElement element)
+        private static void ApplyCheck(StyleOptions options, IReadOnlyList<StyleCheck> catalog, string name,
+            JsonElement element)
         {
-            var check = StyleCatalog.Find(name);
+            var check = catalog.FirstOrDefault(candidate => candidate.Name == name);
             if (check == null)
                 throw new ConfigException($"неизвестная проверка '{name}'");
 

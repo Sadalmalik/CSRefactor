@@ -2,12 +2,12 @@
 
 Консольный инструмент анализа и рефакторинга C# для ИИ-агентов. Механику проверяет и правит инструмент, агенту остаются суждения: агент получает готовый отчёт и не читает длинные инструкции по стилю.
 
-Статус: работают `csr metrics` и `csr style`; остальные команды в разработке.
+Статус: работают `csr metrics`, `csr style` и `csr arch` (признаки по одному файлу); остальные команды в разработке.
 
 ## Что будет уметь
 
 - `csr style` — проверка стиля по конфигу (работает: форматирование, комментарии, идиомы, модификаторы; дальше — имена и порядок членов).
-- `csr arch` — проверка архитектурных признаков; отдельный режим и отдельный конфиг.
+- `csr arch` — проверка архитектурных признаков; отдельный режим и отдельный конфиг (работает: признаки по одному файлу; дальше — по всему решению).
 - `csr format` — форматирование только изменённых строк (движок — ReSharper Command Line Tools).
 - `csr refs`, `csr rename` — ссылки на символ и семантическое переименование с защитой сериализуемых имён.
 - `csr metrics` — метрики по синтаксису, CRAP с покрытием и снимок `.metrics/crap.edn` (работает).
@@ -97,6 +97,33 @@ csr style <файлы | папки>... --config style.jsonc [--config ещё.jso
 
 Методы логгера для `log-call-wrap`, `message-text` и `comment-typography` — в `project.jsonc` (`logger.methods`, маски с `*`). Пример конфига — `examples/style.example.jsonc`.
 
+## `csr arch`
+
+Архитектурные признаки по синтаксису каждого файла, без загрузки решения: файлы только читаются. Признак — не ошибка, а повод решить: находка говорит, что сработало, а у признака в сводке — вопрос, который решает агент или человек. Режим и конфиг отдельные от `style`.
+
+```
+csr arch <файлы | папки>... --config arch.jsonc [--config ещё.jsonc]... [--project project.jsonc] [--diff <ревизия | файл.diff>] [--scope file | changed-lines] [--format json | md] [--out файл]
+```
+
+- Конфиг — формат `style.jsonc` с признаками ниже: уровень, метка `rule`, параметры, `"enabled": false`, слои; признак вне конфига выключен.
+- У каждого признака есть `paths` и `excludePaths` — маски путей файлов (`*` — любые символы, без учёта регистра): например, ветвление по типу искать только в общем коде, логику в компонентах сцены — не в редакторном и тестовом.
+- JSON: `summary[]` (`check`, `rule`, `severity`, `count`, `question`) и `findings[]` (`file`, `line`, `endLine`, `column`, `check`, `rule`, `severity`, `message`). Коды возврата — как у `style`.
+
+| Признак | Что ловит | Параметры |
+|---|---|---|
+| `type-branch` | `x is T t`, `x is T { }`, `x is T`, `x as T`, `GetType() == typeof(T)`; `switch` по типам — одна находка; `this is T` — база знает наследника. Не ловит: встроенные типы, параметры типа, интерфейсы по имени, `x is A.B` без переменной, `Equals` | `ignoreInterfaces`, `ignoreTypes`, `asCast`, `ignoreMethods` |
+| `behaviour-logic` | у наследника `MonoBehaviour` больше `maxMethods` своих методов (не сообщения движка и не отрисовка); `x.GetComponent…()` в классе, который не компонент сцены | `baseTypes`, `messages`, `ignoreAttributes`, `maxMethods`, `lookupMethods` |
+| `index-api` | открытые методы, конструкторы и свойства с целым номером сущности (`int cell`, `fromBlock`, `cellIndex`), несколько `out int`, `return -1`, открытая константа `-1` | `names`, `indexWords`, `minOutInts`, `notFoundMarker` |
+| `static-data-methods` | `static class`, где методы принимают первым один тип данных (или разные типы данных у большинства методов — класс-свалка); открытые статические методы обычного класса с чужим типом первым | `minMethods`, `minShare`, `minDataShare`, `staticClassesOnly`, `ignoreTypes` |
+| `numeric-constant` | `const` и `static readonly` числа с именем-подсказкой (`Radius`, `Timeout`, `Speed`, `Angle`…) | `hints`, `staticReadonly` |
+| `numeric-literal` | число в сравнении, арифметике, `+=` в логике (`speed > 0.1f`); шумный, уровень подсказки | `neutral`, `integers`, `ignoreMethods` |
+| `tuple-type` | кортеж в сигнатуре или поле | — |
+| `partial-file` | часть `partial`-типа в файле `Type.<Аспект>.cs` со своими полями и методами (подсистема); аспекты вроде `Gizmos` допустимы | `aspects`, `minFields`, `minMethods` |
+| `debug-draw` | `Debug.DrawLine` / `DrawRay` в логике с длительностью или без проверки флага; `bool`-флаг отладки полем объекта, а не настроек | `drawMethods`, `durationArgument`, `debugMethods`, `flagNames`, `settingsTypes` |
+| `obsolete-reason` | `[Obsolete]` без причины | — |
+
+Признаки по всему решению (интерфейс с одной реализацией, мёртвый код, повторяющийся набор параметров) — позже, на слое загрузки решения. Пример конфига — `examples/arch.example.jsonc`.
+
 ## Тесты
 
 ```
@@ -115,7 +142,7 @@ csr metrics src --coverage TestResults/<id1>/coverage.opencover.xml --coverage T
 | Путь | Что |
 |---|---|
 | `src/CSR` | консольное приложение `csr`: разбор аргументов, файлы, вывод |
-| `src/CSR.Core` | ядро (`netstandard2.0` и `net10.0`): на вход синтаксическое дерево и параметры, на выход метрики и находки стиля; без консоли, файловой системы и JSON; основа будущего пакета анализаторов Roslyn |
+| `src/CSR.Core` | ядро (`netstandard2.0` и `net10.0`): на вход синтаксическое дерево и параметры, на выход метрики, находки стиля и архитектурные признаки; без консоли, файловой системы и JSON; основа будущего пакета анализаторов Roslyn |
 | `src/CSR.Reports` | разбор конфигов `.jsonc` и диффа, отчёты JSON и Markdown |
 | `tests/CSR.Core.Tests`, `tests/CSR.Reports.Tests`, `tests/CSR.Tests` | тесты (NUnit): ядро, конфиги и отчёты, CLI (`Program.Main` целиком, git — временный репозиторий) |
 | `examples/` | примеры конфигов |

@@ -11,15 +11,15 @@ namespace CSR
             Команды:
               metrics  метрики по синтаксису: сложность, длина, вложенность, размеры типов и файлов
               style    проверка стиля по конфигу: форматирование, комментарии, идиомы, модификаторы
+              arch     архитектурные признаки по конфигу: находки-решения с вопросом
 
             В разработке:
-              arch     проверка архитектурных признаков
               format   форматирование изменённых строк
               refs     все ссылки на символ
               rename   семантическое переименование с защитой сериализуемых имён
 
             csr help [команда] - справка
-            Коды возврата: 0 - успех, 1 - есть находки уровня error (style), 2 - ошибка запуска
+            Коды возврата: 0 - успех, 1 - есть находки уровня error (style, arch), 2 - ошибка запуска
             """;
 
         public static int Main(string[] args)
@@ -35,6 +35,7 @@ namespace CSR
                 {
                     "metrics" => MetricsCommand.Run(args.Skip(1)),
                     "style" => StyleCommand.Run(args.Skip(1)),
+                    "arch" => ArchCommand.Run(args.Skip(1)),
                     _ => throw new UsageException($"команда '{args[0]}' не реализована"),
                 };
             }
@@ -61,6 +62,7 @@ namespace CSR
             {
                 "metrics" => MetricsCommand.Usage,
                 "style" => StyleCommand.Usage,
+                "arch" => ArchCommand.Usage,
                 _ => Usage,
             };
 
