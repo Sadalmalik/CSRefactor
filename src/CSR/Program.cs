@@ -11,6 +11,7 @@ namespace CSR
             Команды:
               metrics  метрики по синтаксису: сложность, длина, вложенность, размеры типов и файлов
               style    проверка стиля по конфигу: форматирование, комментарии, идиомы, модификаторы
+              fix      применить замены находок style; без --apply - только дифф
               arch     архитектурные признаки по конфигу: находки-решения с вопросом
               refs     все ссылки на символ по решению
               rename   семантическое переименование с защитой сериализуемых имён; без --apply - только дифф
@@ -36,6 +37,7 @@ namespace CSR
                 {
                     "metrics" => MetricsCommand.Run(args.Skip(1)),
                     "style" => StyleCommand.Run(args.Skip(1)),
+                    "fix" => FixCommand.Run(args.Skip(1)),
                     "arch" => ArchCommand.Run(args.Skip(1)),
                     "refs" => RefsCommand.Run(args.Skip(1)),
                     "rename" => RenameCommand.Run(args.Skip(1)),
@@ -66,6 +68,7 @@ namespace CSR
             {
                 "metrics" => MetricsCommand.Usage,
                 "style" => StyleCommand.Usage,
+                "fix" => FixCommand.Usage,
                 "arch" => ArchCommand.Usage,
                 "refs" => RefsCommand.Usage,
                 "rename" => RenameCommand.Usage,
