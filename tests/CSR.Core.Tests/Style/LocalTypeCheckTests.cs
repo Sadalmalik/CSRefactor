@@ -14,6 +14,8 @@ namespace CSR.Core.Tests.Style
         [TestCase("string text = $\"{a}\";", "var text = $\"{a}\";")]
         [TestCase("using Stream stream = Open();", "using var stream = Open();")]
         [TestCase("Drain drain = o.Wall?.Drain;", "var drain = o.Wall?.Drain;")]
+        [TestCase("Path path = c ? new Path() : (Path)o;", "var path = c ? new Path() : (Path)o;")]
+        [TestCase("string text = c ? \"a\" : $\"{a}\";", "var text = c ? \"a\" : $\"{a}\";")]
         public void Explicit_ToVar(string body, string expected)
         {
             var finding = Run("local-type", InMethod(body)).Single();
@@ -33,6 +35,9 @@ namespace CSR.Core.Tests.Style
         [TestCase("List<int> items = [];")]
         [TestCase("Func<int, int> twice = x => x * 2;")]
         [TestCase("Path path = c ? Find() : null;")]
+        [TestCase("SyntaxNode node = c ? access : name;")]
+        [TestCase("Shape shape = c ? FindCircle() : FindSquare();")]
+        [TestCase("Path path = c ? new Path() : Find();")]
         [TestCase("Span<int> span = stackalloc int[4];")]
         [TestCase("const string Name = \"a\";")]
         [TestCase("Path first = Find(), second = Find();")]

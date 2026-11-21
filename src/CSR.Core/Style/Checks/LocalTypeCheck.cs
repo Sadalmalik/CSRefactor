@@ -8,7 +8,8 @@ namespace CSR.Core.Style.Checks
 {
     // Тип локальной и переменной foreach: var или явный тип.
     // prefer var: явный тип с инициализатором -> var. Не проверяются: bool (bool-local-type), числовые типы, object,
-    // nullable, без инициализатора, null / default / stackalloc / [] / лямбда, тернарник с null, new другого типа
+    // nullable, без инициализатора, null / default / stackalloc / [] / лямбда, тернарник с веткой, тип которой
+    // не виден в коде (null, вызов, поле: ветки разных типов с var не собираются), new другого типа
     // (объявлен базовый тип), переменная, которой дальше присваивается новое значение (тип мог быть выбран под него),
     // const, несколько переменных; foreach - кроме типов из foreachExplicitTypes
     // (необобщенный IEnumerable без семантики не отличить).
@@ -138,16 +139,34 @@ namespace CSR.Core.Style.Checks
                 CastExpressionSyntax cast => cast.Type.WithoutTrivia().ToString() == declared,
                 BinaryExpressionSyntax binary when binary.IsKind(SyntaxKind.AsExpression)
                     => binary.Right.WithoutTrivia().ToString() == declared,
-                ConditionalExpressionSyntax conditional => !IsNullLike(conditional.WhenTrue)
-                    && !IsNullLike(conditional.WhenFalse)
-                    && IsVarCompatible(type, conditional.WhenTrue)
-                    && IsVarCompatible(type, conditional.WhenFalse),
+                ConditionalExpressionSyntax conditional => IsTypeShown(declared, conditional),
                 BinaryExpressionSyntax coalesce when coalesce.IsKind(SyntaxKind.CoalesceExpression)
                     => !IsNullLike(coalesce.Right),
                 InterpolatedStringExpressionSyntax => declared == "string",
                 InvocationExpressionSyntax or MemberAccessExpressionSyntax or IdentifierNameSyntax
                     or ElementAccessExpressionSyntax or AwaitExpressionSyntax
                     or ConditionalAccessExpressionSyntax => true,
+                _ => false,
+            };
+        }
+
+        // Тип выражения виден в коде и равен объявленному. Для тернарника - у каждой ветки: ветки неизвестных типов
+        // могут быть разными (база и наследник, интерфейс и класс), с var такой код не собирается (CS0173)
+        private static bool IsTypeShown(string declared, ExpressionSyntax value)
+        {
+            return value switch
+            {
+                ParenthesizedExpressionSyntax parenthesized => IsTypeShown(declared, parenthesized.Expression),
+                ConditionalExpressionSyntax conditional => IsTypeShown(declared, conditional.WhenTrue)
+                    && IsTypeShown(declared, conditional.WhenFalse),
+                ObjectCreationExpressionSyntax creation => creation.Type.WithoutTrivia().ToString() == declared,
+                ArrayCreationExpressionSyntax array => array.Type.WithoutTrivia().ToString() == declared,
+                CastExpressionSyntax cast => cast.Type.WithoutTrivia().ToString() == declared,
+                BinaryExpressionSyntax binary when binary.IsKind(SyntaxKind.AsExpression)
+                    => binary.Right.WithoutTrivia().ToString() == declared,
+                LiteralExpressionSyntax literal => declared == "string"
+                    && literal.IsKind(SyntaxKind.StringLiteralExpression),
+                InterpolatedStringExpressionSyntax => declared == "string",
                 _ => false,
             };
         }
