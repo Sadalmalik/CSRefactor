@@ -38,12 +38,15 @@ namespace CSR.Core.Style.Checks
             foreach (var group in oneLine.GroupBy(list => TextLines.GetLineNumber(text, list.SpanStart)))
             {
                 var line = text.Lines[group.Key];
-                if (line.Span.Length <= max)
+                // длину портит выровненный отступ продолжения, а не вызов: с нормальным отступом (+4) строка
+                // может поместиться - тогда переносить нечего (отступ - condition-wrap или агент)
+                var excess = TextLines.GetContinuationExcess(context.Root, text, group.Key);
+                if (line.Span.Length - excess <= max)
                     continue;
 
                 var candidate = group
                     .Where(list => !group.Any(other => other != list && other.Span.Contains(list.Span)))
-                    .Where(list => TextLines.GetColumn(text, list.OpenParenToken.Span.End) < max)
+                    .Where(list => TextLines.GetColumn(text, list.OpenParenToken.Span.End) - excess < max)
                     .OrderByDescending(list => list.Span.Length)
                     .FirstOrDefault();
                 if (candidate != null)

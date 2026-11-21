@@ -60,6 +60,49 @@ namespace CSR.Core.Tests.Style
             }));
         }
 
+        // Строка длиннее порога только из-за выравнивания продолжения под первым операндом
+        private const string AlignedInitializer = """
+                    bool hasTarget = data.ExitArea >= 0 && data.ExitArea < areas.Count
+                                     && FreeClimbRouterX.TryGetAreaBlock(surface, areas[data.ExitArea], data.ExitCell, out targetBlk);
+            """;
+
+        [Test]
+        public void Condition_AlignedContinuation_CallNotWrapped()
+        {
+            var source = InMethod(AlignedInitializer);
+
+            Assert.That(source.Split('\n').Max(line => line.Length), Is.GreaterThan(120));
+            Assert.That(Run("call-wrap", source), Is.Empty);
+            Assert.That(Run("condition-wrap", source), Is.Empty, "в инициализаторе отступ не задан (F24)");
+            var finding = Run("condition-wrap", source, settings => settings.Set("assignmentIndent", true)).Single();
+            var call = "FreeClimbRouterX.TryGetAreaBlock(surface, areas[data.ExitArea], data.ExitCell, out targetBlk);";
+            var expected = "            && " + call;
+            Assert.That(finding.Replacement, Is.EqualTo(new[] { expected }));
+        }
+
+        [Test]
+        public void Condition_IfContinuation_PlusFour_ReturnUntouched()
+        {
+            const string body = """
+                        if (a > 0
+                                && c)
+                            return;
+
+                        while (a > 0
+                        || c)
+                            a--;
+
+                        return  a > 0
+                             && c;
+                """;
+            var findings = Run("condition-wrap", InMethod(body));
+            Assert.That(findings.Select(finding => finding.Replacement!.Single()), Is.EqualTo(new[]
+            {
+                "            && c)",
+                "            || c)",
+            }));
+        }
+
         [Test]
         public void Condition_ShortOrWrapped_NoFinding()
         {

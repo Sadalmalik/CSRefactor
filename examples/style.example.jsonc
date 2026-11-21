@@ -28,7 +28,7 @@
     "signature-wrap": { "severity": "warning", "max": 120, "minParameters": 5, "initializerOnOwnLine": true },
     "call-wrap": { "severity": "warning", "max": 120 },
     "region-layout": { "severity": "hint", "inside": 1, "between": 2, "outside": 1 },
-    "condition-wrap": { "severity": "warning", "max": 120, "argumentIndent": true },
+    "condition-wrap": { "severity": "warning", "max": 120, "argumentIndent": true, "continuationIndent": true, "assignmentIndent": false },
     "initializer-layout": { "severity": "warning", "max": 120, "trailingComma": true }
   }
 }
