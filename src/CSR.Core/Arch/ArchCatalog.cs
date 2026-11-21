@@ -19,6 +19,7 @@ namespace CSR.Core.Arch
             new PartialFileCheck(),
             new DebugDrawCheck(),
             new ObsoleteReasonCheck(),
+            new VariantFlagCheck(),
         ];
 
         public static ArchCheck? Find(string name)

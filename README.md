@@ -103,7 +103,10 @@ csr style <файлы | папки>... --config style.jsonc [--config ещё.jso
 
 ```
 csr arch <файлы | папки>... --config arch.jsonc [--config ещё.jsonc]... [--project project.jsonc] [--diff <ревизия | файл.diff>] [--scope file | changed-lines] [--format json | md] [--out файл]
+csr arch --solution <файл .sln | .slnx | .csproj> [--projects <маска>]... --config arch.jsonc... [--project project.jsonc] [--format json | md] [--out файл] [--no-server]
 ```
+
+Режим решения (`--solution`, `--projects`): решение загружается слоем `CSR.Workspace` (или берётся у живого `csr serve`), признаки по одному файлу идут по документам выбранных проектов, признаки по решению — по их компиляциям. `--projects` — маски имён проектов (без них — все проекты); в отчёте `scope` — `solution`.
 
 - Конфиг — формат `style.jsonc` с признаками ниже: уровень, метка `rule`, параметры, `"enabled": false`, слои; признак вне конфига выключен.
 - У каждого признака есть `paths` и `excludePaths` — маски путей файлов (`*` — любые символы, без учёта регистра): например, ветвление по типу искать только в общем коде, логику в компонентах сцены — не в редакторном и тестовом.
@@ -121,11 +124,12 @@ csr arch <файлы | папки>... --config arch.jsonc [--config ещё.jsonc
 | `partial-file` | часть `partial`-типа в файле `Type.<Аспект>.cs` со своими полями и методами (подсистема); аспекты вроде `Gizmos` допустимы | `aspects`, `minFields`, `minMethods` |
 | `debug-draw` | `Debug.DrawLine` / `DrawRay` в логике с длительностью или без проверки флага; `bool`-флаг отладки полем объекта, а не настроек | `drawMethods`, `durationArgument`, `debugMethods`, `flagNames`, `settingsTypes` |
 | `obsolete-reason` | `[Obsolete]` без причины | — |
+| `variant-flag` | только `--solution`: не private bool-свойство или поле, по которому ветвится код других типов (`if`, `while`, `?:`, `when`, операнды `&&`, `\|\|`, `!`) в `minFiles` файлах и больше; находка у объявления со списком файлов | `minFiles`, `minUses`, `names`, `ignoreNames` |
 | `project-mechanism` | повтор механизма, который в проекте уже есть: тип по имени или по полю и методам (свой пул: поле `Stack<T>` и `Rent` / `Return`), вызов или `new` в обход механизма | — (механизмы — в `project.jsonc`) |
 
 Механизмы проекта для `project-mechanism` — в `project.jsonc`: `mechanisms` (имя → `use` — чем заменить; `types`, `fields`, `methods`, `calls`, `creates` — как распознать повтор; `excludePaths`) и `logger.bypass` (вызовы в обход логгера: замена — `logger.methods`). Пример — `examples/project.example.jsonc`.
 
-Признаки по всему решению (интерфейс с одной реализацией, мёртвый код, повторяющийся набор параметров) — позже, на слое загрузки решения. Пример конфига — `examples/arch.example.jsonc`.
+Другие признаки по всему решению (интерфейс с одной реализацией, мёртвый код, повторяющийся набор параметров) — позже. Пример конфига — `examples/arch.example.jsonc`.
 
 ## `csr refs`
 

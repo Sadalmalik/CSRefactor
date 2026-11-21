@@ -53,6 +53,7 @@ namespace CSR.Commands
                 {
                     "refs" => await RefsCommand.ExecuteAsync(context, request.Arguments, cancellation),
                     "rename" => await RenameCommand.ExecuteAsync(context, request.Arguments, cancellation),
+                    "arch" => await ArchCommand.ExecuteAsync(context, request.Arguments, cancellation),
                     _ => throw new UsageException($"команда '{request.Command}' не работает с решением"),
                 };
             }

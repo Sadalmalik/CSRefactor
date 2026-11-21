@@ -23,6 +23,8 @@
     "tuple-type": { "severity": "warning" },
     "partial-file": { "severity": "warning", "aspects": ["Gizmos", "g"], "minFields": 1, "minMethods": 5 },
     "debug-draw": { "severity": "warning", "drawMethods": ["Debug.DrawLine", "Debug.DrawRay"] },
-    "obsolete-reason": { "severity": "warning" }
+    "obsolete-reason": { "severity": "warning" },
+    // Только csr arch --solution: bool-флаг, по которому ветвится код других типов
+    "variant-flag": { "severity": "hint", "minFiles": 3, "ignoreNames": ["*Debug*"] }
   }
 }

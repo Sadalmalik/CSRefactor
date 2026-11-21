@@ -25,20 +25,21 @@ namespace CSR.Core.Arch
 
         public override void Analyze(CheckContext context)
         {
-            if (IsInScope(context))
+            if (IsInScope(context.Settings, context.Tree.FilePath))
                 AnalyzeFile(context);
         }
 
-        protected abstract void AnalyzeFile(CheckContext context);
-
-        private static bool IsInScope(CheckContext context)
+        // Файл попадает под paths и не попадает под excludePaths
+        public static bool IsInScope(CheckSettings settings, string filePath)
         {
-            var path = context.Tree.FilePath.Replace('\\', '/');
-            var included = NameMask.Get(context.Settings.GetStrings("paths"), true);
+            var path = filePath.Replace('\\', '/');
+            var included = NameMask.Get(settings.GetStrings("paths"), true);
             if (!included.IsEmpty && !included.IsMatch(path))
                 return false;
 
-            return !NameMask.Get(context.Settings.GetStrings("excludePaths"), true).IsMatch(path);
+            return !NameMask.Get(settings.GetStrings("excludePaths"), true).IsMatch(path);
         }
+
+        protected abstract void AnalyzeFile(CheckContext context);
     }
 }
