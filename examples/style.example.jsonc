@@ -1,7 +1,7 @@
 // Пример конфига csr style: csr style <папка> --config style.jsonc --project project.jsonc
 // Проверка, которой нет в конфиге, выключена. У проверки: "severity" (error | warning | hint), "rule" - метка правила
 // вашего гайда (попадает в находку), "enabled": false - выключить в следующем слое, остальное - параметры.
-// Список проверок и параметров - README
+// Список проверок и параметров - DOCS.md
 {
   "checks": {
     "line-length": { "severity": "error", "rule": "STYLE-1", "max": 120 },
