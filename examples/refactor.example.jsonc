@@ -1,0 +1,29 @@
+// Параметры csr rename: сериализуемые имена проекта и поиск строковых совпадений
+{
+  "serialization": {
+    // Атрибуты проекта, при которых имя члена пишется в данные: переименование - отказ.
+    // Встроенные: SerializeField, SerializeReference, публичные поля [Serializable] и MonoBehaviour (Unity),
+    // [JsonProperty] и [DataMember] без явного имени
+    "attributes": ["MyGame.Persistence.SavedAttribute"]
+  },
+
+  "strings": {
+    // Файлы, где ищется старое имя целым словом (в .cs - только строковые литералы)
+    "extensions": [".lua", ".json", ".yaml", ".yml", ".xml"],
+
+    // Ассеты Unity: только для имен, которые могут быть в сериализованных данных
+    "unityExtensions": [".prefab", ".asset", ".unity"],
+
+    // Папки поиска относительно папки решения; пусто - папка решения
+    "roots": [],
+
+    // Имена папок, которые пропускаются
+    "exclude": ["Library", "Temp", "Logs", "obj", "bin", ".git", ".vs", ".idea", "node_modules"],
+
+    // Файлы больше порога не читаются (число таких файлов - в отчете)
+    "maxFileSizeKb": 20480,
+
+    // Сколько совпадений показать (всего - в отчете)
+    "maxMatches": 200
+  }
+}

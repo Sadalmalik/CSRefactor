@@ -39,6 +39,21 @@ namespace CSR.Workspace.Tests
             }
         }
 
+        [Test]
+        public async Task Load_ProjectFilter()
+        {
+            using var sample = SampleSolution.Create();
+
+            using var tools = await SolutionLoader.LoadAsync(sample.SolutionPath, name => name == "Game.Tools");
+            var game = await SolutionLoader.LoadAsync(sample.SolutionPath, name => name == "Game");
+
+            var names = tools.Current.Projects.Select(project => project.Name).OrderBy(name => name);
+            Assert.That(names, Is.EqualTo(new[] { "Game", "Game.Tools" }));
+            Assert.That(game.Current.Projects.Single().Name, Is.EqualTo("Game"));
+            game.Dispose();
+            Assert.ThrowsAsync<FileNotFoundException>(() => SolutionLoader.LoadAsync(sample.SolutionPath, _ => false));
+        }
+
 #endregion
 
 #region Symbols

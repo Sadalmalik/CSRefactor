@@ -1,5 +1,4 @@
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.CodeAnalysis.Text;
 
 namespace CSR.Workspace.Loading
@@ -99,65 +98,6 @@ namespace CSR.Workspace.Loading
             }
 
             return null;
-        }
-    }
-
-    // Загрузка решения или проекта через MSBuildWorkspace (BuildHost Roslyn 5).
-    // Если в решении есть проекты старого формата (Unity), сборка идет с obj и папкой вывода в кэше CSR
-    // и через теневую копию решения: рядом с кодом проекта ничего не пишется
-    public static class SolutionLoader
-    {
-        public static async Task<LoadedSolution> LoadAsync(string path, CancellationToken cancellation = default)
-        {
-            var fullPath = Path.GetFullPath(path);
-            if (!File.Exists(fullPath))
-                throw new FileNotFoundException($"нет файла решения или проекта: {path}", fullPath);
-
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            var isSolution = SolutionFile.IsSolution(fullPath);
-            var projects = isSolution ? SolutionFile.ReadProjects(fullPath) : [fullPath];
-            var isolated = projects.Any(SolutionFile.IsLegacyProject);
-            var properties = new Dictionary<string, string>();
-            var openPath = fullPath;
-            if (isolated)
-            {
-                var cache = CachePaths.ForSolution(fullPath);
-                var obj = Path.Combine(cache, "obj") + Path.DirectorySeparatorChar;
-                var bin = Path.Combine(cache, "bin") + Path.DirectorySeparatorChar;
-                properties["BaseIntermediateOutputPath"] = obj;
-                properties["IntermediateOutputPath"] = obj;
-                // PrepareForBuild создает папку вывода: у Unity это Temp\Bin\Debug\<проект> рядом с кодом
-                properties["OutputPath"] = bin;
-                properties["OutDir"] = bin;
-                if (isSolution)
-                    openPath = SolutionFile.WriteShadow(fullPath, cache);
-            }
-
-            var workspace = MSBuildWorkspace.Create(properties);
-            var warnings = new List<string>();
-            workspace.RegisterWorkspaceFailedHandler(failure =>
-            {
-                lock (warnings)
-                    warnings.Add($"{failure.Diagnostic.Kind}: {failure.Diagnostic.Message}");
-            });
-
-            try
-            {
-                var solution = isSolution
-                    ? await workspace.OpenSolutionAsync(openPath, cancellationToken: cancellation)
-                    : (await workspace.OpenProjectAsync(openPath, cancellationToken: cancellation)).Solution;
-                return new LoadedSolution(fullPath, solution, workspace)
-                {
-                    Warnings = warnings,
-                    LoadTime = stopwatch.Elapsed,
-                    Isolated = isolated,
-                };
-            }
-            catch
-            {
-                workspace.Dispose();
-                throw;
-            }
         }
     }
 }
