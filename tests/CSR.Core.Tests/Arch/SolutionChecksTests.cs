@@ -29,7 +29,7 @@ namespace CSR.Core.Tests.Arch
 
         private static readonly ProjectOptions Project = new();
 
-        private static List<Finding> Analyze(IReadOnlyList<Compilation> compilations, string check,
+        internal static List<Finding> Analyze(IReadOnlyList<Compilation> compilations, string check,
             Action<CheckSettings>? configure = null)
         {
             var configuration = CheckConfiguration.Create(ArchCatalog.Find(check)!, Severity.Hint, "R1");
@@ -40,10 +40,10 @@ namespace CSR.Core.Tests.Arch
         }
 
         // Компиляция из пар "путь", "код"
-        private static CSharpCompilation Compile(string name, params string[] files)
+        internal static CSharpCompilation Compile(string name, params string[] files)
             => Compile(name, Array.Empty<MetadataReference>(), files);
 
-        private static CSharpCompilation Compile(string name, IEnumerable<MetadataReference> extra,
+        internal static CSharpCompilation Compile(string name, IEnumerable<MetadataReference> extra,
             params string[] files)
         {
             var trees = new List<SyntaxTree>();

@@ -21,10 +21,11 @@ namespace CSR.Core.Arch
         private readonly List<Finding> m_Findings;
         private readonly Func<string, string> m_DisplayPath;
 
-        public SolutionCheckContext(IReadOnlyList<Compilation> compilations, ProjectOptions project,
-            CheckConfiguration configuration, List<Finding> findings, Func<string, string> displayPath,
-            CancellationToken cancellation)
+        public SolutionCheckContext(SolutionIndex index, IReadOnlyList<Compilation> compilations,
+            ProjectOptions project, CheckConfiguration configuration, List<Finding> findings,
+            Func<string, string> displayPath, CancellationToken cancellation)
         {
+            Index = index;
             Compilations = compilations;
             Project = project;
             m_Configuration = configuration;
@@ -32,6 +33,9 @@ namespace CSR.Core.Arch
             m_DisplayPath = displayPath;
             Cancellation = cancellation;
         }
+
+        // Типы и ссылки выбранных проектов; общий для всех признаков прогона
+        public SolutionIndex Index { get; }
 
         // Компиляции выбранных проектов: их файлы - область поиска и подсчета
         public IReadOnlyList<Compilation> Compilations { get; }

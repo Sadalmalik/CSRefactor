@@ -25,13 +25,14 @@ namespace CSR.Core.Arch
             });
 
             var findings = results.SelectMany(list => list).ToList();
+            var index = new SolutionIndex(compilations, cancellation);
             foreach (var configuration in options.Checks)
             {
                 if (configuration.Check is not SolutionCheck check)
                     continue;
 
-                var context = new SolutionCheckContext(compilations, project, configuration, findings, displayPath,
-                    cancellation);
+                var context = new SolutionCheckContext(index, compilations, project, configuration, findings,
+                    displayPath, cancellation);
                 check.AnalyzeSolution(context);
             }
 
