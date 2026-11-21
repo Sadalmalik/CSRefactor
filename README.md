@@ -129,11 +129,15 @@ csr arch --solution <файл .sln | .slnx | .csproj> [--projects <маска>].
 | `debug-draw` | `Debug.DrawLine` / `DrawRay` в логике с длительностью или без проверки флага; `bool`-флаг отладки полем объекта, а не настроек | `drawMethods`, `durationArgument`, `debugMethods`, `flagNames`, `settingsTypes` |
 | `obsolete-reason` | `[Obsolete]` без причины | — |
 | `variant-flag` | только `--solution`: не private bool-свойство или поле, по которому ветвится код других типов (`if`, `while`, `?:`, `when`, операнды `&&`, `\|\|`, `!`) в `minFiles` файлах и больше; находка у объявления со списком файлов | `minFiles`, `minUses`, `names`, `ignoreNames` |
+| `persisted-class` | тип с членами под атрибутами сохранения (`JsonProperty`, `DataMember`): конструкторы есть, пустого нет; производное свойство помечено к сохранению; поле-кэш без атрибута исключения | `saveAttributes`, `ignoreAttributes`, `cacheNames` |
+| `single-implementation` | только `--solution`: интерфейс, который реализует один неабстрактный тип выбранных проектов; контракт-комментарий над интерфейсом (`// Реализуют …`) — точка расширения, не находка | `contractMasks`, `ignoreAttributes`, `ignoreMarkers` |
+| `dead-member` | только `--solution`: член без ссылок, поле или свойство, которое только записывается, параметр, который не читается; override, virtual, реализации интерфейсов, сообщения движка и члены с атрибутами сериализации и тестов не ищутся | `accessibility` (по умолчанию `private`, `internal`), `writeOnly`, `parameters`, `ignoreNames`, `ignoreAttributes` |
+| `parameter-set` | только `--solution`: метод с 4+ входными параметрами и 3+ вызовами, где параметры вызывающего передаются дальше | `minParameters`, `minCalls`, `minForwarded` |
 | `project-mechanism` | повтор механизма, который в проекте уже есть: тип по имени или по полю и методам (свой пул: поле `Stack<T>` и `Rent` / `Return`), вызов или `new` в обход механизма | — (механизмы — в `project.jsonc`) |
 
 Механизмы проекта для `project-mechanism` — в `project.jsonc`: `mechanisms` (имя → `use` — чем заменить; `types`, `fields`, `methods`, `calls`, `creates` — как распознать повтор; `excludePaths`) и `logger.bypass` (вызовы в обход логгера: замена — `logger.methods`). Пример — `examples/project.example.jsonc`.
 
-Другие признаки по всему решению (интерфейс с одной реализацией, мёртвый код, повторяющийся набор параметров) — позже. Пример конфига — `examples/arch.example.jsonc`.
+Признаки по решению считают ссылки только внутри выбранных проектов: член, которым пользуется проект вне `--projects`, Lua или рефлексия, попадёт в находки — поэтому `public` в `dead-member` по умолчанию не ищется. Пример конфига — `examples/arch.example.jsonc`.
 
 ## `csr fix`
 
