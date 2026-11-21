@@ -121,6 +121,9 @@ csr arch <файлы | папки>... --config arch.jsonc [--config ещё.jsonc
 | `partial-file` | часть `partial`-типа в файле `Type.<Аспект>.cs` со своими полями и методами (подсистема); аспекты вроде `Gizmos` допустимы | `aspects`, `minFields`, `minMethods` |
 | `debug-draw` | `Debug.DrawLine` / `DrawRay` в логике с длительностью или без проверки флага; `bool`-флаг отладки полем объекта, а не настроек | `drawMethods`, `durationArgument`, `debugMethods`, `flagNames`, `settingsTypes` |
 | `obsolete-reason` | `[Obsolete]` без причины | — |
+| `project-mechanism` | повтор механизма, который в проекте уже есть: тип по имени или по полю и методам (свой пул: поле `Stack<T>` и `Rent` / `Return`), вызов или `new` в обход механизма | — (механизмы — в `project.jsonc`) |
+
+Механизмы проекта для `project-mechanism` — в `project.jsonc`: `mechanisms` (имя → `use` — чем заменить; `types`, `fields`, `methods`, `calls`, `creates` — как распознать повтор; `excludePaths`) и `logger.bypass` (вызовы в обход логгера: замена — `logger.methods`). Пример — `examples/project.example.jsonc`.
 
 Признаки по всему решению (интерфейс с одной реализацией, мёртвый код, повторяющийся набор параметров) — позже, на слое загрузки решения. Пример конфига — `examples/arch.example.jsonc`.
 

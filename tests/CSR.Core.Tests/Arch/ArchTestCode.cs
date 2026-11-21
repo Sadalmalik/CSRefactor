@@ -11,13 +11,17 @@ namespace CSR.Core.Tests.Arch
 
         public static List<Finding> Run(string check, string source, Action<CheckSettings>? configure = null,
             string path = "Sample.cs")
+            => Run(check, source, Project, configure, path);
+
+        public static List<Finding> Run(string check, string source, ProjectOptions project,
+            Action<CheckSettings>? configure = null, string path = "Sample.cs")
         {
             var configuration = CheckConfiguration.Create(ArchCatalog.Find(check)!, Severity.Warning, "R1");
             configure?.Invoke(configuration.Settings);
             var options = new CheckOptions();
             options.Checks.Add(configuration);
-            var tree = CSharpSyntaxTree.ParseText(source, Project.ParseOptions, path);
-            return SyntaxAnalyzer.Analyze(tree, options, Project);
+            var tree = CSharpSyntaxTree.ParseText(source, project.ParseOptions, path);
+            return SyntaxAnalyzer.Analyze(tree, options, project);
         }
 
         // Тело метода в классе: строки тела начинаются с 5-й строки файла

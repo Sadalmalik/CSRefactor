@@ -16,6 +16,8 @@
     },
     "index-api": { "severity": "warning", "names": ["cell", "node", "area", "block"], "minOutInts": 2 },
     "static-data-methods": { "severity": "warning", "minMethods": 3, "minShare": 60 },
+    // Повтор механизма проекта: список механизмов - в project.jsonc (mechanisms, logger.bypass)
+    "project-mechanism": { "severity": "warning" },
     "numeric-constant": { "severity": "hint" },
     "numeric-literal": { "severity": "hint", "neutral": ["0", "1", "-1", "2", "0.5", "1e-*", "0.00*"] },
     "tuple-type": { "severity": "warning" },

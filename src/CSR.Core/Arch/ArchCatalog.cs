@@ -12,6 +12,7 @@ namespace CSR.Core.Arch
             new BehaviourLogicCheck(),
             new IndexApiCheck(),
             new StaticDataMethodsCheck(),
+            new ProjectMechanismCheck(),
             new NumericConstantCheck(),
             new NumericLiteralCheck(),
             new TupleSignatureCheck(),

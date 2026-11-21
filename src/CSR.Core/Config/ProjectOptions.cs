@@ -23,6 +23,9 @@ namespace CSR.Core.Config
             }
         }
 
+        // Механизмы проекта для признака повтора механизма; логгер с вызовами в обход - один из них
+        public IReadOnlyList<ProjectMechanism> Mechanisms { get; init; } = Array.Empty<ProjectMechanism>();
+
         public CSharpParseOptions ParseOptions
             => new(LanguageVersion.Latest, DocumentationMode.Parse, SourceCodeKind.Regular, PreprocessorSymbols);
 

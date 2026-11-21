@@ -3,8 +3,26 @@
   // Символы препроцессора при разборе (по умолчанию UNITY_EDITOR): код под #if без символа не анализируется
   "preprocessorSymbols": ["UNITY_EDITOR"],
 
-  // Методы логгера для проверок текста лога: текст вызова без пробелов; * - любые символы
+  // Методы логгера для проверок текста лога: текст вызова без пробелов; * - любые символы.
+  // bypass - вызовы в обход логгера проекта: csr arch (project-mechanism) предложит заменить их на methods
   "logger": {
-    "methods": ["Debug.Log", "Debug.LogWarning", "Debug.LogError", "*.Logger.Error"]
+    "methods": ["Log.Info", "Log.Warning", "Log.Error"],
+    "bypass": ["Debug.Log*", "Console.Write*"]
+  },
+
+  // Механизмы проекта для csr arch (project-mechanism): как распознать самодельный повтор и чем заменить.
+  // use - чем заменить; types - маски имен типов; fields + methods - тип с полем такого типа и методом на каждую
+  // маску; calls - вызовы в обход, creates - new в обход; excludePaths - где лежит сам механизм
+  "mechanisms": {
+    "pool": {
+      "use": "UnityEngine.Pool: ObjectPool<T>, ListPool<T>",
+      "fields": ["Stack<*>", "Queue<*>"],
+      "methods": ["Rent*", "Return*"]
+    },
+    "timer": {
+      "use": "Timers.Schedule",
+      "creates": ["Timer", "System.Threading.Timer"],
+      "excludePaths": ["*/Timers/*"]
+    }
   }
 }
