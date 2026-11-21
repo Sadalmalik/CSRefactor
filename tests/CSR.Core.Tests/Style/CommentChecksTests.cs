@@ -22,7 +22,39 @@ namespace CSR.Core.Tests.Style
             Assert.That(finding.Line, Is.EqualTo(3));
             Assert.That(finding.EndLine, Is.EqualTo(5));
             Assert.That(finding.Rule, Is.EqualTo("R1"));
-            Assert.That(finding.Replacement, Is.Empty);
+            Assert.That(finding.Replacement, Is.EqualTo(new[] { "    // Отменяет движение" }));
+            var deleted = Run("xml-doc", source, settings => settings.Set("explanation", "delete")).Single();
+            Assert.That(deleted.Replacement, Is.Empty);
+        }
+
+        [Test]
+        public void XmlDoc_ParamsLongOrEmpty()
+        {
+            var tail = new string('x', 120);
+            var source = $$"""
+                public class Sample
+                {
+                    /// <summary>Отменяет движение</summary>
+                    /// <param name="isForced">Даже в прыжке</param>
+                    public void Cancel(bool isForced) { }
+
+                    /// <summary>{{tail}}</summary>
+                    public void Long() { }
+
+                    /// <summary></summary>
+                    public void Empty() { }
+
+                    /// <summary>Как <see cref="Cancel"/>, но для <paramref name="value"/>.</summary>
+                    public void Ref(int value) { }
+                }
+                """;
+            var replacements = Run("xml-doc", source).Select(finding => finding.Replacement).ToList();
+            Assert.That(replacements[0], Is.Null, "текст в param - суждение агента");
+            Assert.That(replacements[1], Is.Null, "строка // длиннее порога");
+            Assert.That(replacements[2], Is.Empty);
+            Assert.That(replacements[3], Is.EqualTo(new[] { "    // Как Cancel, но для value" }));
+            var none = Run("xml-doc", source, settings => settings.Set("explanation", "none"));
+            Assert.That(none.All(finding => finding.Replacement == null));
         }
 
         [Test]

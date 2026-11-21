@@ -76,6 +76,7 @@ namespace CSR.Core.Tests.Fix
         public void Fix_DeletesLinesAndShiftsLater()
         {
             var options = CreateOptions("xml-doc", "null-check");
+            options.Checks[0].Settings.Set("explanation", "delete");
 
             var result = SyntaxFixer.Fix(Source, "Sample.cs", options, Project, new FixOptions(), null);
 

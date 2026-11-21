@@ -7,7 +7,7 @@
     "line-length": { "severity": "error", "rule": "STYLE-1", "max": 120 },
     "directive-column": { "severity": "warning" },
     "binary-op-wrap": { "severity": "warning", "prefer": "leading", "operators": ["&&", "||"] },
-    "xml-doc": { "severity": "hint" },
+    "xml-doc": { "severity": "hint", "explanation": "comment", "max": 120 },
     "comment-separator": { "severity": "warning" },
     "comment-typography": { "severity": "warning", "attributes": ["Tooltip"] },
     "comment-ending": { "severity": "hint", "prefer": "no-period" },

@@ -62,6 +62,35 @@ namespace CSR.Core.Style.Checks
             }
         }
 
+        // Вызов - "голова" инструкции: сама инструкция, значение присваивания или инициализатора, return, тело '=>'
+        // или лямбды, аргумент другого такого вызова. Внутри тернарника, бинарного выражения, цепочки вызовов
+        // раскладка не однозначна (F24, F25, F26 или вынос в переменную - F20)
+        private static bool IsHeadPosition(ArgumentListSyntax list)
+        {
+            SyntaxNode current = list.Parent!;
+            while (current.Parent is { } parent)
+            {
+                switch (parent)
+                {
+                    case ArgumentSyntax or ArgumentListSyntax or AwaitExpressionSyntax:
+                    case ExpressionElementSyntax or CollectionExpressionSyntax or InitializerExpressionSyntax:
+                    case InvocationExpressionSyntax or BaseObjectCreationExpressionSyntax
+                        when current is ArgumentListSyntax or InitializerExpressionSyntax:
+                    case AssignmentExpressionSyntax assignment when assignment.Right == current:
+                        current = parent;
+                        continue;
+                    case EqualsValueClauseSyntax or ArrowExpressionClauseSyntax or LambdaExpressionSyntax:
+                    case ReturnStatementSyntax or ExpressionStatementSyntax:
+                    case ThrowStatementSyntax or YieldStatementSyntax:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
+            return false;
+        }
+
         private static bool IsChecked(CheckContext context, ArgumentListSyntax list)
         {
             if (TextLines.HasCommentOrDirective(list))
@@ -113,6 +142,15 @@ namespace CSR.Core.Style.Checks
         private static void Report(CheckContext context, ArgumentListSyntax list, string message)
         {
             var text = context.Text;
+            if (!IsHeadPosition(list))
+            {
+                var nested = message + "; вызов внутри выражения - раскладка по F24 / F25 или вынос в переменную";
+                context.Report(
+                    TextSpan.FromBounds(list.OpenParenToken.SpanStart, list.CloseParenToken.Span.End),
+                    nested);
+                return;
+            }
+
             var openLine = text.Lines.GetLineFromPosition(list.OpenParenToken.SpanStart);
             var closeLine = text.Lines.GetLineFromPosition(list.CloseParenToken.SpanStart);
             var inner = TextLines.Deeper(TextLines.GetIndent(text, list.OpenParenToken.SpanStart));

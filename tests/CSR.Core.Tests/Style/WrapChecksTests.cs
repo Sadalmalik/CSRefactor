@@ -192,6 +192,32 @@ namespace CSR.Core.Tests.Style
         }
 
         [Test]
+        public void Call_InsideTernaryOrBinary_NoReplacement()
+        {
+            var name = new string('n', 60);
+            var body = $"""
+                        var mode = c && Helper.IsSprinting(o, a, "{name}") ? Mode.Sprint : Mode.Walk;
+                        var size = a + Helper.Measure(o, a, "{name}", 1, 2, 3, 4, 5, 6, 7) * 2;
+                        var next = c ? Mode.None : Helper.GetSection(o, a, "{name}", 1, 2, 3, 4, 5);
+                """;
+            var findings = Run("call-wrap", InMethod(body));
+            Assert.That(findings, Has.Count.EqualTo(3));
+            Assert.That(findings.All(finding => finding.Replacement == null));
+            Assert.That(findings[0].Message, Does.Contain("вызов внутри выражения"));
+        }
+
+        [Test]
+        public void Call_ArgumentOfHeadCall_Replaced()
+        {
+            var name = new string('n', 70);
+            var body = $"""
+                        result = Helper.Calculate(Helper.Transform(o, a), "{name}");
+                """;
+            var finding = Run("call-wrap", InMethod(body)).Single();
+            Assert.That(finding.Replacement![0], Is.EqualTo("        result = Helper.Calculate("));
+        }
+
+        [Test]
         public void Call_ConditionLoggerAndLambda_NoFinding()
         {
             var text = new string('t', 100);
