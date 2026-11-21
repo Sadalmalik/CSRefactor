@@ -19,7 +19,8 @@ namespace CSR.Commands
               --format json | md         формат отчета (по умолчанию json)
               --top <N>                  размер топа по каждой метрике (по умолчанию 10)
               --all                      в JSON - все функции и типы по файлам
-              --coverage <opencover.xml> покрытие (OpenCover XML): покрытие и CRAP функций, топ по CRAP
+              --coverage <opencover.xml> покрытие (OpenCover XML): покрытие и CRAP функций, топ по CRAP;
+                                         несколько файлов объединяются
               --edn <файл>               записать снимок crap.edn в формате crapper (без --coverage - :coverage nil)
               --out <файл>               записать отчет в файл вместо stdout
             """;
@@ -41,7 +42,7 @@ namespace CSR.Commands
             var options = LoadOptions(commandLine);
             var project = LoadProject(commandLine);
             var files = SourceFiles.Collect(commandLine.Positional);
-            var coverage = LoadCoverage(commandLine.GetOption("--coverage"));
+            var coverage = LoadCoverage(commandLine.GetOptions("--coverage"));
 
             var stopwatch = Stopwatch.StartNew();
             var results = Measure(files, project.ParseOptions, coverage);
@@ -82,22 +83,28 @@ namespace CSR.Commands
             return metrics;
         }
 
-        private static Dictionary<string, FileCoverage>? LoadCoverage(string? path)
+        private static Dictionary<string, FileCoverage>? LoadCoverage(IReadOnlyList<string> paths)
         {
-            if (path == null)
+            if (paths.Count == 0)
                 return null;
 
-            if (!File.Exists(path))
-                throw new UsageException($"нет файла покрытия: {path}");
+            var coverage = new Dictionary<string, FileCoverage>(StringComparer.OrdinalIgnoreCase);
+            foreach (var path in paths)
+            {
+                if (!File.Exists(path))
+                    throw new UsageException($"нет файла покрытия: {path}");
 
-            try
-            {
-                return OpenCoverReader.Read(File.ReadAllText(path));
+                try
+                {
+                    OpenCoverReader.Read(File.ReadAllText(path), coverage);
+                }
+                catch (System.Xml.XmlException exception)
+                {
+                    throw new UsageException($"покрытие {path}: {exception.Message}");
+                }
             }
-            catch (System.Xml.XmlException exception)
-            {
-                throw new UsageException($"покрытие {path}: {exception.Message}");
-            }
+
+            return coverage;
         }
 
         private static MetricsOptions LoadOptions(CommandLine commandLine)

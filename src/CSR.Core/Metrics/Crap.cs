@@ -1,20 +1,21 @@
 namespace CSR.Core.Metrics
 {
-    // Покрытие строк одного файла: на строке - число точек последовательности и покрытых из них
+    // Покрытие строк одного файла: точки последовательности по строке и колонке начала.
+    // Точка из нескольких отчетов (разные тестовые сборки) учитывается один раз и покрыта, если покрыта хоть в одном
     public class FileCoverage
     {
-        private readonly Dictionary<int, int> m_Total = new();
-        private readonly Dictionary<int, int> m_Covered = new();
+        private readonly Dictionary<int, Dictionary<int, bool>> m_Points = new();
 
-        public void Add(int line, bool isCovered)
+        public void Add(int line, int column, bool isCovered)
         {
-            m_Total.TryGetValue(line, out int total);
-            m_Total[line] = total + 1;
-            if (!isCovered)
-                return;
+            if (!m_Points.TryGetValue(line, out Dictionary<int, bool>? points))
+            {
+                points = new Dictionary<int, bool>();
+                m_Points[line] = points;
+            }
 
-            m_Covered.TryGetValue(line, out int covered);
-            m_Covered[line] = covered + 1;
+            points.TryGetValue(column, out bool wasCovered);
+            points[column] = wasCovered || isCovered;
         }
 
         // Процент покрытых точек в строках start..end; точек нет - 0, как в crapper
@@ -24,12 +25,11 @@ namespace CSR.Core.Metrics
             var covered = 0;
             for (var line = start; line <= end; line++)
             {
-                if (!m_Total.TryGetValue(line, out int lineTotal))
+                if (!m_Points.TryGetValue(line, out Dictionary<int, bool>? points))
                     continue;
 
-                m_Covered.TryGetValue(line, out int lineCovered);
-                total += lineTotal;
-                covered += lineCovered;
+                total += points.Count;
+                covered += points.Values.Count(isCovered => isCovered);
             }
 
             return total == 0 ? 0.0 : 100.0 * covered / total;

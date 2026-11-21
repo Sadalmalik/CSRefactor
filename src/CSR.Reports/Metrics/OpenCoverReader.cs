@@ -4,14 +4,21 @@ using CSR.Core.Metrics;
 namespace CSR.Reports.Metrics
 {
     // Покрытие из OpenCover XML (Unity Code Coverage, coverlet, OpenCover): точки последовательности
-    // SequencePoint (vc - число выполнений, sl - строка, fileid - File uid) по файлам Files/File (fullPath)
+    // SequencePoint (vc - число выполнений, sl / sc - строка и колонка, fileid - File uid) по файлам Files/File.
+    // Несколько отчетов объединяются в один результат
     public static class OpenCoverReader
     {
         // Ключ - полный путь файла из отчета, без учета регистра
         public static Dictionary<string, FileCoverage> Read(string xml)
         {
-            var document = XDocument.Parse(xml);
             var result = new Dictionary<string, FileCoverage>(StringComparer.OrdinalIgnoreCase);
+            Read(xml, result);
+            return result;
+        }
+
+        public static void Read(string xml, Dictionary<string, FileCoverage> result)
+        {
+            var document = XDocument.Parse(xml);
             foreach (var module in document.Descendants("Module"))
             {
                 var paths = module.Descendants("File")
@@ -22,8 +29,6 @@ namespace CSR.Reports.Metrics
                 foreach (var point in module.Descendants("SequencePoint"))
                     AddPoint(result, paths, point);
             }
-
-            return result;
         }
 
         private static void AddPoint(Dictionary<string, FileCoverage> result, Dictionary<string, string> paths,
@@ -36,6 +41,7 @@ namespace CSR.Reports.Metrics
             if (!int.TryParse(point.Attribute("sl")?.Value, out int line))
                 return;
 
+            int.TryParse(point.Attribute("sc")?.Value, out int column);
             int.TryParse(point.Attribute("vc")?.Value, out int visits);
             var key = NormalizePath(path);
             if (!result.TryGetValue(key, out FileCoverage? coverage))
@@ -44,7 +50,7 @@ namespace CSR.Reports.Metrics
                 result[key] = coverage;
             }
 
-            coverage.Add(line, visits > 0);
+            coverage.Add(line, column, visits > 0);
         }
 
         public static string NormalizePath(string path)

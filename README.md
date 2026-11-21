@@ -54,7 +54,7 @@ csr metrics <файлы | папки>... [--config metrics.jsonc] [--project pro
 - `metrics.jsonc` — размер топа, включение метрик и пороги, пример — `examples/metrics.example.jsonc`;
 - `project.jsonc` — общие сведения о проекте для всех режимов: символы препроцессора (по умолчанию `UNITY_EDITOR`) и методы логгера, пример — `examples/project.example.jsonc`.
 
-CRAP = CC² × (1 − покрытие)³ + CC, как в crap4clj / crap4java: `--coverage` читает OpenCover XML (Unity Code Coverage, coverlet), покрытие функции — доля выполненных точек последовательности в её строках; функция, которой нет в отчёте, — покрытие 0. В отчёт добавляются покрытие и CRAP функций и топ по CRAP. `--edn` пишет снимок в формате `.metrics/crap.edn` (`{:entries [{:name :namespace :complexity :coverage :crap}]}`, `:namespace` — пространство имён и типы, `:name` — член типа; без `--coverage` — `:coverage nil`).
+CRAP = CC² × (1 − покрытие)³ + CC, как в crap4clj / crap4java: `--coverage` читает OpenCover XML (Unity Code Coverage, coverlet), покрытие функции — доля выполненных точек последовательности в её строках; функция, которой нет в отчёте, — покрытие 0. В отчёт добавляются покрытие и CRAP функций и топ по CRAP; несколько `--coverage` объединяются по точкам (строка и колонка; точка покрыта, если покрыта хоть в одном отчёте). `--edn` пишет снимок в формате `.metrics/crap.edn` (`{:entries [{:name :namespace :complexity :coverage :crap}]}`, `:namespace` — пространство имён и типы, `:name` — член типа; без `--coverage` — `:coverage nil`).
 
 Коды возврата: 0 — отчёт построен, 2 — ошибка запуска (аргументы, конфиг, файл покрытия).
 
@@ -101,6 +101,13 @@ csr style <файлы | папки>... --config style.jsonc [--config ещё.jso
 
 ```
 dotnet test CSR.slnx
+```
+
+Покрытие тестами (coverlet, OpenCover) и CRAP самого CSR:
+
+```
+dotnet test CSR.slnx --collect "XPlat Code Coverage" --results-directory TestResults -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+csr metrics src --coverage TestResults/<id1>/coverage.opencover.xml --coverage TestResults/<id2>/coverage.opencover.xml --format md
 ```
 
 ## Структура

@@ -38,10 +38,10 @@ namespace CSR.Core.Tests.Metrics
         public void FileCoverage_PercentOverLineRange()
         {
             var coverage = new FileCoverage();
-            coverage.Add(10, true);
-            coverage.Add(10, false);
-            coverage.Add(11, true);
-            coverage.Add(20, false);
+            coverage.Add(10, 1, true);
+            coverage.Add(10, 5, false);
+            coverage.Add(11, 1, true);
+            coverage.Add(20, 1, false);
 
             Assert.That(coverage.GetPercent(10, 11), Is.EqualTo(100.0 * 2 / 3).Within(1e-9));
             Assert.That(coverage.GetPercent(10, 20), Is.EqualTo(50.0));
@@ -49,15 +49,25 @@ namespace CSR.Core.Tests.Metrics
         }
 
         [Test]
+        public void FileCoverage_SamePointFromTwoReports_CountedOnceAndCoveredIfAny()
+        {
+            var coverage = new FileCoverage();
+            coverage.Add(10, 1, false);
+            coverage.Add(10, 9, false);
+            coverage.Add(10, 1, true);
+            Assert.That(coverage.GetPercent(10, 10), Is.EqualTo(50.0));
+        }
+
+        [Test]
         public void Apply_SetsCoverageAndCrap_MissingFileIsZero()
         {
             var file = TestCode.Measure(Source);
             var coverage = new FileCoverage();
-            coverage.Add(9, true);
-            coverage.Add(10, true);
-            coverage.Add(11, true);
-            coverage.Add(12, false);
-            coverage.Add(13, false);
+            coverage.Add(9, 1, true);
+            coverage.Add(10, 1, true);
+            coverage.Add(11, 1, true);
+            coverage.Add(12, 1, false);
+            coverage.Add(13, 1, false);
             Crap.Apply(file, coverage);
 
             var method = file.Functions[0];
