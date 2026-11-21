@@ -159,10 +159,22 @@ namespace CSR.Core.Style.Checks
                 return false;
 
             return scope.DescendantNodes()
-                .OfType<AssignmentExpressionSyntax>()
-                .Any(assignment => assignment.SpanStart > local.Span.End
-                    && assignment.Left is IdentifierNameSyntax { Identifier.Text: var target }
-                    && target == name);
+                .Where(node => node.SpanStart > local.Span.End)
+                .Any(node => GetAssignedName(node) == name);
+        }
+
+        // Имя локальной, которой узел присваивает новое значение: x = ..., out x, ref x; null - не присваивание
+        private static string? GetAssignedName(SyntaxNode node)
+        {
+            var target = node switch
+            {
+                AssignmentExpressionSyntax assignment => assignment.Left,
+                ArgumentSyntax argument when !argument.RefKindKeyword.IsKind(SyntaxKind.None)
+                    && !argument.RefKindKeyword.IsKind(SyntaxKind.InKeyword) => argument.Expression,
+                _ => null,
+            };
+
+            return target is IdentifierNameSyntax identifier ? identifier.Identifier.Text : null;
         }
 
         private static bool IsNullLike(ExpressionSyntax expression)

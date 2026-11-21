@@ -38,8 +38,17 @@ namespace CSR.Core.Tests.Style
         [TestCase("Path first = Find(), second = Find();")]
         [TestCase("var path = Find();")]
         [TestCase("IReadOnlyList<int> items = Array.Empty<int>();\nitems = new List<int>();")]
+        [TestCase("IReadOnlyList<int> items = Array.Empty<int>();\nRead(out items);")]
+        [TestCase("IReadOnlyList<int> items = Array.Empty<int>();\nRead(ref items);")]
         public void Exceptions_NoFinding(string body)
             => Assert.That(Run("local-type", InMethod(body)), Is.Empty);
+
+        [Test]
+        public void InArgument_NotReassignment_Found()
+        {
+            var findings = Run("local-type", InMethod("Path path = Find();\nRead(in path);"));
+            Assert.That(findings.Single().Message, Does.Contain("var path"));
+        }
 
         [Test]
         public void Foreach_ExplicitElementType_ToVar()
