@@ -8,7 +8,7 @@ namespace CSR.Core.Tests.Arch
 #region partial-file
 
         private const string Part = """
-            public partial class Chain
+            public partial class Mover
             {
                 private int m_Block;
                 private float m_Speed;
@@ -24,23 +24,23 @@ namespace CSR.Core.Tests.Arch
         [Test]
         public void PartialFile_SubsystemPart_Found()
         {
-            var finding = Run("partial-file", Part, path: "Scheme/Chain.Wall.cs").Single();
-            const string message = "часть 'Chain' в файле Chain.Wall.cs: полей 2, методов 5, строк 11";
+            var finding = Run("partial-file", Part, path: "Scheme/Mover.Swim.cs").Single();
+            const string message = "часть 'Mover' в файле Mover.Swim.cs: полей 2, методов 5, строк 11";
             Assert.That(finding.Message, Is.EqualTo(message));
         }
 
-        [TestCase("Scheme/Chain.cs")]
-        [TestCase("Scheme/Chain.Gizmos.cs")]
-        [TestCase("Scheme/Chain.g.cs")]
+        [TestCase("Scheme/Mover.cs")]
+        [TestCase("Scheme/Mover.Gizmos.cs")]
+        [TestCase("Scheme/Mover.g.cs")]
         public void PartialFile_OwnFileOrAspect_NoFinding(string path)
             => Assert.That(Run("partial-file", Part, path: path), Is.Empty);
 
         [Test]
         public void PartialFile_SmallPartOrNotPartial_NoFinding()
         {
-            var small = Run("partial-file", Part, settings => settings.Set("minMethods", 6), "Chain.Wall.cs");
+            var small = Run("partial-file", Part, settings => settings.Set("minMethods", 6), "Mover.Swim.cs");
             Assert.That(small, Is.Empty);
-            Assert.That(Run("partial-file", Part.Replace("partial ", ""), path: "Chain.Wall.cs"), Is.Empty);
+            Assert.That(Run("partial-file", Part.Replace("partial ", ""), path: "Mover.Swim.cs"), Is.Empty);
         }
 
 #endregion

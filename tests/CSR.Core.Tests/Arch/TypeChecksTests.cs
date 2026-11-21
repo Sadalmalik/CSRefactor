@@ -97,7 +97,7 @@ namespace CSR.Core.Tests.Arch
             var source = InMethod("if (shape is Circle circle) return;");
             Action<CheckSettings> configure = settings => settings.Set("paths", new[] { "*/Common/*" });
             Assert.That(Run("type-branch", source, configure, "Game/Common/Sample.cs"), Has.Count.EqualTo(1));
-            Assert.That(Run("type-branch", source, configure, "Game/Ladder/Sample.cs"), Is.Empty);
+            Assert.That(Run("type-branch", source, configure, "Game/Doors/Sample.cs"), Is.Empty);
         }
 
 #endregion
@@ -139,7 +139,7 @@ namespace CSR.Core.Tests.Arch
         public void BehaviourLogic_ProjectBase_Found()
         {
             const string source = """
-                public class Ladder : SceneMarker
+                public class Door : SceneMarker
                 {
                     public float CalculateLength() => 0;
                 }
@@ -147,7 +147,7 @@ namespace CSR.Core.Tests.Arch
             Assert.That(Run("behaviour-logic", source), Is.Empty);
             var findings = Run("behaviour-logic", source,
                 settings => settings.Set("baseTypes", new[] { "SceneMarker" }));
-            Assert.That(findings.Single().Message, Does.StartWith("SceneMarker 'Ladder'"));
+            Assert.That(findings.Single().Message, Does.StartWith("SceneMarker 'Door'"));
         }
 
         [Test]

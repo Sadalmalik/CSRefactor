@@ -12,9 +12,9 @@ namespace CSR.Core.Tests.Arch
             const string source = """
                 public class Grid
                 {
-                    public const int NoBlock = -1;
+                    public const int NoNode = -1;
 
-                    public bool TryFindExit(int block, bool isUp, out int area, out int cell)
+                    public bool TryFindPath(int node, bool isFast, out int area, out int cell)
                     {
                         area = 0;
                         cell = 0;
@@ -31,9 +31,9 @@ namespace CSR.Core.Tests.Arch
                 """;
             var findings = Run("index-api", source);
             Assert.That(findings.Select(finding => finding.Line), Is.EqualTo(new[] { 3, 5, 12, 17 }));
-            Assert.That(findings[0].Message, Is.EqualTo("NoBlock: маркер NoBlock = -1"));
+            Assert.That(findings[0].Message, Is.EqualTo("NoNode: маркер NoNode = -1"));
             Assert.That(findings[1].Message,
-                Is.EqualTo("TryFindExit: параметр int block; параметр int area; параметр int cell; out целых: 2"));
+                Is.EqualTo("TryFindPath: параметр int node; параметр int area; параметр int cell; out целых: 2"));
             Assert.That(findings[2].Message, Is.EqualTo("FindNearestCell: результат int FindNearestCell; return -1"));
             Assert.That(findings[3].Message, Is.EqualTo("CellIndex: свойство int CellIndex"));
         }
@@ -44,7 +44,7 @@ namespace CSR.Core.Tests.Arch
             const string source = """
                 public class Grid : Base
                 {
-                    private const int NoBlock = -1;
+                    private const int NoNode = -1;
 
                     public int NodeCount { get; }
 
@@ -122,14 +122,14 @@ namespace CSR.Core.Tests.Arch
                 {
                     public static bool IsAgile(Entity entity) => true;
                     public static bool IsSprinting(Entity entity) => true;
-                    public static bool HasEnter(Traversal traversal) => true;
-                    public static bool IsInZone(Traversal traversal, Entity entity) => true;
+                    public static bool HasEnter(Route route) => true;
+                    public static bool IsInZone(Route route, Entity entity) => true;
                     public static bool CanFall(Unit unit) => true;
                 }
                 """;
             var finding = Run("static-data-methods", source).Single();
             const string message = "static class 'Helper': 5 из 5 методов принимают данные первым параметром, "
-                + "типов 3: Entity 2, Traversal 2, Unit 1";
+                + "типов 3: Entity 2, Route 2, Unit 1";
             Assert.That(finding.Message, Is.EqualTo(message));
             Assert.That(Run("static-data-methods", source, settings => settings.Set("minDataShare", 0)), Is.Empty);
         }

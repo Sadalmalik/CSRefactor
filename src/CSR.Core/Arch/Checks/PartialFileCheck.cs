@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CSR.Core.Arch.Checks
 {
-    // partial-файл с подсистемой: часть partial-типа в файле не своего имени (Type.Wall.cs, а не Type.cs),
+    // partial-файл с подсистемой: часть partial-типа в файле не своего имени (Type.Swim.cs, а не Type.cs),
     // у которой не меньше minFields своих полей и minMethods методов. Аспект из aspects (Type.Gizmos.cs) и
     // часть в файле Type.cs не ищутся: однофайловый partial по требованию генератора не находка
     public class PartialFileCheck : ArchCheck
