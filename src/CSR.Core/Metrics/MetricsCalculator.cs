@@ -69,6 +69,7 @@ namespace CSR.Core.Metrics
                 Kind = Functions.GetKind(function),
                 Name = container.Length == 0 ? name : container + "." + name,
                 Namespace = GetNamespace(function),
+                Owner = GetOwnerTypes(function),
                 File = path,
                 Line = span.StartLinePosition.Line + 1,
                 EndLine = span.EndLinePosition.Line + 1,
@@ -119,6 +120,17 @@ namespace CSR.Core.Metrics
 
             parts.Reverse();
             return string.Join(".", parts);
+        }
+
+        // Только объемлющие типы: Outer.Inner
+        private static string GetOwnerTypes(SyntaxNode node)
+        {
+            var names = node.Ancestors()
+                .OfType<BaseTypeDeclarationSyntax>()
+                .Select(TypeMembers.GetName)
+                .Reverse();
+
+            return string.Join(".", names);
         }
 
         private static string GetNamespace(SyntaxNode node)

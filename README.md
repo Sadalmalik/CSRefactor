@@ -10,7 +10,7 @@
 - `csr arch` — проверка архитектурных признаков; отдельный режим и отдельный конфиг.
 - `csr format` — форматирование только изменённых строк (движок — ReSharper Command Line Tools).
 - `csr refs`, `csr rename` — ссылки на символ и семантическое переименование с защитой сериализуемых имён.
-- `csr metrics` — метрики по синтаксису (работает); позже CRAP с покрытием и снимок `.metrics/crap.edn`.
+- `csr metrics` — метрики по синтаксису, CRAP с покрытием и снимок `.metrics/crap.edn` (работает).
 
 Правила, пороги и уровни задаются конфигами: проверки в инструменте общие, конфиг выбирает их и подписывает находки ID своих правил. Разные команды и люди — разные конфиги.
 
@@ -39,7 +39,7 @@ dotnet tool install -g CSRefactor --add-source artifacts
 Метрики по синтаксису каждого файла, без загрузки решения: файлы только читаются.
 
 ```
-csr metrics <файлы | папки>... [--config metrics.jsonc] [--project project.jsonc] [--format json | md] [--top N] [--all] [--out файл]
+csr metrics <файлы | папки>... [--config metrics.jsonc] [--project project.jsonc] [--format json | md] [--top N] [--all] [--coverage opencover.xml] [--edn файл] [--out файл]
 ```
 
 | Уровень | Метрики |
@@ -54,7 +54,9 @@ csr metrics <файлы | папки>... [--config metrics.jsonc] [--project pro
 - `metrics.jsonc` — размер топа, включение метрик и пороги, пример — `examples/metrics.example.jsonc`;
 - `project.jsonc` — общие сведения о проекте для всех режимов: символы препроцессора (по умолчанию `UNITY_EDITOR`) и методы логгера, пример — `examples/project.example.jsonc`.
 
-Коды возврата: 0 — отчёт построен, 2 — ошибка запуска (аргументы, конфиг).
+CRAP = CC² × (1 − покрытие)³ + CC, как в crap4clj / crap4java: `--coverage` читает OpenCover XML (Unity Code Coverage, coverlet), покрытие функции — доля выполненных точек последовательности в её строках; функция, которой нет в отчёте, — покрытие 0. В отчёт добавляются покрытие и CRAP функций и топ по CRAP. `--edn` пишет снимок в формате `.metrics/crap.edn` (`{:entries [{:name :namespace :complexity :coverage :crap}]}`, `:namespace` — пространство имён и типы, `:name` — член типа; без `--coverage` — `:coverage nil`).
+
+Коды возврата: 0 — отчёт построен, 2 — ошибка запуска (аргументы, конфиг, файл покрытия).
 
 ## `csr style`
 

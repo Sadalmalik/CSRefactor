@@ -18,11 +18,14 @@ namespace CSR.Commands
               --project <project.jsonc>  символы препроцессора (по умолчанию UNITY_EDITOR)
               --format json | md         формат отчета (по умолчанию json)
               --top <N>                  размер топа по каждой метрике (по умолчанию 10)
-              --all                      в JSON — все функции и типы по файлам
+              --all                      в JSON - все функции и типы по файлам
+              --coverage <opencover.xml> покрытие (OpenCover XML): покрытие и CRAP функций, топ по CRAP
+              --edn <файл>               записать снимок crap.edn в формате crapper (без --coverage - :coverage nil)
               --out <файл>               записать отчет в файл вместо stdout
             """;
 
-        private static readonly HashSet<string> OptionNames = ["--config", "--project", "--format", "--top", "--out"];
+        private static readonly HashSet<string> OptionNames =
+            ["--config", "--project", "--format", "--top", "--out", "--coverage", "--edn"];
         private static readonly HashSet<string> FlagNames = ["--all"];
 
         public static int Run(IEnumerable<string> args)
@@ -38,10 +41,15 @@ namespace CSR.Commands
             var options = LoadOptions(commandLine);
             var project = LoadProject(commandLine);
             var files = SourceFiles.Collect(commandLine.Positional);
+            var coverage = LoadCoverage(commandLine.GetOption("--coverage"));
 
             var stopwatch = Stopwatch.StartNew();
-            var results = Measure(files, project.ParseOptions);
+            var results = Measure(files, project.ParseOptions, coverage);
             var report = MetricsReport.Build(results, options);
+            var edn = commandLine.GetOption("--edn");
+            if (edn != null)
+                Output.Write(CrapEdnWriter.Write(results), edn);
+
             var text = format == "md"
                 ? MetricsMarkdownWriter.Write(report)
                 : MetricsJsonWriter.Write(report, commandLine.HasFlag("--all"));
@@ -53,17 +61,43 @@ namespace CSR.Commands
             return 0;
         }
 
-        private static List<FileMetrics> Measure(List<string> files, CSharpParseOptions parseOptions)
+        private static List<FileMetrics> Measure(List<string> files, CSharpParseOptions parseOptions,
+            Dictionary<string, FileCoverage>? coverage)
         {
             var results = new ConcurrentBag<FileMetrics>();
-            Parallel.ForEach(files, file => results.Add(MeasureFile(file, parseOptions)));
+            Parallel.ForEach(files, file => results.Add(MeasureFile(file, parseOptions, coverage)));
             return results.OrderBy(result => result.File.File, StringComparer.Ordinal).ToList();
         }
 
-        private static FileMetrics MeasureFile(string file, CSharpParseOptions parseOptions)
+        private static FileMetrics MeasureFile(string file, CSharpParseOptions parseOptions,
+            Dictionary<string, FileCoverage>? coverage)
         {
             var source = File.ReadAllText(file);
-            return MetricsCalculator.Calculate(source, SourceFiles.GetDisplayPath(file), parseOptions);
+            var metrics = MetricsCalculator.Calculate(source, SourceFiles.GetDisplayPath(file), parseOptions);
+            if (coverage == null)
+                return metrics;
+
+            coverage.TryGetValue(OpenCoverReader.NormalizePath(file), out FileCoverage? fileCoverage);
+            Crap.Apply(metrics, fileCoverage);
+            return metrics;
+        }
+
+        private static Dictionary<string, FileCoverage>? LoadCoverage(string? path)
+        {
+            if (path == null)
+                return null;
+
+            if (!File.Exists(path))
+                throw new UsageException($"нет файла покрытия: {path}");
+
+            try
+            {
+                return OpenCoverReader.Read(File.ReadAllText(path));
+            }
+            catch (System.Xml.XmlException exception)
+            {
+                throw new UsageException($"покрытие {path}: {exception.Message}");
+            }
         }
 
         private static MetricsOptions LoadOptions(CommandLine commandLine)

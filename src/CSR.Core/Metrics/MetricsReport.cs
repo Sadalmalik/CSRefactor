@@ -30,6 +30,9 @@ namespace CSR.Core.Metrics
 
         public required IReadOnlyList<MetricSummary> Metrics { get; init; }
 
+        // Наибольший CRAP, если задано покрытие; пусто - покрытия нет
+        public IReadOnlyList<MetricItem> CrapTop { get; init; } = Array.Empty<MetricItem>();
+
         public int TypeCount
             => Files.Sum(file => file.Types.Count);
 
@@ -43,7 +46,16 @@ namespace CSR.Core.Metrics
                 .Select(metric => Summarize(metric, GetItems(files, metric.Level), options))
                 .ToList();
 
-            return new MetricsReport { Files = files, Metrics = metrics };
+            var crapTop = files
+                .SelectMany(file => file.Functions)
+                .Where(function => function.Crap != null)
+                .OrderByDescending(function => function.Crap)
+                .ThenBy(function => function.File, StringComparer.Ordinal)
+                .ThenBy(function => function.Line)
+                .Take(options.Top)
+                .ToList();
+
+            return new MetricsReport { Files = files, Metrics = metrics, CrapTop = crapTop };
         }
 
         // Перцентиль - значение с индексом floor(q * n) отсортированного ряда, как в прототипе spikes/RoslynLoad

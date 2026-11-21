@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using CSR.Core.Metrics;
 
@@ -28,10 +29,31 @@ namespace CSR.Reports.Metrics
                     + $"| {summary.P90} | {summary.P99} | {summary.Max} | {threshold} | {above} |");
             }
 
+            WriteCrap(builder, report);
             foreach (var summary in report.Metrics)
                 WriteTop(builder, summary);
 
             return builder.ToString();
+        }
+
+        private static void WriteCrap(StringBuilder builder, MetricsReport report)
+        {
+            if (report.CrapTop.Count == 0)
+                return;
+
+            builder.AppendLine();
+            builder.AppendLine("## CRAP");
+            builder.AppendLine();
+            builder.AppendLine("| CRAP | Покрытие, % | Сложность | Имя | Место |");
+            builder.AppendLine("|---:|---:|---:|---|---|");
+            foreach (var function in report.CrapTop)
+            {
+                var crap = function.Crap!.Value.ToString("0.####", CultureInfo.InvariantCulture);
+                var coverage = function.Coverage!.Value.ToString("0.##", CultureInfo.InvariantCulture);
+                var complexity = function.Values[MetricKeys.Cyclomatic];
+                var place = $"{Escape(function.File)}:{function.Line}";
+                builder.AppendLine($"| {crap} | {coverage} | {complexity} | `{Escape(function.Name)}` | `{place}` |");
+            }
         }
 
         private static void WriteTop(StringBuilder builder, MetricSummary summary)

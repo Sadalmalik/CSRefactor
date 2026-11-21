@@ -20,6 +20,12 @@ namespace CSR.Core.Metrics
 
         public required string Namespace { get; init; }
 
+        // У функции - объемлющие типы (Outer.Inner); Name = Owner.Member
+        public string Owner { get; init; } = "";
+
+        public string Member
+            => Owner.Length == 0 ? Name : Name.Substring(Owner.Length + 1);
+
         public required string File { get; init; }
 
         // Строки - с 1
@@ -31,6 +37,11 @@ namespace CSR.Core.Metrics
 
         // Только у типа: число членов по видам - TypeMembers
         public IReadOnlyDictionary<string, int>? Members { get; init; }
+
+        // Только у функции, если задано покрытие: доля покрытых точек в процентах и CRAP; null - покрытия нет
+        public double? Coverage { get; set; }
+
+        public double? Crap { get; set; }
     }
 
     public class FileMetrics

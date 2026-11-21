@@ -29,6 +29,22 @@ namespace CSR.Reports.Metrics
                     WriteSummary(writer, summary);
                 writer.WriteEndArray();
 
+                if (report.CrapTop.Count > 0)
+                {
+                    writer.WriteStartArray("crap");
+                    foreach (var function in report.CrapTop)
+                    {
+                        writer.WriteStartObject();
+                        writer.WriteNumber("value", function.Crap!.Value);
+                        writer.WriteNumber("coverage", function.Coverage!.Value);
+                        writer.WriteNumber("complexity", function.Values[MetricKeys.Cyclomatic]);
+                        WriteLocation(writer, function);
+                        writer.WriteEndObject();
+                    }
+
+                    writer.WriteEndArray();
+                }
+
                 if (includeItems)
                 {
                     writer.WriteStartArray("items");
@@ -97,6 +113,10 @@ namespace CSR.Reports.Metrics
             writer.WriteStartObject();
             WriteLocation(writer, item);
             WriteValues(writer, "values", item.Values);
+            if (item.Coverage != null)
+                writer.WriteNumber("coverage", item.Coverage.Value);
+            if (item.Crap != null)
+                writer.WriteNumber("crap", item.Crap.Value);
             if (item.Members != null)
                 WriteValues(writer, "members", item.Members);
             writer.WriteEndObject();
