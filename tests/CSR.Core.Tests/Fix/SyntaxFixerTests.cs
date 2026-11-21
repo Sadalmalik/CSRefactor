@@ -72,6 +72,39 @@ namespace CSR.Core.Tests.Fix
             Assert.That(result.Remaining, Is.Empty);
         }
 
+        // Замена на несколько строк: находка покрывает их все, строки не размножаются
+        [Test]
+        public void Fix_MultilineReplacement_LinesNotDuplicated()
+        {
+            const string source = """
+                using System.Collections.Generic;
+
+                public class Sample
+                {
+                    /// <summary>
+                    /// Первая строка
+                    /// Скорость — м/с, «вне пути»
+                    /// Третья — строка
+                    /// </summary>
+                    public void Cancel()
+                    {
+                        Dictionary<int, string> names =
+                            new();
+                    }
+                }
+                """;
+            var options = CreateOptions("comment-typography", "local-type");
+
+            var result = SyntaxFixer.Fix(source, "Sample.cs", options, Project, new FixOptions(), null);
+
+            Assert.That(result.Text, Is.EqualTo(source
+                .Replace(" — ", " - ")
+                .Replace("«вне пути»", "\"вне пути\"")
+                .Replace("Dictionary<int, string> names", "var names")
+                .Replace("new();", "new Dictionary<int, string>();")));
+            Assert.That(result.Applied, Has.Count.EqualTo(2));
+        }
+
         [Test]
         public void Fix_DeletesLinesAndShiftsLater()
         {

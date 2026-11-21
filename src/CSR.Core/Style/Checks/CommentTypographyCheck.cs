@@ -86,9 +86,11 @@ namespace CSR.Core.Style.Checks
             if (changes.Count == 0)
                 return;
 
+            // находка - на все строки с заменами: replacement заменяет строки line..endLine целиком
             changes.Sort((a, b) => a.Span.Start.CompareTo(b.Span.Start));
             var replacement = replaceable ? context.ReplaceInLines(changes) : null;
-            context.Report(changes[0].Span, $"типографские знаки: {found}", replacement);
+            var reported = TextSpan.FromBounds(changes[0].Span.Start, changes.Max(change => change.Span.End));
+            context.Report(reported, $"типографские знаки: {found}", replacement);
         }
 
         // Кавычка замены внутри литерала: \" в обычной строке, "" в verbatim (@); в raw-строке кавычка рядом

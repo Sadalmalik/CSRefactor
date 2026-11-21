@@ -97,8 +97,10 @@ namespace CSR.Core.Style.Checks
             if (value is ImplicitObjectCreationExpressionSyntax creation)
                 changes.Add(new TextChange(creation.NewKeyword.Span, "new " + type.WithoutTrivia()));
 
+            // находка - до 'new' на следующей строке: replacement заменяет строки line..endLine целиком
             var replacement = context.ReplaceInLines(changes);
-            context.Report(type.Span, $"'{type} {name}' -> 'var {name}'", replacement);
+            var reported = TextSpan.FromBounds(type.SpanStart, changes.Max(change => change.Span.End));
+            context.Report(reported, $"'{type} {name}' -> 'var {name}'", replacement);
         }
 
         private static void CheckForeach(
