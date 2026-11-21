@@ -147,6 +147,64 @@ namespace CSR.Core.Tests.Style
             Assert.That(finding.Replacement![2], Is.EqualTo("        int second) { }"));
         }
 
+        [Test]
+        public void Signature_Where_OwnLine()
+        {
+            const string source = """
+                public class Sample
+                {
+                    public T Convert<T, TSource>(TSource source, int a, int b, int c, int d) where T : struct where TSource : class
+                    {
+                    }
+
+                    public T Column<T>(
+                        int a,
+                        int b) where T : struct;
+
+                    public T Short<T>(int a) where T : struct;
+                }
+                """;
+            var findings = Run("signature-wrap", source);
+            Assert.That(findings.Select(finding => finding.Line), Is.EqualTo(new[] { 3, 7 }));
+            Assert.That(findings[0].Replacement, Is.EqualTo(new[]
+            {
+                "    public T Convert<T, TSource>(",
+                "        TSource source,",
+                "        int a,",
+                "        int b,",
+                "        int c,",
+                "        int d)",
+                "        where T : struct",
+                "        where TSource : class",
+            }));
+            Assert.That(findings[1].Replacement, Is.EqualTo(new[]
+            {
+                "    public T Column<T>(",
+                "        int a,",
+                "        int b)",
+                "        where T : struct;",
+            }));
+        }
+
+        [Test]
+        public void Signature_ColumnBaseOnCloseLine_Found()
+        {
+            const string source = """
+                public class Sample : Base
+                {
+                    public Sample(
+                        int a,
+                        int b) : base(a)
+                    {
+                    }
+                }
+                """;
+            var finding = Run("signature-wrap", source).Single();
+            Assert.That(finding.Replacement![^1], Is.EqualTo("        : base(a)"));
+            var off = Run("signature-wrap", source, settings => settings.Set("initializerOnOwnLine", false));
+            Assert.That(off, Is.Empty);
+        }
+
 #endregion
 
 

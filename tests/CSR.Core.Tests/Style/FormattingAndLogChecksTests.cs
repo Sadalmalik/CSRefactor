@@ -134,6 +134,29 @@ namespace CSR.Core.Tests.Style
             Assert.That(findings.Single().Message, Does.Contain("сократить текст"));
         }
 
+        [Test]
+        public void LogWrap_SplitText_OnlyWhenLongerThanLine()
+        {
+            var text = new string('t', 100);
+            var body = $$"""
+                Debug.Log(
+                    $"{{text}} {a} " +
+                    $"дальше {c} '{o}'");
+                Debug.Log(
+                    $"шаг {a} " +
+                    "дальше");
+                Debug.Log(
+                    $"шаг {a} " + o +
+                    "дальше");
+                """;
+            var findings = Run("log-call-wrap", InMethod(body), settings => settings.Set("maxLength", 120));
+            Assert.That(findings.Select(finding => finding.Line), Is.EqualTo(new[] { 10, 13 }));
+            Assert.That(findings[0].Message, Does.Contain("помещается"));
+            Assert.That(findings[1].Message, Is.EqualTo("вызов лога не в одну строку"), "склейка со значением");
+            var noLength = Run("log-call-wrap", InMethod(body));
+            Assert.That(noLength.Select(finding => finding.Line), Is.EqualTo(new[] { 13 }));
+        }
+
 #endregion
 
 
@@ -150,6 +173,22 @@ namespace CSR.Core.Tests.Style
             Assert.That(findings.Select(finding => finding.Line), Is.EqualTo(new[] { 7, 7, 8 }));
             var expected = "throw new ArgumentOutOfRangeException(nameof(a), $\"Slot {a} is out of range\");";
             Assert.That(findings[2].Replacement, Is.EqualTo(new[] { expected }));
+        }
+
+        [Test]
+        public void Message_SplitText_NotConcatenation()
+        {
+            const string body = """
+                Debug.Log(
+                    $"шаг {a} " +
+                    "дальше");
+                Debug.Log("шаг " + "дальше");
+                Debug.Log(
+                    $"шаг {a} " +
+                    a);
+                """;
+            var findings = Run("message-text", InMethod(body));
+            Assert.That(findings.Select(finding => finding.Line), Is.EqualTo(new[] { 10, 12 }));
         }
 
         [Test]

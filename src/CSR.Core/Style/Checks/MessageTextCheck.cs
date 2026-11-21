@@ -7,7 +7,8 @@ using Microsoft.CodeAnalysis.Text;
 namespace CSR.Core.Style.Checks
 {
     // Текст лога и исключения: конкатенация вместо интерполяции, точка в конце.
-    // Лог - вызов метода логгера из project.jsonc; исключение - new *Exception(...) в throw
+    // Лог - вызов метода логгера из project.jsonc; исключение - new *Exception(...) в throw.
+    // Текст, разделенный по строкам (SplitText, C22), - не конкатенация
     public class MessageTextCheck : SyntaxCheck
     {
         private static readonly CheckParameter[] AllParameters =
@@ -53,7 +54,8 @@ namespace CSR.Core.Style.Checks
 
         private static void CheckMessage(CheckContext context, ExpressionSyntax message)
         {
-            if (context.Settings.GetBool("concatenation") && message is BinaryExpressionSyntax)
+            bool isSplit = SplitText.GetParts(context.Text, message) != null;
+            if (context.Settings.GetBool("concatenation") && message is BinaryExpressionSyntax && !isSplit)
                 context.Report(message.Span, "текст склеен через + - нужна интерполяция $\"...\"");
 
             if (!context.Settings.GetBool("trailingPeriod"))

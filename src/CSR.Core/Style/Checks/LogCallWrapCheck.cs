@@ -1,11 +1,14 @@
 using CSR.Core.Checks;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 
 namespace CSR.Core.Style.Checks
 {
     // Вызов логгера - одной строкой; допустим перенос всех аргументов на следующую строку после '('.
     // Однострочный вызов в строке длиннее maxLength - находка: сначала сократить текст, затем перенести аргумент.
-    // Методы логгера - в project.jsonc
+    // После переноса аргументов текст длиннее строки делится на части по строкам (SplitText, R67); склейка,
+    // которая помещается в maxLength одной частью, - находка. Методы логгера - в project.jsonc
     public class LogCallWrapCheck : SyntaxCheck
     {
         private static readonly CheckParameter[] AllParameters =
@@ -49,10 +52,57 @@ namespace CSR.Core.Style.Checks
                     ? last
                     : lines.GetLineFromPosition(arguments.Arguments[0].SpanStart).LineNumber;
 
-                bool isArgumentsWrapped = last == first + 1 && openLine == first && argumentsLine == last;
-                if (!isArgumentsWrapped)
+                if (openLine != first || argumentsLine != first + 1)
+                {
                     context.Report(invocation.Span, "вызов лога не в одну строку");
+                    continue;
+                }
+
+                var problem = GetSplitProblem(context.Text, arguments, maxLength);
+                if (problem != null)
+                    context.Report(invocation.Span, problem);
             }
+        }
+
+        // Аргументы после '(' в несколько строк: переносы - только после '+' текста, разделенного по строкам
+        private static string? GetSplitProblem(SourceText text, ArgumentListSyntax arguments, int maxLength)
+        {
+            if (arguments.Arguments.Count == 0)
+                return "вызов лога не в одну строку";
+
+            var splits = arguments.Arguments
+                .Select(argument => SplitText.GetParts(text, argument.Expression))
+                .Where(parts => parts != null)
+                .Select(parts => parts!)
+                .ToList();
+            var allowed = new HashSet<SyntaxToken>(splits
+                .SelectMany(parts => parts.Skip(1))
+                .Select(part => part.GetFirstToken().GetPreviousToken()));
+
+            var token = arguments.Arguments[0].GetFirstToken();
+            while (token != arguments.CloseParenToken)
+            {
+                var next = token.GetNextToken();
+                var line = TextLines.GetLineNumber(text, token.SpanStart);
+                bool isBreak = TextLines.GetLineNumber(text, next.SpanStart) > line;
+                if (isBreak && !allowed.Contains(token))
+                    return "вызов лога не в одну строку";
+
+                token = next;
+            }
+
+            if (maxLength > 0 && splits.Any(parts => GetJoinedLineLength(text, parts) <= maxLength))
+                return "текст лога помещается в строку - одной строкой без склейки";
+
+            return null;
+        }
+
+        // Длина строки с текстом одной частью: начало строки первой части, текст, хвост строки последней части
+        private static int GetJoinedLineLength(SourceText text, IReadOnlyList<ExpressionSyntax> parts)
+        {
+            var lastLine = text.Lines.GetLineFromPosition(parts[parts.Count - 1].Span.End);
+            var tail = lastLine.End - parts[parts.Count - 1].Span.End;
+            return TextLines.GetColumn(text, parts[0].SpanStart) + SplitText.GetJoinedLength(parts) + tail;
         }
     }
 }

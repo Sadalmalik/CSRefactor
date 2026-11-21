@@ -6,9 +6,9 @@ using Microsoft.CodeAnalysis.Text;
 namespace CSR.Core.Style.Checks
 {
     // Сигнатура столбиком: перенос после '(', параметр на строку с отступом +4 к объявлению, ')' на строке
-    // последнего параметра; ': base(...)' / ': this(...)' - отдельной строкой +4. Находка: однострочная сигнатура
-    // длиннее max или с minParameters+ параметрами; перенос посреди списка (первый параметр в строке имени);
-    // ')' на отдельной строке
+    // последнего параметра; ': base(...)' / ': this(...)' и каждое ограничение 'where' - отдельной строкой +4.
+    // Находка: однострочная сигнатура длиннее max или с minParameters+ параметрами; перенос посреди списка (первый
+    // параметр в строке имени); ')' на отдельной строке; ': base(...)' или 'where' в строке ')' у сигнатуры столбиком
     public class SignatureWrapCheck : SyntaxCheck
     {
         private static readonly CheckParameter[] AllParameters =
@@ -42,12 +42,15 @@ namespace CSR.Core.Style.Checks
                 if (!isSignature || list.Parameters.Count == 0 || TextLines.HasCommentOrDirective(list))
                     continue;
 
+                var tails = GetTails(context.Text, list, initializerOnOwnLine);
                 var problem = GetProblem(context.Text, list, max, minParameters);
+                if (problem == null && tails.Count > 0 && IsColumn(context.Text, list))
+                    problem = "': base' или 'where' в строке ')' - отдельной строкой";
+
                 if (problem == null)
                     continue;
 
-                var initializer = initializerOnOwnLine ? GetInitializer(context.Text, list) : null;
-                Report(context, list, initializer, problem);
+                Report(context, list, tails, problem);
             }
         }
 
@@ -83,20 +86,40 @@ namespace CSR.Core.Style.Checks
             return crowded && many ? "два параметра в одной строке" : null;
         }
 
-        // ': base(...)' в строке ')' - переносится; уже на своей строке - не трогается
-        private static ConstructorInitializerSyntax? GetInitializer(SourceText text, ParameterListSyntax list)
+        // Начала ': base(...)' и ограничений 'where' в строке ')' - переносятся; уже на своей строке - не трогаются
+        private static List<int> GetTails(SourceText text, ParameterListSyntax list, bool initializerOnOwnLine)
         {
-            if (list.Parent is not ConstructorDeclarationSyntax { Initializer: { } initializer })
-                return null;
+            var nodes = new List<SyntaxNode>();
+            if (initializerOnOwnLine && list.Parent is ConstructorDeclarationSyntax { Initializer: { } initializer })
+                nodes.Add(initializer);
+
+            nodes.AddRange(list.Parent switch
+            {
+                MethodDeclarationSyntax method => method.ConstraintClauses,
+                LocalFunctionStatementSyntax function => function.ConstraintClauses,
+                DelegateDeclarationSyntax declaration => declaration.ConstraintClauses,
+                _ => Enumerable.Empty<SyntaxNode>(),
+            });
 
             var closeLine = TextLines.GetLineNumber(text, list.CloseParenToken.SpanStart);
-            return TextLines.GetLineNumber(text, initializer.SpanStart) == closeLine ? initializer : null;
+            return nodes
+                .Where(node => TextLines.GetLineNumber(text, node.SpanStart) == closeLine)
+                .Select(node => node.SpanStart)
+                .ToList();
+        }
+
+        // Параметры уже столбиком: первый - на строке после '(', каждый - в одну строку
+        private static bool IsColumn(SourceText text, ParameterListSyntax list)
+        {
+            var openLine = TextLines.GetLineNumber(text, list.OpenParenToken.SpanStart);
+            return TextLines.GetLineNumber(text, list.Parameters[0].SpanStart) > openLine
+                && list.Parameters.All(parameter => TextLines.IsSingleLine(text, parameter.Span));
         }
 
         private static void Report(
             CheckContext context,
             ParameterListSyntax list,
-            ConstructorInitializerSyntax? initializer,
+            List<int> tails,
             string problem)
         {
             var text = context.Text;
@@ -117,16 +140,15 @@ namespace CSR.Core.Style.Checks
                 lines.Add(inner + parameters[i].ToString().Trim() + separator);
             }
 
-            var rest = text.ToString(TextSpan.FromBounds(list.CloseParenToken.Span.End, closeLine.End));
-            if (initializer != null)
+            // хвост строки ')' до первого переносимого куска остается на ней; каждый кусок - своей строкой
+            var ends = tails.Skip(1).Append(closeLine.End).ToList();
+            var first = tails.Count > 0 ? tails[0] : closeLine.End;
+            var rest = text.ToString(TextSpan.FromBounds(list.CloseParenToken.Span.End, first));
+            lines[lines.Count - 1] += tails.Count > 0 ? rest.TrimEnd() : rest;
+            for (var i = 0; i < tails.Count; i++)
             {
-                var start = initializer.SpanStart - list.CloseParenToken.Span.End;
-                lines[lines.Count - 1] += rest.Substring(0, start).TrimEnd();
-                lines.Add(inner + rest.Substring(start));
-            }
-            else
-            {
-                lines[lines.Count - 1] += rest;
+                var part = text.ToString(TextSpan.FromBounds(tails[i], ends[i]));
+                lines.Add(inner + (i < tails.Count - 1 ? part.TrimEnd() : part));
             }
 
             context.Report(TextSpan.FromBounds(openLine.Start, closeLine.End), problem, lines);
