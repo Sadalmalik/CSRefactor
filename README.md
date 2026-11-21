@@ -30,8 +30,10 @@
 Скрипт `scripts/install.ps1` (PowerShell, Windows) публикует `src/CSR` из текущей ветки (`win-x64`, один файл, .NET внутри), копирует `csr.exe` и папки `BuildHost-*` в папку установки и добавляет её в `PATH` пользователя. После установки `csr` вызывается по имени из любого каталога (в новых терминалах). Нужен .NET SDK 10.
 
 ```
-.\scripts\install.ps1 [-Configs <папка>] [-Link] [-Destination <папка>] [-NoPath]
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 [-Configs <папка>] [-Link] [-Destination <папка>] [-NoPath]
 ```
+
+`-ExecutionPolicy Bypass` действует только на этот запуск: политика по умолчанию в Windows (`Restricted`) запрещает запуск `.ps1`, системная настройка не меняется.
 
 | Параметр | Назначение |
 |---|---|
@@ -43,7 +45,7 @@
 Пример: установка с личными конфигами по ссылке:
 
 ```
-.\scripts\install.ps1 -Configs D:\my\csr-configs -Link
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Configs D:\my\csr-configs -Link
 ```
 
 Скрипт ничего не удаляет за пределами папки установки; запущенный из неё `csr` (в том числе `csr serve`) — ошибка, процесс нужно остановить. Версия установки (коммит, ветка, дата) — в `version.txt` рядом с `csr.exe`. Проектный слой конфигов — папка `.csr` в репозитории проекта; порядок поиска — в [DOCS.md](DOCS.md#где-искать-конфиги).
