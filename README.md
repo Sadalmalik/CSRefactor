@@ -107,7 +107,7 @@ dotnet test CSR.slnx
 
 ```
 dotnet test CSR.slnx --collect "XPlat Code Coverage" --results-directory TestResults -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
-csr metrics src --coverage TestResults/<id1>/coverage.opencover.xml --coverage TestResults/<id2>/coverage.opencover.xml --format md
+csr metrics src --coverage TestResults/<id1>/coverage.opencover.xml --coverage TestResults/<id2>/coverage.opencover.xml --coverage TestResults/<id3>/coverage.opencover.xml --format md
 ```
 
 ## Структура
@@ -117,7 +117,7 @@ csr metrics src --coverage TestResults/<id1>/coverage.opencover.xml --coverage T
 | `src/CSR` | консольное приложение `csr`: разбор аргументов, файлы, вывод |
 | `src/CSR.Core` | ядро (`netstandard2.0` и `net10.0`): на вход синтаксическое дерево и параметры, на выход метрики и находки стиля; без консоли, файловой системы и JSON; основа будущего пакета анализаторов Roslyn |
 | `src/CSR.Reports` | разбор конфигов `.jsonc` и диффа, отчёты JSON и Markdown |
-| `tests/CSR.Core.Tests`, `tests/CSR.Reports.Tests` | тесты (NUnit) |
+| `tests/CSR.Core.Tests`, `tests/CSR.Reports.Tests`, `tests/CSR.Tests` | тесты (NUnit): ядро, конфиги и отчёты, CLI (`Program.Main` целиком, git — временный репозиторий) |
 | `examples/` | примеры конфигов |
 | `spikes/` | прототипы замеров, не часть инструмента |
 | `Directory.Build.props` | общие настройки проектов |

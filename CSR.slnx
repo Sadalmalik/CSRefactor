@@ -10,5 +10,6 @@
   <Folder Name="/tests/">
     <Project Path="tests/CSR.Core.Tests/CSR.Core.Tests.csproj" />
     <Project Path="tests/CSR.Reports.Tests/CSR.Reports.Tests.csproj" />
+    <Project Path="tests/CSR.Tests/CSR.Tests.csproj" />
   </Folder>
 </Solution>
