@@ -102,6 +102,7 @@ namespace CSR.Core.Tests.Arch
 
 #endregion
 
+
 #region behaviour-logic
 
         private const string Behaviour = """
@@ -145,7 +146,9 @@ namespace CSR.Core.Tests.Arch
                 }
                 """;
             Assert.That(Run("behaviour-logic", source), Is.Empty);
-            var findings = Run("behaviour-logic", source,
+            var findings = Run(
+                "behaviour-logic",
+                source,
                 settings => settings.Set("baseTypes", new[] { "SceneMarker" }));
             Assert.That(findings.Single().Message, Does.StartWith("SceneMarker 'Door'"));
         }

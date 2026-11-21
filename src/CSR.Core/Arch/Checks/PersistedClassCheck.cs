@@ -14,12 +14,21 @@ namespace CSR.Core.Arch.Checks
         private static readonly CheckParameter[] AllParameters =
         [
             CheckParameter.Strings("saveAttributes", "атрибуты сохранения члена", "JsonProperty", "DataMember"),
-            CheckParameter.Strings("ignoreAttributes", "атрибуты явного исключения из сохранения",
-                "JsonIgnore", "NonSerialized", "IgnoreDataMember"),
-            CheckParameter.Strings("constructorAttributes", "атрибуты конструктора десериализации",
+            CheckParameter.Strings(
+                "ignoreAttributes",
+                "атрибуты явного исключения из сохранения",
+                "JsonIgnore",
+                "NonSerialized",
+                "IgnoreDataMember"),
+            CheckParameter.Strings(
+                "constructorAttributes",
+                "атрибуты конструктора десериализации",
                 "JsonConstructor"),
-            CheckParameter.Strings("cacheNames", "маски имен полей-кэшей и производных значений (без m_, _)",
-                "*Cache*", "*Cached*"),
+            CheckParameter.Strings(
+                "cacheNames",
+                "маски имен полей-кэшей и производных значений (без m_, _)",
+                "*Cache*",
+                "*Cached*"),
         ];
 
         public override string Name

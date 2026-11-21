@@ -39,7 +39,9 @@ namespace CSR.Workspace.Tests
 
             Assert.That(plan.Changes.Select(change => change.File), Is.EqualTo(new[]
             {
-                "Game.Tools/Report.cs", "Game/Inventory.cs", "Game/Player.cs",
+                "Game.Tools/Report.cs",
+                "Game/Inventory.cs",
+                "Game/Player.cs",
             }));
             Assert.That(plan.Compile!.NewErrors, Is.Empty);
             Assert.That(plan.Compile.Projects, Is.EqualTo(2));
@@ -87,6 +89,7 @@ namespace CSR.Workspace.Tests
         }
 
 #endregion
+
 
 #region Serialization
 
@@ -195,6 +198,7 @@ namespace CSR.Workspace.Tests
         }
 
 #endregion
+
 
 #region Apply
 

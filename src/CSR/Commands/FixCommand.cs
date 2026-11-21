@@ -87,8 +87,12 @@ namespace CSR.Commands
             return report.HasErrors ? 1 : 0;
         }
 
-        private static List<FileFix> Fix(List<string> files, CheckOptions options, ProjectOptions project,
-            FixOptions fix, Dictionary<string, ChangedLines>? changed)
+        private static List<FileFix> Fix(
+            List<string> files,
+            CheckOptions options,
+            ProjectOptions project,
+            FixOptions fix,
+            Dictionary<string, ChangedLines>? changed)
         {
             var results = new ConcurrentBag<FileFix>();
             Parallel.ForEach(files, file =>

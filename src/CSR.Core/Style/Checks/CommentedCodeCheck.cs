@@ -14,7 +14,8 @@ namespace CSR.Core.Style.Checks
             @"^(if|else|for|foreach|while|do|switch|case|return|var|using|break|continue|throw|yield)\b",
             RegexOptions.CultureInvariant);
 
-        private static readonly Regex Todo = new(@"^(todo|fixme|hack)\b",
+        private static readonly Regex Todo = new(
+            @"^(todo|fixme|hack)\b",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
         public override string Name

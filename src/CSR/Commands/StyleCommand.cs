@@ -66,7 +66,10 @@ namespace CSR.Commands
             return report.HasErrors ? 1 : 0;
         }
 
-        internal static List<Finding> Analyze(List<string> files, CheckOptions options, ProjectOptions project,
+        internal static List<Finding> Analyze(
+            List<string> files,
+            CheckOptions options,
+            ProjectOptions project,
             Dictionary<string, ChangedLines>? filter)
         {
             var results = new ConcurrentBag<List<Finding>>();
@@ -79,7 +82,10 @@ namespace CSR.Commands
                 .ToList();
         }
 
-        private static List<Finding> AnalyzeFile(string file, CheckOptions options, ProjectOptions project,
+        private static List<Finding> AnalyzeFile(
+            string file,
+            CheckOptions options,
+            ProjectOptions project,
             Dictionary<string, ChangedLines>? filter)
         {
             var source = File.ReadAllText(file);

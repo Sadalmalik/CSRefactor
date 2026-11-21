@@ -11,8 +11,12 @@ namespace CSR.Workspace.Symbols
     public static class SymbolResolver
     {
         // allowOverloads: несколько перегрузок метода - все (refs); иначе неоднозначность - ошибка (rename)
-        public static async Task<IReadOnlyList<ISymbol>> ResolveAsync(LoadedSolution loaded, SymbolQuery query,
-            string baseDirectory, bool allowOverloads, CancellationToken cancellation = default)
+        public static async Task<IReadOnlyList<ISymbol>> ResolveAsync(
+            LoadedSolution loaded,
+            SymbolQuery query,
+            string baseDirectory,
+            bool allowOverloads,
+            CancellationToken cancellation = default)
         {
             if (query.IsPosition)
             {
@@ -36,19 +40,26 @@ namespace CSR.Workspace.Symbols
 
 #region Name
 
-        private static async Task<List<ISymbol>> FindSourceAsync(Solution solution, SymbolQuery query,
+        private static async Task<List<ISymbol>> FindSourceAsync(
+            Solution solution,
+            SymbolQuery query,
             CancellationToken cancellation)
         {
             var last = query.LastSegment;
-            var declared = await SymbolFinder.FindSourceDeclarationsAsync(solution, name => name == last,
-                SymbolFilter.TypeAndMember, cancellation);
+            var declared = await SymbolFinder.FindSourceDeclarationsAsync(
+                solution,
+                name => name == last,
+                SymbolFilter.TypeAndMember,
+                cancellation);
             var symbols = declared
                 .Where(symbol => SymbolText.Qualified(symbol) == query.Name && MatchesParameters(symbol, query))
                 .ToList();
             return Distinct(symbols);
         }
 
-        private static async Task<List<ISymbol>> FindMetadataAsync(Solution solution, SymbolQuery query,
+        private static async Task<List<ISymbol>> FindMetadataAsync(
+            Solution solution,
+            SymbolQuery query,
             CancellationToken cancellation)
         {
             var name = query.Name!;
@@ -118,10 +129,14 @@ namespace CSR.Workspace.Symbols
 
 #endregion
 
+
 #region Position
 
-        private static async Task<ISymbol> ResolvePositionAsync(LoadedSolution loaded, SymbolQuery query,
-            string baseDirectory, CancellationToken cancellation)
+        private static async Task<ISymbol> ResolvePositionAsync(
+            LoadedSolution loaded,
+            SymbolQuery query,
+            string baseDirectory,
+            CancellationToken cancellation)
         {
             var file = ResolveFile(loaded, query.File!, baseDirectory);
             var documents = loaded.FindDocuments(file);
@@ -154,7 +169,10 @@ namespace CSR.Workspace.Symbols
             return Path.GetFullPath(Path.Combine(loaded.Root, file));
         }
 
-        private static async Task<ISymbol?> FindAtColumnAsync(Document document, TextLine line, int column,
+        private static async Task<ISymbol?> FindAtColumnAsync(
+            Document document,
+            TextLine line,
+            int column,
             CancellationToken cancellation)
         {
             var position = Math.Min(line.Start + Math.Max(column - 1, 0), line.End);

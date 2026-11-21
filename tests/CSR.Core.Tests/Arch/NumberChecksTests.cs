@@ -63,6 +63,7 @@ namespace CSR.Core.Tests.Arch
 
 #endregion
 
+
 #region numeric-literal
 
         [Test]

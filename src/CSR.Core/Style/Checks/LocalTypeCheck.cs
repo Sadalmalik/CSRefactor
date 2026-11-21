@@ -35,10 +35,14 @@ namespace CSR.Core.Style.Checks
 
         private static readonly CheckParameter[] AllParameters =
         [
-            CheckParameter.Choice("prefer", "var - var там, где тип виден справа или не важен; explicit - явный тип",
-                "var", "explicit"),
+            CheckParameter.Choice(
+                "prefer",
+                "var - var там, где тип виден справа или не важен; explicit - явный тип",
+                "var",
+                "explicit"),
             CheckParameter.Bool("foreach", true, "проверять переменную foreach"),
-            CheckParameter.Strings("foreachExplicitTypes",
+            CheckParameter.Strings(
+                "foreachExplicitTypes",
                 "типы элементов, у которых в foreach остается явный тип (необобщенный IEnumerable, например Transform)"),
         ];
 
@@ -96,7 +100,9 @@ namespace CSR.Core.Style.Checks
             context.Report(type.Span, $"'{type} {name}' -> 'var {name}'", replacement);
         }
 
-        private static void CheckForeach(CheckContext context, ForEachStatementSyntax loop,
+        private static void CheckForeach(
+            CheckContext context,
+            ForEachStatementSyntax loop,
             IReadOnlyList<string> exceptions)
         {
             var type = loop.Type;

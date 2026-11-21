@@ -33,6 +33,7 @@ namespace CSR.Core.Tests.Style
 
 #endregion
 
+
 #region directive-column
 
         [Test]
@@ -59,6 +60,7 @@ namespace CSR.Core.Tests.Style
         }
 
 #endregion
+
 
 #region binary-op-wrap
 
@@ -96,6 +98,7 @@ namespace CSR.Core.Tests.Style
 
 #endregion
 
+
 #region log-call-wrap
 
         [Test]
@@ -132,6 +135,7 @@ namespace CSR.Core.Tests.Style
         }
 
 #endregion
+
 
 #region message-text
 

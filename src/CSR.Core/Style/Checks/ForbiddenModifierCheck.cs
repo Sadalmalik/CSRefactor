@@ -9,8 +9,12 @@ namespace CSR.Core.Style.Checks
     {
         private static readonly CheckParameter[] AllParameters =
         [
-            CheckParameter.Strings("modifiers", "модификатор или сочетание через пробел (в любом порядке)",
-                "sealed", "private protected", "protected internal"),
+            CheckParameter.Strings(
+                "modifiers",
+                "модификатор или сочетание через пробел (в любом порядке)",
+                "sealed",
+                "private protected",
+                "protected internal"),
         ];
 
         public override string Name

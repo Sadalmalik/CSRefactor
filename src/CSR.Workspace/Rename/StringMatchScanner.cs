@@ -43,11 +43,17 @@ namespace CSR.Workspace.Rename
         ];
 
         // unityAssets: просматривать и ассеты Unity (RefactorOptions.UnityExtensions)
-        public static async Task<StringScan> ScanAsync(Solution solution, string root, string name,
-            RefactorOptions options, bool unityAssets, CancellationToken cancellation = default)
+        public static async Task<StringScan> ScanAsync(
+            Solution solution,
+            string root,
+            string name,
+            RefactorOptions options,
+            bool unityAssets,
+            CancellationToken cancellation = default)
         {
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            var pattern = new Regex($@"(?<![\p{{L}}\p{{Nd}}_]){Regex.Escape(name)}(?![\p{{L}}\p{{Nd}}_])",
+            var pattern = new Regex(
+                $@"(?<![\p{{L}}\p{{Nd}}_]){Regex.Escape(name)}(?![\p{{L}}\p{{Nd}}_])",
                 RegexOptions.CultureInvariant);
             var matches = new ConcurrentBag<StringMatch>();
             await ScanLiteralsAsync(solution, root, name, pattern, matches, cancellation);
@@ -72,8 +78,13 @@ namespace CSR.Workspace.Rename
             };
         }
 
-        private static async Task ScanLiteralsAsync(Solution solution, string root, string name, Regex pattern,
-            ConcurrentBag<StringMatch> matches, CancellationToken cancellation)
+        private static async Task ScanLiteralsAsync(
+            Solution solution,
+            string root,
+            string name,
+            Regex pattern,
+            ConcurrentBag<StringMatch> matches,
+            CancellationToken cancellation)
         {
             var documents = solution.Projects
                 .SelectMany(project => project.Documents)
@@ -112,8 +123,14 @@ namespace CSR.Workspace.Rename
             });
         }
 
-        private static FileCounts ScanFiles(string root, string name, Regex pattern, HashSet<string> extensions,
-            RefactorOptions options, ConcurrentBag<StringMatch> matches, CancellationToken cancellation)
+        private static FileCounts ScanFiles(
+            string root,
+            string name,
+            Regex pattern,
+            HashSet<string> extensions,
+            RefactorOptions options,
+            ConcurrentBag<StringMatch> matches,
+            CancellationToken cancellation)
         {
             if (extensions.Count == 0)
                 return new FileCounts(0, 0);
@@ -140,7 +157,11 @@ namespace CSR.Workspace.Rename
             return new FileCounts(files.Count, skipped);
         }
 
-        private static void ScanFile(string file, string root, string name, Regex pattern,
+        private static void ScanFile(
+            string file,
+            string root,
+            string name,
+            Regex pattern,
             ConcurrentBag<StringMatch> matches)
         {
             string text;
@@ -177,7 +198,9 @@ namespace CSR.Workspace.Rename
 
         private record struct FileCounts(int Scanned, int Skipped);
 
-        private static IEnumerable<string> EnumerateFiles(string root, HashSet<string> extensions,
+        private static IEnumerable<string> EnumerateFiles(
+            string root,
+            HashSet<string> extensions,
             HashSet<string> exclude)
         {
             if (!Directory.Exists(root))

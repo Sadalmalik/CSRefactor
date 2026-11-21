@@ -78,7 +78,9 @@ namespace CSR.Core.Metrics
             };
         }
 
-        private static MetricSummary Summarize(MetricDefinition metric, IEnumerable<MetricItem> items,
+        private static MetricSummary Summarize(
+            MetricDefinition metric,
+            IEnumerable<MetricItem> items,
             MetricsOptions options)
         {
             var list = items.ToList();

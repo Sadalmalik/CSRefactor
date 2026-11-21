@@ -41,6 +41,7 @@ namespace CSR.Core.Tests.Style
 
 #endregion
 
+
 #region comment-separator
 
         [TestCase("// ===== Stuck detection =====")]
@@ -57,6 +58,7 @@ namespace CSR.Core.Tests.Style
             => Assert.That(Run("comment-separator", InMethod(comment)), Is.Empty);
 
 #endregion
+
 
 #region comment-typography
 
@@ -137,6 +139,7 @@ namespace CSR.Core.Tests.Style
 
 #endregion
 
+
 #region comment-ending
 
         [Test]
@@ -174,12 +177,15 @@ namespace CSR.Core.Tests.Style
         [Test]
         public void Ending_PreferPeriod_AddsPeriod()
         {
-            var findings = Run("comment-ending", InMethod("// Без точки"),
+            var findings = Run(
+                "comment-ending",
+                InMethod("// Без точки"),
                 settings => settings.Set("prefer", "period"));
             Assert.That(findings.Single().Replacement, Is.EqualTo(new[] { "// Без точки." }));
         }
 
 #endregion
+
 
 #region commented-code
 
@@ -225,6 +231,7 @@ namespace CSR.Core.Tests.Style
 
 #endregion
 
+
 #region todo-format
 
         [Test]
@@ -247,7 +254,9 @@ namespace CSR.Core.Tests.Style
         [Test]
         public void Todo_RequireCyrillic()
         {
-            var findings = Run("todo-format", InMethod("// TODO: fix smoothing"),
+            var findings = Run(
+                "todo-format",
+                InMethod("// TODO: fix smoothing"),
                 settings => settings.Set("requireCyrillic", true));
             Assert.That(findings.Single().Message, Does.Contain("кириллице"));
         }

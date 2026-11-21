@@ -13,8 +13,14 @@ namespace CSR.Core.Arch.Checks
     {
         private static readonly CheckParameter[] AllParameters =
         [
-            CheckParameter.Strings("aspects", "маски аспектов файла Type.<аспект>.cs, которые допустимы",
-                "Gizmos", "Debug", "g", "Designer", "Generated"),
+            CheckParameter.Strings(
+                "aspects",
+                "маски аспектов файла Type.<аспект>.cs, которые допустимы",
+                "Gizmos",
+                "Debug",
+                "g",
+                "Designer",
+                "Generated"),
             CheckParameter.Int("minFields", 1, "сколько своих полей в части - находка"),
             CheckParameter.Int("minMethods", 5, "сколько методов в части - находка"),
         ];

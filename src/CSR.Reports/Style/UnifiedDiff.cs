@@ -6,7 +6,8 @@ namespace CSR.Reports.Style
     // Измененные строки из unified diff (git diff -U0): путь из "+++ b/<путь>", строки из "@@ -a,b +c,d @@"
     public static class UnifiedDiff
     {
-        private static readonly Regex Hunk = new(@"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@",
+        private static readonly Regex Hunk = new(
+            @"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@",
             RegexOptions.CultureInvariant);
 
         // Ключ - путь из диффа (относительно корня репозитория, разделитель '/')

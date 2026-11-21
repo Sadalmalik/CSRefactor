@@ -31,8 +31,13 @@ namespace CSR.Workspace.Rename
         private const string SerializableTypeNote =
             "тип [Serializable]: если хранится через [SerializeReference], имя типа записано в ассетах - нужен [MovedFrom]";
 
-        public static async Task<RenamePlan> PlanAsync(LoadedSolution loaded, ISymbol requested, string newName,
-            RenameSettings settings, RefactorOptions options, CancellationToken cancellation = default)
+        public static async Task<RenamePlan> PlanAsync(
+            LoadedSolution loaded,
+            ISymbol requested,
+            string newName,
+            RenameSettings settings,
+            RefactorOptions options,
+            CancellationToken cancellation = default)
         {
             var symbol = GetRenameTarget(requested);
             ValidateName(symbol, newName);
@@ -60,7 +65,11 @@ namespace CSR.Workspace.Rename
             }
 
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            var renamed = await Renamer.RenameSymbolAsync(working, target, new SymbolRenameOptions(), newName,
+            var renamed = await Renamer.RenameSymbolAsync(
+                working,
+                target,
+                new SymbolRenameOptions(),
+                newName,
                 cancellation);
             var changes = await CollectChangesAsync(solution, renamed, loaded.Root, cancellation);
             var renameTime = stopwatch.Elapsed;
@@ -69,7 +78,12 @@ namespace CSR.Workspace.Rename
                 : null;
             var unityAssets = IsInUnityData(symbol, serialized);
             var strings = settings.ScanStrings
-                ? await StringMatchScanner.ScanAsync(solution, loaded.Root, symbol.Name, options, unityAssets,
+                ? await StringMatchScanner.ScanAsync(
+                    solution,
+                    loaded.Root,
+                    symbol.Name,
+                    options,
+                    unityAssets,
                     cancellation)
                 : null;
             return new RenamePlan
@@ -145,8 +159,11 @@ namespace CSR.Workspace.Rename
         }
 
         // После миграции текст сдвинут: символ - в сдвинутой позиции того же объявления
-        private static async Task<ISymbol> RefindAsync(Solution original, SerializationMigration migration,
-            ISymbol symbol, CancellationToken cancellation)
+        private static async Task<ISymbol> RefindAsync(
+            Solution original,
+            SerializationMigration migration,
+            ISymbol symbol,
+            CancellationToken cancellation)
         {
             var location = symbol.Locations.First(item => item.IsInSource);
             var documentId = original.GetDocumentId(location.SourceTree)!;
@@ -159,7 +176,10 @@ namespace CSR.Workspace.Rename
             return found;
         }
 
-        private static async Task<List<FileChange>> CollectChangesAsync(Solution before, Solution after, string root,
+        private static async Task<List<FileChange>> CollectChangesAsync(
+            Solution before,
+            Solution after,
+            string root,
             CancellationToken cancellation)
         {
             var changes = new List<FileChange>();

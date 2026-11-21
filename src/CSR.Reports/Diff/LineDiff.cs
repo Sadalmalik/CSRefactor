@@ -70,7 +70,12 @@ namespace CSR.Reports.Diff
             return edits;
         }
 
-        private static void AddMiddle(List<Edit> edits, string[] oldLines, string[] newLines, int start, int oldEnd,
+        private static void AddMiddle(
+            List<Edit> edits,
+            string[] oldLines,
+            string[] newLines,
+            int start,
+            int oldEnd,
             int newEnd)
         {
             var oldCount = oldEnd - start;

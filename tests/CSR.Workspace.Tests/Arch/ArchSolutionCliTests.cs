@@ -19,10 +19,28 @@ namespace CSR.Workspace.Tests.Arch
             var project = Path.Combine(sample.Root, "project.jsonc");
             File.WriteAllText(project, """{ "logger": { "methods": ["Log.Info"], "bypass": ["Console.Write*"] } }""");
 
-            var result = Cli.Run("arch", "--solution", sample.SolutionPath, "--projects", "Game", "--no-server",
-                "--config", config, "--project", project, "--format", "md");
-            var all = Cli.Run("arch", "--solution", sample.SolutionPath, "--no-server", "--config", config,
-                "--project", project);
+            var result = Cli.Run(
+                "arch",
+                "--solution",
+                sample.SolutionPath,
+                "--projects",
+                "Game",
+                "--no-server",
+                "--config",
+                config,
+                "--project",
+                project,
+                "--format",
+                "md");
+            var all = Cli.Run(
+                "arch",
+                "--solution",
+                sample.SolutionPath,
+                "--no-server",
+                "--config",
+                config,
+                "--project",
+                project);
 
             Assert.That(result.ExitCode, Is.Zero, result.Error);
             Assert.That(result.Output, Does.Contain("режим: solution"));
@@ -44,8 +62,15 @@ namespace CSR.Workspace.Tests.Arch
 
             var files = Cli.Run("arch", sample.Root, "--solution", solution, "--no-server", "--config", config);
             var diff = Cli.Run("arch", "--solution", solution, "--no-server", "--config", config, "--diff", "HEAD");
-            var projects = Cli.Run("arch", "--solution", solution, "--no-server", "--config", config,
-                "--projects", "Missing*");
+            var projects = Cli.Run(
+                "arch",
+                "--solution",
+                solution,
+                "--no-server",
+                "--config",
+                config,
+                "--projects",
+                "Missing*");
 
             Assert.That(files.ExitCode, Is.EqualTo(2));
             Assert.That(files.Error, Does.Contain("файлы не задаются"));

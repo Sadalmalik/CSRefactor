@@ -14,11 +14,22 @@ namespace CSR.Core.Arch.Checks
     {
         private static readonly CheckParameter[] AllParameters =
         [
-            CheckParameter.Strings("neutral", "маски нейтральных значений: нормализованный текст, у отрицательных '-'",
-                "0", "1", "-1", "2", "0.5"),
+            CheckParameter.Strings(
+                "neutral",
+                "маски нейтральных значений: нормализованный текст, у отрицательных '-'",
+                "0",
+                "1",
+                "-1",
+                "2",
+                "0.5"),
             CheckParameter.Bool("integers", true, "искать и целые литералы"),
-            CheckParameter.Strings("ignoreMethods", "маски имен членов, где литералы не ищутся",
-                "OnDrawGizmos*", "Draw*", "OnGUI", "GetHashCode"),
+            CheckParameter.Strings(
+                "ignoreMethods",
+                "маски имен членов, где литералы не ищутся",
+                "OnDrawGizmos*",
+                "Draw*",
+                "OnGUI",
+                "GetHashCode"),
         ];
 
         private static readonly HashSet<SyntaxKind> BinaryKinds =

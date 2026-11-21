@@ -12,7 +12,10 @@ namespace CSR.Commands
     {
         private const string ServeHint = "csr serve держит решение загруженным";
 
-        public static int Run(string command, IEnumerable<string> args, ISet<string> optionNames,
+        public static int Run(
+            string command,
+            IEnumerable<string> args,
+            ISet<string> optionNames,
             ISet<string> flagNames)
         {
             var arguments = args.ToArray();
@@ -40,7 +43,9 @@ namespace CSR.Commands
         }
 
         // Обработчик запросов: в процессе CLI и на сервере
-        public static async Task<WorkspaceResponse> ExecuteAsync(LoadedSolution loaded, WorkspaceRequest request,
+        public static async Task<WorkspaceResponse> ExecuteAsync(
+            LoadedSolution loaded,
+            WorkspaceRequest request,
             CancellationToken cancellation)
         {
             var output = new StringWriter();

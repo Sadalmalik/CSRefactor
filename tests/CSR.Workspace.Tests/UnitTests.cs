@@ -53,6 +53,7 @@ namespace CSR.Workspace.Tests
 
 #endregion
 
+
 #region TextDiff
 
         [Test]
@@ -99,6 +100,7 @@ namespace CSR.Workspace.Tests
 
 #endregion
 
+
 #region RefactorConfig
 
         [Test]
@@ -134,6 +136,7 @@ namespace CSR.Workspace.Tests
         }
 
 #endregion
+
 
 #region SolutionFile
 

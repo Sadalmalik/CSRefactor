@@ -56,6 +56,7 @@ namespace CSR.Workspace.Tests
 
 #endregion
 
+
 #region Symbols
 
         [Test]
@@ -123,6 +124,7 @@ namespace CSR.Workspace.Tests
 
 #endregion
 
+
 #region References
 
         [Test]
@@ -134,10 +136,13 @@ namespace CSR.Workspace.Tests
             Assert.That(report.Definitions, Has.Count.EqualTo(2));
             Assert.That(places.Select(place => place.File).Distinct(), Is.EquivalentTo(new[]
             {
-                "Game/Inventory.cs", "Game/Player.cs", "Game.Tools/Report.cs",
+                "Game/Inventory.cs",
+                "Game/Player.cs",
+                "Game.Tools/Report.cs",
             }));
             Assert.That(report.ReferenceCount, Is.EqualTo(4));
-            Assert.That(places.Single(place => place.File == "Game/Player.cs").Container,
+            Assert.That(
+                places.Single(place => place.File == "Game/Player.cs").Container,
                 Is.EqualTo("Sample.Units.Player.Pick(Sample.Items.Item)"));
         }
 

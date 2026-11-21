@@ -31,7 +31,9 @@ namespace CSR.Reports.Metrics
             }
         }
 
-        private static void AddPoint(Dictionary<string, FileCoverage> result, Dictionary<string, string> paths,
+        private static void AddPoint(
+            Dictionary<string, FileCoverage> result,
+            Dictionary<string, string> paths,
             XElement point)
         {
             var fileId = point.Attribute("fileid")?.Value;

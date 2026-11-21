@@ -59,6 +59,7 @@ namespace CSR.Core.Tests.Arch
 
 #endregion
 
+
 #region dead-member
 
         private const string Process = """
@@ -117,7 +118,8 @@ namespace CSR.Core.Tests.Arch
                 settings.Set("accessibility", new[] { "public" });
                 settings.Set("parameters", false);
             });
-            Assert.That(findings.Select(finding => finding.Message),
+            Assert.That(
+                findings.Select(finding => finding.Message),
                 Is.EqualTo(new[] { "метод 'User.Run' не используется" }));
         }
 
@@ -146,7 +148,9 @@ namespace CSR.Core.Tests.Arch
                 }
                 """;
             var stubs = "namespace UnityEngine { public class SerializeFieldAttribute : System.Attribute { } }";
-            var findings = Analyze([Compile("Game", "Handler.cs", source, "Stubs.cs", stubs)], "dead-member",
+            var findings = Analyze(
+                [Compile("Game", "Handler.cs", source, "Stubs.cs", stubs)],
+                "dead-member",
                 settings => settings.Set("accessibility", new[] { "private", "internal", "protected" }));
             Assert.That(findings, Is.Empty);
         }
@@ -182,6 +186,7 @@ namespace CSR.Core.Tests.Arch
 
 #endregion
 
+
 #region parameter-set
 
         [Test]
@@ -211,12 +216,15 @@ namespace CSR.Core.Tests.Arch
                 + "из них 1 передают параметры вызывающего дальше";
             Assert.That(finding.Message, Is.EqualTo(message));
 
-            var strict = Analyze([Compile("Game", "Mover.cs", source)], "parameter-set",
+            var strict = Analyze(
+                [Compile("Game", "Mover.cs", source)],
+                "parameter-set",
                 settings => settings.Set("minForwarded", 2));
             Assert.That(strict, Is.Empty);
         }
 
 #endregion
+
 
 #region persisted-class
 

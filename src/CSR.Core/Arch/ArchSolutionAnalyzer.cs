@@ -9,8 +9,12 @@ namespace CSR.Core.Arch
     // признаки по решению - на всех компиляциях сразу. Дерево, общее для нескольких проектов, - один раз
     public static class ArchSolutionAnalyzer
     {
-        public static List<Finding> Analyze(IReadOnlyList<Compilation> compilations, CheckOptions options,
-            ProjectOptions project, Func<string, string> displayPath, CancellationToken cancellation)
+        public static List<Finding> Analyze(
+            IReadOnlyList<Compilation> compilations,
+            CheckOptions options,
+            ProjectOptions project,
+            Func<string, string> displayPath,
+            CancellationToken cancellation)
         {
             var fileOptions = new CheckOptions();
             var fileChecks = options.Checks.Where(configuration => configuration.Check is not SolutionCheck);
@@ -31,8 +35,14 @@ namespace CSR.Core.Arch
                 if (configuration.Check is not SolutionCheck check)
                     continue;
 
-                var context = new SolutionCheckContext(index, compilations, project, configuration, findings,
-                    displayPath, cancellation);
+                var context = new SolutionCheckContext(
+                    index,
+                    compilations,
+                    project,
+                    configuration,
+                    findings,
+                    displayPath,
+                    cancellation);
                 check.AnalyzeSolution(context);
             }
 

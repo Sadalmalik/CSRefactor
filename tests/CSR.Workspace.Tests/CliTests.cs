@@ -52,8 +52,13 @@ namespace CSR.Workspace.Tests
 
             var json = Cli.Run("refs", "Sample.Items.Inventory.Add", "--solution", sample.SolutionPath, "--no-server");
             var missing = Cli.Run("refs", "Sample.Items.Missing", "--solution", sample.SolutionPath, "--no-server");
-            var format = Cli.Run("refs", "Sample.Items.Inventory", "--solution", sample.SolutionPath,
-                "--format", "xml");
+            var format = Cli.Run(
+                "refs",
+                "Sample.Items.Inventory",
+                "--solution",
+                sample.SolutionPath,
+                "--format",
+                "xml");
             var noSolution = Cli.Run("refs", "X.Y", "--solution", sample.GetPath("None.sln"));
 
             Assert.That(json.ExitCode, Is.Zero, json.Error);
@@ -75,13 +80,36 @@ namespace CSR.Workspace.Tests
             var inventory = File.ReadAllText(sample.GetPath("Game/Inventory.cs"));
 
             var preview = Cli.Run("rename", "Sample.Items.Inventory", "Bag", "--solution", solution, "--no-server");
-            var refused = Cli.Run("rename", "Sample.Units.Player.m_Speed", "m_Velocity", "--solution", solution,
-                "--no-server", "--format", "json", "--config", config);
-            var blocked = Cli.Run("rename", "Sample.Items.Inventory", "Bag", "--solution", solution, "--no-server",
+            var refused = Cli.Run(
+                "rename",
+                "Sample.Units.Player.m_Speed",
+                "m_Velocity",
+                "--solution",
+                solution,
+                "--no-server",
+                "--format",
+                "json",
+                "--config",
+                config);
+            var blocked = Cli.Run(
+                "rename",
+                "Sample.Items.Inventory",
+                "Bag",
+                "--solution",
+                solution,
+                "--no-server",
                 "--apply");
             var unchanged = File.ReadAllText(sample.GetPath("Game/Inventory.cs"));
-            var applied = Cli.Run("rename", "Sample.Items.Inventory", "Bag", "--solution", solution, "--no-server",
-                "--apply", "--force", "--no-verify");
+            var applied = Cli.Run(
+                "rename",
+                "Sample.Items.Inventory",
+                "Bag",
+                "--solution",
+                solution,
+                "--no-server",
+                "--apply",
+                "--force",
+                "--no-verify");
 
             Assert.That(preview.ExitCode, Is.Zero, preview.Error);
             Assert.That(preview.Output, Does.StartWith("--- a/Game.Tools/Report.cs\n+++ b/Game.Tools/Report.cs\n"));

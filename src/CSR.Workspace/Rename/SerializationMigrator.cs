@@ -36,8 +36,11 @@ namespace CSR.Workspace.Rename
         private const string UnityNamespace = "UnityEngine.Serialization";
         private const string FormerlySerializedAs = "FormerlySerializedAs";
 
-        public static async Task<SerializationMigration> ApplyAsync(Solution solution, ISymbol symbol,
-            IReadOnlyList<SerializedName> names, CancellationToken cancellation)
+        public static async Task<SerializationMigration> ApplyAsync(
+            Solution solution,
+            ISymbol symbol,
+            IReadOnlyList<SerializedName> names,
+            CancellationToken cancellation)
         {
             var changes = new Dictionary<DocumentId, List<TextChange>>();
             foreach (var name in names)
@@ -59,8 +62,12 @@ namespace CSR.Workspace.Rename
             return new SerializationMigration(migrated, changes);
         }
 
-        private static async Task AddUnityAsync(Solution solution, ISymbol symbol, bool backingField,
-            Dictionary<DocumentId, List<TextChange>> changes, CancellationToken cancellation)
+        private static async Task AddUnityAsync(
+            Solution solution,
+            ISymbol symbol,
+            bool backingField,
+            Dictionary<DocumentId, List<TextChange>> changes,
+            CancellationToken cancellation)
         {
             foreach (var reference in symbol.DeclaringSyntaxReferences)
             {
@@ -82,8 +89,12 @@ namespace CSR.Workspace.Rename
 
         // Короткое имя, если using UnityEngine.Serialization есть или его можно добавить к usings файла;
         // иначе полное
-        private static string GetUnityAttributeName(CompilationUnitSyntax root, MemberDeclarationSyntax member,
-            Dictionary<DocumentId, List<TextChange>> changes, DocumentId document, SourceText text)
+        private static string GetUnityAttributeName(
+            CompilationUnitSyntax root,
+            MemberDeclarationSyntax member,
+            Dictionary<DocumentId, List<TextChange>> changes,
+            DocumentId document,
+            SourceText text)
         {
             var usings = member.Ancestors()
                 .OfType<BaseNamespaceDeclarationSyntax>()
@@ -121,8 +132,13 @@ namespace CSR.Workspace.Rename
             return new TextChange(new TextSpan(last.EndIncludingLineBreak, 0), statement + newLine);
         }
 
-        private static async Task AddAttributeNameAsync(Solution solution, string oldName, SerializedKind kind,
-            SyntaxReference reference, Dictionary<DocumentId, List<TextChange>> changes, CancellationToken cancellation)
+        private static async Task AddAttributeNameAsync(
+            Solution solution,
+            string oldName,
+            SerializedKind kind,
+            SyntaxReference reference,
+            Dictionary<DocumentId, List<TextChange>> changes,
+            CancellationToken cancellation)
         {
             var document = solution.GetDocument(reference.SyntaxTree);
             if (document == null || await reference.GetSyntaxAsync(cancellation) is not AttributeSyntax attribute)
@@ -164,7 +180,9 @@ namespace CSR.Workspace.Rename
             return first.EndIncludingLineBreak - first.End == 2 ? "\r\n" : "\n";
         }
 
-        private static void Add(Dictionary<DocumentId, List<TextChange>> changes, DocumentId document,
+        private static void Add(
+            Dictionary<DocumentId, List<TextChange>> changes,
+            DocumentId document,
             TextChange change)
         {
             if (!changes.TryGetValue(document, out List<TextChange>? list))

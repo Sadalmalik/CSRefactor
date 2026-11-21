@@ -62,8 +62,12 @@ namespace CSR.Core.Arch.Checks
             }
         }
 
-        private static void CollectTree(Compilation compilation, SyntaxTree tree, Dictionary<string, FlagUsage> flags,
-            NameMask names, NameMask ignored)
+        private static void CollectTree(
+            Compilation compilation,
+            SyntaxTree tree,
+            Dictionary<string, FlagUsage> flags,
+            NameMask names,
+            NameMask ignored)
         {
             SemanticModel? model = null;
             foreach (var name in tree.GetRoot().DescendantNodes().OfType<IdentifierNameSyntax>())

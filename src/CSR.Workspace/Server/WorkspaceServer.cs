@@ -21,9 +21,11 @@ namespace CSR.Workspace.Server
 
         // idleTimeout: остановка после простоя; TimeSpan.Zero - без остановки
         // handler - выполнение команды над решением (CLI: WorkspaceCommands.ExecuteAsync)
-        public WorkspaceServer(LoadedSolution loaded,
+        public WorkspaceServer(
+            LoadedSolution loaded,
             Func<LoadedSolution, WorkspaceRequest, CancellationToken, Task<WorkspaceResponse>> handler,
-            TimeSpan idleTimeout, TextWriter log)
+            TimeSpan idleTimeout,
+            TextWriter log)
         {
             m_Loaded = loaded;
             m_Handler = handler;
@@ -71,8 +73,11 @@ namespace CSR.Workspace.Server
         {
             while (!stop.IsCancellationRequested)
             {
-                var pipe = new NamedPipeServerStream(PipeName, PipeDirection.InOut,
-                    NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte,
+                var pipe = new NamedPipeServerStream(
+                    PipeName,
+                    PipeDirection.InOut,
+                    NamedPipeServerStream.MaxAllowedServerInstances,
+                    PipeTransmissionMode.Byte,
                     PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
                 try
                 {
@@ -88,7 +93,9 @@ namespace CSR.Workspace.Server
             }
         }
 
-        private async Task HandleAsync(NamedPipeServerStream pipe, SolutionWatcher watcher,
+        private async Task HandleAsync(
+            NamedPipeServerStream pipe,
+            SolutionWatcher watcher,
             CancellationTokenSource stop)
         {
             Interlocked.Increment(ref m_Active);

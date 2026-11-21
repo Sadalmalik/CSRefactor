@@ -21,9 +21,14 @@ namespace CSR.Core.Arch
         private readonly List<Finding> m_Findings;
         private readonly Func<string, string> m_DisplayPath;
 
-        public SolutionCheckContext(SolutionIndex index, IReadOnlyList<Compilation> compilations,
-            ProjectOptions project, CheckConfiguration configuration, List<Finding> findings,
-            Func<string, string> displayPath, CancellationToken cancellation)
+        public SolutionCheckContext(
+            SolutionIndex index,
+            IReadOnlyList<Compilation> compilations,
+            ProjectOptions project,
+            CheckConfiguration configuration,
+            List<Finding> findings,
+            Func<string, string> displayPath,
+            CancellationToken cancellation)
         {
             Index = index;
             Compilations = compilations;

@@ -11,8 +11,11 @@ namespace CSR.Core.Arch.Checks
     {
         private static readonly CheckParameter[] AllParameters =
         [
-            CheckParameter.Strings("contractMasks", "маски текста комментария-контракта над интерфейсом",
-                "Реализу*", "Implement*"),
+            CheckParameter.Strings(
+                "contractMasks",
+                "маски текста комментария-контракта над интерфейсом",
+                "Реализу*",
+                "Implement*"),
             CheckParameter.Strings("ignoreAttributes", "интерфейсы с этими атрибутами не ищутся"),
             CheckParameter.Bool("ignoreMarkers", true, "не искать интерфейсы без членов"),
         ];

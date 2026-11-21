@@ -8,7 +8,8 @@ namespace CSR.Workspace.Symbols
     {
         private const string ExpectedFormat = "ожидается Namespace.Type.Member или файл.cs:строка[:колонка]";
 
-        private static readonly Regex PositionPattern = new(@"^(?<file>.+\.cs):(?<line>\d+)(?::(?<column>\d+))?$",
+        private static readonly Regex PositionPattern = new(
+            @"^(?<file>.+\.cs):(?<line>\d+)(?::(?<column>\d+))?$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         private static readonly Regex NamePattern = new(
             @"^(?<name>[\p{L}_@][\p{L}\p{Nd}_.]*)(?:\((?<parameters>[^)]*)\))?$",

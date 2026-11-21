@@ -7,11 +7,17 @@ namespace CSR.Workspace.Server
     {
         public static readonly TimeSpan DefaultConnectTimeout = TimeSpan.FromMilliseconds(300);
 
-        public static async Task<WorkspaceResponse?> TrySendAsync(string solutionPath, WorkspaceRequest request,
-            TimeSpan connectTimeout, CancellationToken cancellation = default)
+        public static async Task<WorkspaceResponse?> TrySendAsync(
+            string solutionPath,
+            WorkspaceRequest request,
+            TimeSpan connectTimeout,
+            CancellationToken cancellation = default)
         {
             var pipeName = WorkspaceProtocol.GetPipeName(solutionPath);
-            await using var pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut,
+            await using var pipe = new NamedPipeClientStream(
+                ".",
+                pipeName,
+                PipeDirection.InOut,
                 PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
             try
             {
@@ -28,8 +34,11 @@ namespace CSR.Workspace.Server
         }
 
         // Ответ сервера на служебную команду или null
-        public static Task<WorkspaceResponse?> SendServiceAsync(string solutionPath, string command,
-            TimeSpan connectTimeout, CancellationToken cancellation = default)
+        public static Task<WorkspaceResponse?> SendServiceAsync(
+            string solutionPath,
+            string command,
+            TimeSpan connectTimeout,
+            CancellationToken cancellation = default)
         {
             var request = new WorkspaceRequest
             {

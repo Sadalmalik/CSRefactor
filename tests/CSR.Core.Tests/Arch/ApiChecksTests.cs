@@ -32,7 +32,8 @@ namespace CSR.Core.Tests.Arch
             var findings = Run("index-api", source);
             Assert.That(findings.Select(finding => finding.Line), Is.EqualTo(new[] { 3, 5, 12, 17 }));
             Assert.That(findings[0].Message, Is.EqualTo("NoNode: маркер NoNode = -1"));
-            Assert.That(findings[1].Message,
+            Assert.That(
+                findings[1].Message,
                 Is.EqualTo("TryFindPath: параметр int node; параметр int area; параметр int cell; out целых: 2"));
             Assert.That(findings[2].Message, Is.EqualTo("FindNearestCell: результат int FindNearestCell; return -1"));
             Assert.That(findings[3].Message, Is.EqualTo("CellIndex: свойство int CellIndex"));
@@ -73,6 +74,7 @@ namespace CSR.Core.Tests.Arch
         }
 
 #endregion
+
 
 #region static-data-methods
 
@@ -163,6 +165,7 @@ namespace CSR.Core.Tests.Arch
         }
 
 #endregion
+
 
 #region tuple-type
 

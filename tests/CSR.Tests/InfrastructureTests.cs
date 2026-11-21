@@ -8,8 +8,10 @@ namespace CSR.Tests
         [Test]
         public void Parse_PositionalOptionsAndFlags()
         {
-            var commandLine = CommandLine.Parse(["a", "--config", "x.jsonc", "b", "--all", "--config", "y.jsonc"],
-                Options, Flags);
+            var commandLine = CommandLine.Parse(
+                ["a", "--config", "x.jsonc", "b", "--all", "--config", "y.jsonc"],
+                Options,
+                Flags);
 
             Assert.That(commandLine.Positional, Is.EqualTo(new[] { "a", "b" }));
             Assert.That(commandLine.HasFlag("--all"), Is.True);

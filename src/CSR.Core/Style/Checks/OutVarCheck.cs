@@ -11,7 +11,9 @@ namespace CSR.Core.Style.Checks
         private static readonly CheckParameter[] AllParameters =
         [
             CheckParameter.Choice("prefer", "explicit - out T x, var - out var x", "explicit", "var"),
-            CheckParameter.Bool("discardUnused", true,
+            CheckParameter.Bool(
+                "discardUnused",
+                true,
                 "переменная, которую дальше по коду функции не читают, - находка с заменой на out _"),
         ];
 
@@ -49,7 +51,9 @@ namespace CSR.Core.Style.Checks
                 if (discardUnused && !IsReadLater(variable))
                 {
                     var discard = context.ReplaceInLines(declaration.Span, "_");
-                    context.Report(declaration.Span, $"'{variable.Identifier.Text}' дальше не читается -> 'out _'",
+                    context.Report(
+                        declaration.Span,
+                        $"'{variable.Identifier.Text}' дальше не читается -> 'out _'",
                         discard);
                     continue;
                 }

@@ -9,7 +9,10 @@ namespace CSR.Workspace.Rename
     {
         private const int Context = 3;
 
-        public static string Build(string path, SourceText before, SourceText after,
+        public static string Build(
+            string path,
+            SourceText before,
+            SourceText after,
             IReadOnlyList<TextChange> changes)
         {
             if (changes.Count == 0)
@@ -64,8 +67,13 @@ namespace CSR.Workspace.Rename
             return blocks;
         }
 
-        private static void AppendHunk(StringBuilder output, SourceText before, SourceText after, List<Block> blocks,
-            int first, int last)
+        private static void AppendHunk(
+            StringBuilder output,
+            SourceText before,
+            SourceText after,
+            List<Block> blocks,
+            int first,
+            int last)
         {
             var oldStart = Math.Max(0, blocks[first].OldStart - Context);
             var oldEnd = Math.Min(before.Lines.Count, blocks[last].OldEnd + Context);

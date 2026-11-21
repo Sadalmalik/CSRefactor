@@ -20,10 +20,16 @@ namespace CSR.Core.Style.Checks
 
         private static readonly CheckParameter[] AllParameters =
         [
-            CheckParameter.Choice("prefer", "explicit - private пишется, implicit - не пишется",
-                "explicit", "implicit"),
-            CheckParameter.Strings("members", "виды членов: field, method, property, event, constructor, type",
-                Field, Method),
+            CheckParameter.Choice(
+                "prefer",
+                "explicit - private пишется, implicit - не пишется",
+                "explicit",
+                "implicit"),
+            CheckParameter.Strings(
+                "members",
+                "виды членов: field, method, property, event, constructor, type",
+                Field,
+                Method),
         ];
 
         public override string Name

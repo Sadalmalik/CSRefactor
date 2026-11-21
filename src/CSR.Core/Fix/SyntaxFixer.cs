@@ -39,8 +39,13 @@ namespace CSR.Core.Fix
     public static class SyntaxFixer
     {
         // changed: измененные строки (режим changed-lines); замены сдвигают и переносят их; null - весь файл
-        public static FixResult Fix(string source, string path, CheckOptions options, ProjectOptions project,
-            FixOptions fix, ChangedLines? changed)
+        public static FixResult Fix(
+            string source,
+            string path,
+            CheckOptions options,
+            ProjectOptions project,
+            FixOptions fix,
+            ChangedLines? changed)
         {
             var lines = SourceLines.Parse(source);
             var flags = GetFlags(changed, source);
@@ -90,7 +95,11 @@ namespace CSR.Core.Fix
             return tree.GetDiagnostics().Count(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error);
         }
 
-        private static List<Finding> Analyze(string text, string path, CheckOptions options, ProjectOptions project,
+        private static List<Finding> Analyze(
+            string text,
+            string path,
+            CheckOptions options,
+            ProjectOptions project,
             List<bool>? flags)
         {
             var tree = CSharpSyntaxTree.ParseText(text, project.ParseOptions, path);

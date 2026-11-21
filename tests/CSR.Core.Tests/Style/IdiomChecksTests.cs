@@ -22,12 +22,15 @@ namespace CSR.Core.Tests.Style
         [Test]
         public void NullCheck_PreferPattern_FlagsEquality()
         {
-            var findings = Run("null-check", InMethod("if (o != null) return;"),
+            var findings = Run(
+                "null-check",
+                InMethod("if (o != null) return;"),
                 settings => settings.Set("prefer", "pattern"));
             Assert.That(findings.Single().Replacement, Is.EqualTo(new[] { "if (o is not null) return;" }));
         }
 
 #endregion
+
 
 #region coalesce-assignment
 
@@ -49,6 +52,7 @@ namespace CSR.Core.Tests.Style
             => Assert.That(Run("coalesce-assignment", InMethod(body)), Is.Empty);
 
 #endregion
+
 
 #region out-var
 
@@ -85,6 +89,7 @@ namespace CSR.Core.Tests.Style
 
 #endregion
 
+
 #region bool-local-type
 
         [TestCase("var isAtExit = a >= 10;")]
@@ -105,6 +110,7 @@ namespace CSR.Core.Tests.Style
             => Assert.That(Run("bool-local-type", InMethod(body)), Is.Empty);
 
 #endregion
+
 
 #region tuple-type
 

@@ -100,7 +100,10 @@ namespace CSR.Workspace.Rename
             return names;
         }
 
-        private static void AddAttributeNames(ISymbol symbol, List<SerializedName> names, bool singleDeclarator,
+        private static void AddAttributeNames(
+            ISymbol symbol,
+            List<SerializedName> names,
+            bool singleDeclarator,
             string? sharedProblem)
         {
             foreach (var attribute in symbol.GetAttributes())
@@ -131,7 +134,9 @@ namespace CSR.Workspace.Rename
             }
         }
 
-        private static void AddCustomNames(ISymbol symbol, IReadOnlyList<string> customAttributes,
+        private static void AddCustomNames(
+            ISymbol symbol,
+            IReadOnlyList<string> customAttributes,
             List<SerializedName> names)
         {
             if (customAttributes.Count == 0)

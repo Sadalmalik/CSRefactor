@@ -58,6 +58,7 @@ namespace CSR.Core.Tests.Fix
 
 #endregion
 
+
 #region SyntaxFixer
 
         [Test]
@@ -90,10 +91,20 @@ namespace CSR.Core.Tests.Fix
             options.Checks[1].Severity = Severity.Hint;
 
             var errorsOnly = SyntaxFixer.Fix(Source, "Sample.cs", options, Project, new FixOptions(), null);
-            var withHints = SyntaxFixer.Fix(Source, "Sample.cs", options, Project,
-                new FixOptions { MinSeverity = Severity.Hint }, null);
-            var onlyNull = SyntaxFixer.Fix(Source, "Sample.cs", options, Project,
-                new FixOptions { MinSeverity = Severity.Hint, Checks = new HashSet<string> { "null-check" } }, null);
+            var withHints = SyntaxFixer.Fix(
+                Source,
+                "Sample.cs",
+                options,
+                Project,
+                new FixOptions { MinSeverity = Severity.Hint },
+                null);
+            var onlyNull = SyntaxFixer.Fix(
+                Source,
+                "Sample.cs",
+                options,
+                Project,
+                new FixOptions { MinSeverity = Severity.Hint, Checks = new HashSet<string> { "null-check" } },
+                null);
 
             Assert.That(errorsOnly.Text, Does.Contain("a is null"));
             var remaining = errorsOnly.Remaining.Select(finding => finding.Check);

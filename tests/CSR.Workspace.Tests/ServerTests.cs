@@ -35,7 +35,8 @@ namespace CSR.Workspace.Tests
 
             // правка существующего файла: текст перечитывается без перезагрузки
             var player = sample.GetPath("Game/Player.cs");
-            File.WriteAllText(player, File.ReadAllText(player).Replace("=> m_Inventory.Add(item);",
+            File.WriteAllText(player, File.ReadAllText(player).Replace(
+                "=> m_Inventory.Add(item);",
                 "{\n            m_Inventory.Add(item);\n            m_Inventory.Add(item, 2);\n        }"));
             Assert.That(await WaitForAsync(() => CountRefsAsync(sample), count => count == 5), Is.EqualTo(5));
             Assert.That(server.Reloads, Is.Zero);
@@ -62,8 +63,13 @@ namespace CSR.Workspace.Tests
             var running = server.RunAsync(cancellation.Token);
             await PingAsync(sample);
 
-            var refs = Cli.Run("refs", "Sample.Units.Player.m_Speed", "--solution", sample.SolutionPath,
-                "--format", "text");
+            var refs = Cli.Run(
+                "refs",
+                "Sample.Units.Player.m_Speed",
+                "--solution",
+                sample.SolutionPath,
+                "--format",
+                "text");
             var status = Cli.Run("serve", sample.SolutionPath, "--status");
             var stop = Cli.Run("serve", sample.SolutionPath, "--stop");
             await running.WaitAsync(Wait);
@@ -81,7 +87,8 @@ namespace CSR.Workspace.Tests
         {
             var timeout = TimeSpan.FromSeconds(1);
             var solution = sample.SolutionPath;
-            return WaitForAsync(() => WorkspaceClient.SendServiceAsync(solution, WorkspaceProtocol.Ping, timeout),
+            return WaitForAsync(
+                () => WorkspaceClient.SendServiceAsync(solution, WorkspaceProtocol.Ping, timeout),
                 response => response != null);
         }
 

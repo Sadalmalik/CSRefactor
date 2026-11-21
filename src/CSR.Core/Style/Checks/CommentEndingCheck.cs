@@ -14,10 +14,16 @@ namespace CSR.Core.Style.Checks
 
         private static readonly CheckParameter[] AllParameters =
         [
-            CheckParameter.Choice("prefer", "no-period - без точки в конце, period - с точкой, any - не проверять",
-                "no-period", "period", "any"),
+            CheckParameter.Choice(
+                "prefer",
+                "no-period - без точки в конце, period - с точкой, any - не проверять",
+                "no-period",
+                "period",
+                "any"),
             CheckParameter.Map("letters", DefaultLetters, "буквы и их замена"),
-            CheckParameter.Bool("standaloneOnly", true,
+            CheckParameter.Bool(
+                "standaloneOnly",
+                true,
                 "точку проверять только у отдельного комментария: без строк-комментариев выше и ниже"),
         ];
 
@@ -59,7 +65,11 @@ namespace CSR.Core.Style.Checks
             }
         }
 
-        private static void CheckEnding(LineComment comment, string text, string prefer, List<TextChange> changes,
+        private static void CheckEnding(
+            LineComment comment,
+            string text,
+            string prefer,
+            List<TextChange> changes,
             List<string> problems)
         {
             var trimmed = text.TrimEnd();
@@ -83,8 +93,12 @@ namespace CSR.Core.Style.Checks
             }
         }
 
-        private static void CheckLetters(LineComment comment, string text, IReadOnlyDictionary<string, string> letters,
-            List<TextChange> changes, List<string> problems)
+        private static void CheckLetters(
+            LineComment comment,
+            string text,
+            IReadOnlyDictionary<string, string> letters,
+            List<TextChange> changes,
+            List<string> problems)
         {
             foreach (var pair in letters)
             {

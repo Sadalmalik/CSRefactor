@@ -11,7 +11,9 @@ namespace CSR.Core.Style.Checks
         [
             CheckParameter.Int("max", 120, "наибольшая длина строки в символах"),
             CheckParameter.Bool("ignoreComments", true, "не проверять строки, которые начинаются с комментария"),
-            CheckParameter.Bool("ignoreStringLines", true,
+            CheckParameter.Bool(
+                "ignoreStringLines",
+                true,
                 "не проверять строки, которые начинаются со строкового литерала (перенесенный текст сообщения)"),
         ];
 

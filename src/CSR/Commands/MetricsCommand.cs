@@ -62,7 +62,9 @@ namespace CSR.Commands
             return 0;
         }
 
-        private static List<FileMetrics> Measure(List<string> files, CSharpParseOptions parseOptions,
+        private static List<FileMetrics> Measure(
+            List<string> files,
+            CSharpParseOptions parseOptions,
             Dictionary<string, FileCoverage>? coverage)
         {
             var results = new ConcurrentBag<FileMetrics>();
@@ -70,7 +72,9 @@ namespace CSR.Commands
             return results.OrderBy(result => result.File.File, StringComparer.Ordinal).ToList();
         }
 
-        private static FileMetrics MeasureFile(string file, CSharpParseOptions parseOptions,
+        private static FileMetrics MeasureFile(
+            string file,
+            CSharpParseOptions parseOptions,
             Dictionary<string, FileCoverage>? coverage)
         {
             var source = File.ReadAllText(file);

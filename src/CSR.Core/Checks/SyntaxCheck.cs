@@ -52,7 +52,10 @@ namespace CSR.Core.Checks
         private readonly CheckConfiguration m_Configuration;
         private readonly List<Finding> m_Findings;
 
-        public CheckContext(SyntaxTree tree, ProjectOptions project, CheckConfiguration configuration,
+        public CheckContext(
+            SyntaxTree tree,
+            ProjectOptions project,
+            CheckConfiguration configuration,
             List<Finding> findings)
         {
             Tree = tree;
@@ -102,7 +105,8 @@ namespace CSR.Core.Checks
             var last = Text.Lines.GetLineFromPosition(changes.Max(change => change.Span.End));
             var lines = Text.GetSubText(TextSpan.FromBounds(first.Start, last.End));
             var shifted = changes
-                .Select(change => new TextChange(new TextSpan(change.Span.Start - first.Start, change.Span.Length),
+                .Select(change => new TextChange(
+                    new TextSpan(change.Span.Start - first.Start, change.Span.Length),
                     change.NewText ?? ""))
                 .ToList();
 

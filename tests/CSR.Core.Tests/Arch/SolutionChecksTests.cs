@@ -29,7 +29,9 @@ namespace CSR.Core.Tests.Arch
 
         private static readonly ProjectOptions Project = new();
 
-        internal static List<Finding> Analyze(IReadOnlyList<Compilation> compilations, string check,
+        internal static List<Finding> Analyze(
+            IReadOnlyList<Compilation> compilations,
+            string check,
             Action<CheckSettings>? configure = null)
         {
             var configuration = CheckConfiguration.Create(ArchCatalog.Find(check)!, Severity.Hint, "R1");
@@ -43,7 +45,9 @@ namespace CSR.Core.Tests.Arch
         internal static CSharpCompilation Compile(string name, params string[] files)
             => Compile(name, Array.Empty<MetadataReference>(), files);
 
-        internal static CSharpCompilation Compile(string name, IEnumerable<MetadataReference> extra,
+        internal static CSharpCompilation Compile(
+            string name,
+            IEnumerable<MetadataReference> extra,
             params string[] files)
         {
             var trees = new List<SyntaxTree>();
@@ -71,12 +75,18 @@ namespace CSR.Core.Tests.Arch
         [Test]
         public void VariantFlag_BranchesInFiles_Found()
         {
-            var compilation = Compile("Game",
-                "Builder.cs", Builder,
-                "Path.cs", User("Path", "if (!builder.HasAnchors) return 0; return 1;"),
-                "Agent.cs", User("Agent", "return builder?.HasAnchors == true ? 1 : builder.HasAnchors ? 2 : 0;"),
-                "Zone.cs", User("Zone", "while (builder.HasAnchors && builder.IsWall) { } return 0;"),
-                "Wall.cs", User("Wall", "if (builder.IsWall || builder.IsWall) return 1; return 0;"));
+            var compilation = Compile(
+                "Game",
+                "Builder.cs",
+                Builder,
+                "Path.cs",
+                User("Path", "if (!builder.HasAnchors) return 0; return 1;"),
+                "Agent.cs",
+                User("Agent", "return builder?.HasAnchors == true ? 1 : builder.HasAnchors ? 2 : 0;"),
+                "Zone.cs",
+                User("Zone", "while (builder.HasAnchors && builder.IsWall) { } return 0;"),
+                "Wall.cs",
+                User("Wall", "if (builder.IsWall || builder.IsWall) return 1; return 0;"));
             var finding = Analyze([compilation], "variant-flag").Single();
             Assert.That(finding.File, Is.EqualTo("Builder.cs"));
             Assert.That(finding.Line, Is.EqualTo(3));
@@ -89,13 +99,20 @@ namespace CSR.Core.Tests.Arch
         public void VariantFlag_NotBranchOrOwnType_NoFinding()
         {
             const string use = "public partial class Agent { void Use(bool b) { } }";
-            var compilation = Compile("Game",
-                "Builder.cs", Builder,
-                "Path.cs", User("Path", "var flag = builder.HasAnchors; return flag ? 1 : 0;"),
-                "Agent.cs", User("Agent", "Use(builder.HasAnchors); return 0;").Replace("public class", "public partial class"),
-                "Use.cs", use,
-                "Zone.cs", User("Zone", "return builder.HasAnchors.GetHashCode();"),
-                "Debug.cs", User("Debug", "if (Builder.IsDebug) return 1; return 0;"));
+            var compilation = Compile(
+                "Game",
+                "Builder.cs",
+                Builder,
+                "Path.cs",
+                User("Path", "var flag = builder.HasAnchors; return flag ? 1 : 0;"),
+                "Agent.cs",
+                User("Agent", "Use(builder.HasAnchors); return 0;").Replace("public class", "public partial class"),
+                "Use.cs",
+                use,
+                "Zone.cs",
+                User("Zone", "return builder.HasAnchors.GetHashCode();"),
+                "Debug.cs",
+                User("Debug", "if (Builder.IsDebug) return 1; return 0;"));
             Assert.That(Analyze([compilation], "variant-flag", settings => settings.Set("minFiles", 1)), Is.Empty);
         }
 
@@ -104,8 +121,13 @@ namespace CSR.Core.Tests.Arch
         {
             const string branch = "if (builder.IsWall) return 1; return 0;";
             var game = Compile("Game", "Builder.cs", Builder, "Path.cs", User("Path", branch));
-            var tools = Compile("Tools", [game.ToMetadataReference()],
-                "Tool.cs", User("Tool", branch), "Map.cs", User("Map", branch));
+            var tools = Compile(
+                "Tools",
+                [game.ToMetadataReference()],
+                "Tool.cs",
+                User("Tool", branch),
+                "Map.cs",
+                User("Map", branch));
 
             var finding = Analyze([game, tools], "variant-flag").Single();
             Assert.That(finding.Message, Does.Contain("'Builder.IsWall'").And.Contain("мест 3 в 3 файлах"));
@@ -114,10 +136,14 @@ namespace CSR.Core.Tests.Arch
         [Test]
         public void VariantFlag_Options_NamesAndThresholds()
         {
-            var compilation = Compile("Game",
-                "Builder.cs", Builder,
-                "Path.cs", User("Path", "if (builder.IsWall) return 1; return 0;"),
-                "Agent.cs", User("Agent", "if (builder.HasAnchors) return 1; return 0;"));
+            var compilation = Compile(
+                "Game",
+                "Builder.cs",
+                Builder,
+                "Path.cs",
+                User("Path", "if (builder.IsWall) return 1; return 0;"),
+                "Agent.cs",
+                User("Agent", "if (builder.HasAnchors) return 1; return 0;"));
             Assert.That(Analyze([compilation], "variant-flag"), Is.Empty);
 
             var findings = Analyze([compilation], "variant-flag", settings =>

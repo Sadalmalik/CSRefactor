@@ -57,7 +57,10 @@ namespace CSR.Core.Style.Checks
         }
 
         // literal: строковый литерал - кавычки замены экранируются по его виду; null - комментарий
-        private static void Check(CheckContext context, TextSpan span, IReadOnlyDictionary<string, string> replacements,
+        private static void Check(
+            CheckContext context,
+            TextSpan span,
+            IReadOnlyDictionary<string, string> replacements,
             SyntaxToken? literal)
         {
             var text = context.Text.ToString(span);

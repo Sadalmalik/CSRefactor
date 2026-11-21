@@ -14,20 +14,66 @@ namespace CSR.Core.Arch.Checks
     {
         private static readonly CheckParameter[] AllParameters =
         [
-            CheckParameter.Strings("accessibility", "видимость членов: private, protected, internal, public",
-                "private", "internal"),
+            CheckParameter.Strings(
+                "accessibility",
+                "видимость членов: private, protected, internal, public",
+                "private",
+                "internal"),
             CheckParameter.Bool("writeOnly", true, "искать поля и свойства, которые только записываются"),
             CheckParameter.Bool("parameters", true, "искать параметры, которые не читаются"),
-            CheckParameter.Strings("ignoreNames", "маски имен членов, вызываемых снаружи (сообщения движка)",
-                "Awake", "Start", "Update", "FixedUpdate", "LateUpdate", "OnEnable", "OnDisable", "OnDestroy",
-                "OnValidate", "Reset", "OnGUI", "OnDrawGizmos*", "OnTrigger*", "OnCollision*", "OnMouse*",
-                "OnApplication*", "OnBecame*", "OnAnimator*", "OnParticle*", "OnTransform*", "OnRender*",
-                "OnBefore*", "OnAfter*", "GetEnumerator", "Dispose", "Deconstruct", "Main"),
-            CheckParameter.Strings("dataAttributes", "атрибуты сериализации: ищется только запись без чтения",
-                "SerializeField", "Serializable", "SerializeReference", "JsonProperty", "DataMember"),
-            CheckParameter.Strings("ignoreAttributes", "члены и типы с этими атрибутами не ищутся",
-                "Test*", "SetUp", "TearDown", "OneTime*", "MenuItem", "ContextMenu", "RuntimeInitializeOnLoadMethod",
-                "InitializeOnLoad*", "UsedImplicitly", "Preserve", "DllImport", "Obsolete"),
+            CheckParameter.Strings(
+                "ignoreNames",
+                "маски имен членов, вызываемых снаружи (сообщения движка)",
+                "Awake",
+                "Start",
+                "Update",
+                "FixedUpdate",
+                "LateUpdate",
+                "OnEnable",
+                "OnDisable",
+                "OnDestroy",
+                "OnValidate",
+                "Reset",
+                "OnGUI",
+                "OnDrawGizmos*",
+                "OnTrigger*",
+                "OnCollision*",
+                "OnMouse*",
+                "OnApplication*",
+                "OnBecame*",
+                "OnAnimator*",
+                "OnParticle*",
+                "OnTransform*",
+                "OnRender*",
+                "OnBefore*",
+                "OnAfter*",
+                "GetEnumerator",
+                "Dispose",
+                "Deconstruct",
+                "Main"),
+            CheckParameter.Strings(
+                "dataAttributes",
+                "атрибуты сериализации: ищется только запись без чтения",
+                "SerializeField",
+                "Serializable",
+                "SerializeReference",
+                "JsonProperty",
+                "DataMember"),
+            CheckParameter.Strings(
+                "ignoreAttributes",
+                "члены и типы с этими атрибутами не ищутся",
+                "Test*",
+                "SetUp",
+                "TearDown",
+                "OneTime*",
+                "MenuItem",
+                "ContextMenu",
+                "RuntimeInitializeOnLoadMethod",
+                "InitializeOnLoad*",
+                "UsedImplicitly",
+                "Preserve",
+                "DllImport",
+                "Obsolete"),
         ];
 
         public override string Name
@@ -114,7 +160,10 @@ namespace CSR.Core.Arch.Checks
             }
         }
 
-        private static bool IsCandidate(ISymbol member, IReadOnlyList<string> accessibility, NameMask ignoredNames,
+        private static bool IsCandidate(
+            ISymbol member,
+            IReadOnlyList<string> accessibility,
+            NameMask ignoredNames,
             NameMask ignoredAttributes)
         {
             if (!accessibility.Contains(GetAccessibility(member)) || ignoredNames.IsMatch(member.Name)
@@ -132,8 +181,11 @@ namespace CSR.Core.Arch.Checks
         }
 
         // Параметры обычного метода с телом, который вызывается напрямую (не группа методов, не обработчик)
-        private static bool IsParameterCandidate(SolutionCheckContext context, IMethodSymbol method,
-            NameMask ignoredNames, NameMask ignoredAttributes)
+        private static bool IsParameterCandidate(
+            SolutionCheckContext context,
+            IMethodSymbol method,
+            NameMask ignoredNames,
+            NameMask ignoredAttributes)
         {
             if (method.MethodKind is not (MethodKind.Ordinary or MethodKind.Constructor) || IsExternallyBound(method)
                 || ignoredNames.IsMatch(method.Name) || HasAttribute(method, ignoredAttributes) || method.IsExtern)

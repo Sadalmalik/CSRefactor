@@ -11,9 +11,27 @@ namespace CSR.Core.Arch.Checks
     {
         private static readonly CheckParameter[] AllParameters =
         [
-            CheckParameter.Strings("hints", "слова имени поведенческого числа (DeadZone - два слова подряд)",
-                "Radius", "Distance", "Range", "Speed", "Velocity", "Acceleration", "Angle", "Timeout", "Delay",
-                "Duration", "Interval", "Cooldown", "Time", "Threshold", "DeadZone", "Height", "Force", "Chance"),
+            CheckParameter.Strings(
+                "hints",
+                "слова имени поведенческого числа (DeadZone - два слова подряд)",
+                "Radius",
+                "Distance",
+                "Range",
+                "Speed",
+                "Velocity",
+                "Acceleration",
+                "Angle",
+                "Timeout",
+                "Delay",
+                "Duration",
+                "Interval",
+                "Cooldown",
+                "Time",
+                "Threshold",
+                "DeadZone",
+                "Height",
+                "Force",
+                "Chance"),
             CheckParameter.Bool("staticReadonly", true, "искать и static readonly поля"),
         ];
 
@@ -51,7 +69,9 @@ namespace CSR.Core.Arch.Checks
             }
         }
 
-        private static void CheckVariable(CheckContext context, VariableDeclarationSyntax declaration,
+        private static void CheckVariable(
+            CheckContext context,
+            VariableDeclarationSyntax declaration,
             VariableDeclaratorSyntax variable)
         {
             var words = ArchSyntax.SplitWords(variable.Identifier.Text);
@@ -61,7 +81,8 @@ namespace CSR.Core.Arch.Checks
                 return;
 
             var value = variable.Initializer == null ? "" : " = " + ArchSyntax.Shorten(variable.Initializer.Value, 40);
-            context.Report(variable.Identifier.Span,
+            context.Report(
+                variable.Identifier.Span,
                 $"константа {declaration.Type} {variable.Identifier.Text}{value} (подсказка '{hint}')");
         }
 

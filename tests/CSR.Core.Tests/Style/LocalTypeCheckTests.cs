@@ -52,7 +52,9 @@ namespace CSR.Core.Tests.Style
                 foreach (Transform child in o.Root)
                     a++;
                 """;
-            var findings = Run("local-type", InMethod(body),
+            var findings = Run(
+                "local-type",
+                InMethod(body),
                 settings => settings.Set("foreachExplicitTypes", new[] { "Transform" }));
             Assert.That(findings.Single().Replacement, Is.EqualTo(new[] { "foreach (var cell in o.Cells)" }));
         }

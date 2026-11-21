@@ -68,8 +68,17 @@ namespace CSR.Tests
             var file = folder.Write("Sample.cs", Source);
             var config = folder.Write("metrics.jsonc", """{ "function": { "cyclomatic": { "threshold": 1 } } }""");
             var project = folder.Write("project.jsonc", """{ "preprocessorSymbols": [] }""");
-            var result = Cli.Run("metrics", file, "--config", config, "--project", project,
-                "--format", "md", "--top", "1");
+            var result = Cli.Run(
+                "metrics",
+                file,
+                "--config",
+                config,
+                "--project",
+                project,
+                "--format",
+                "md",
+                "--top",
+                "1");
 
             Assert.That(result.ExitCode, Is.EqualTo(0));
             Assert.That(result.Output, Does.Contain("| Функция | Цикломатическая сложность | 3 | 3 | 3 | 3 | 1 | 1 |"));

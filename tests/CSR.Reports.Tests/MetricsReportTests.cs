@@ -59,7 +59,8 @@ namespace CSR.Reports.Tests
             Assert.That(cyclomatic.Max, Is.EqualTo(5));
             Assert.That(cyclomatic.Threshold, Is.EqualTo(1));
             Assert.That(cyclomatic.AboveThreshold, Is.EqualTo(1));
-            Assert.That(cyclomatic.Top.Select(item => item.Name),
+            Assert.That(
+                cyclomatic.Top.Select(item => item.Name),
                 Is.EqualTo(new[] { "Sample.Branchy", "Sample.Simple" }));
         }
 
@@ -123,7 +124,8 @@ namespace CSR.Reports.Tests
             var file = root.GetProperty("items")[0];
             Assert.That(file.GetProperty("file").GetString(), Is.EqualTo(FilePath));
             Assert.That(file.GetProperty("functions").GetArrayLength(), Is.EqualTo(3));
-            Assert.That(file.GetProperty("types")[0].GetProperty("members").GetProperty("methods").GetInt32(),
+            Assert.That(
+                file.GetProperty("types")[0].GetProperty("members").GetProperty("methods").GetInt32(),
                 Is.EqualTo(2));
         }
 

@@ -7,8 +7,12 @@ namespace CSR.Workspace.References
     // Все ссылки на символы по решению (SymbolFinder): с переопределениями, реализациями и аксессорами
     public static class ReferenceFinder
     {
-        public static async Task<ReferenceReport> FindAsync(Solution solution, string root, string query,
-            IReadOnlyList<ISymbol> symbols, CancellationToken cancellation = default)
+        public static async Task<ReferenceReport> FindAsync(
+            Solution solution,
+            string root,
+            string query,
+            IReadOnlyList<ISymbol> symbols,
+            CancellationToken cancellation = default)
         {
             var definitions = new Dictionary<string, ReferencedDefinition>();
             var models = new Dictionary<DocumentId, SemanticModel?>();
@@ -68,8 +72,11 @@ namespace CSR.Workspace.References
             };
         }
 
-        private static async Task<ReferencePlace> CreatePlaceAsync(ReferenceLocation reference, string root,
-            Dictionary<DocumentId, SemanticModel?> models, CancellationToken cancellation)
+        private static async Task<ReferencePlace> CreatePlaceAsync(
+            ReferenceLocation reference,
+            string root,
+            Dictionary<DocumentId, SemanticModel?> models,
+            CancellationToken cancellation)
         {
             var location = SourceLocations.Create(reference.Location, root);
             if (!models.TryGetValue(reference.Document.Id, out SemanticModel? model))

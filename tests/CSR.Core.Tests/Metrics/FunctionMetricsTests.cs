@@ -64,6 +64,7 @@ namespace CSR.Core.Tests.Metrics
 
 #endregion
 
+
 #region Lines
 
         [Test]
@@ -114,6 +115,7 @@ namespace CSR.Core.Tests.Metrics
 
 #endregion
 
+
 #region Parameters and names
 
         [Test]
@@ -134,7 +136,8 @@ namespace CSR.Core.Tests.Metrics
                 }
                 """;
             var file = TestCode.Measure(source);
-            Assert.That(file.Functions.Select(function => function.Values[MetricKeys.Parameters]),
+            Assert.That(
+                file.Functions.Select(function => function.Values[MetricKeys.Parameters]),
                 Is.EqualTo(new[] { 2, 2, 1 }));
         }
 

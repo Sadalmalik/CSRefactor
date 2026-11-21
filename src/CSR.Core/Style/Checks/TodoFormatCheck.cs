@@ -6,10 +6,12 @@ namespace CSR.Core.Style.Checks
     // Формат TODO: // TODO: <что сделать>, без автора, даты и номера задачи
     public class TodoFormatCheck : SyntaxCheck
     {
-        private static readonly Regex Marker = new(@"^(todo|fixme)\b\s*(\([^)]*\))?\s*:?\s*",
+        private static readonly Regex Marker = new(
+            @"^(todo|fixme)\b\s*(\([^)]*\))?\s*:?\s*",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
-        private static readonly Regex Date = new(@"\b\d{4}[-./]\d{1,2}[-./]\d{1,2}\b|\b\d{1,2}[./]\d{1,2}[./]\d{2,4}\b",
+        private static readonly Regex Date = new(
+            @"\b\d{4}[-./]\d{1,2}[-./]\d{1,2}\b|\b\d{1,2}[./]\d{1,2}[./]\d{2,4}\b",
             RegexOptions.CultureInvariant);
 
         private static readonly Regex Ticket = new(@"\b[A-Z][A-Z0-9]+-\d+\b|#\d{2,}", RegexOptions.CultureInvariant);

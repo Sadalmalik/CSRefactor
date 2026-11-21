@@ -45,6 +45,7 @@ namespace CSR.Core.Tests.Arch
 
 #endregion
 
+
 #region debug-draw
 
         [Test]
@@ -117,6 +118,7 @@ namespace CSR.Core.Tests.Arch
 
 #endregion
 
+
 #region obsolete-reason
 
         [Test]
@@ -139,11 +141,13 @@ namespace CSR.Core.Tests.Arch
                 }
                 """;
             var findings = Run("obsolete-reason", source);
-            Assert.That(findings.Select(finding => finding.Message),
+            Assert.That(
+                findings.Select(finding => finding.Message),
                 Is.EqualTo(new[] { "[Obsolete] без причины: A", "[System.Obsolete(\"\")] без причины: B" }));
         }
 
 #endregion
+
 
 #region Common
 
@@ -151,7 +155,10 @@ namespace CSR.Core.Tests.Arch
         public void ExcludePaths_SkipsFile()
         {
             var source = InMethod("if (shape is Circle circle) return;");
-            var findings = Run("type-branch", source, settings => settings.Set("excludePaths", new[] { "*/editor/*" }),
+            var findings = Run(
+                "type-branch",
+                source,
+                settings => settings.Set("excludePaths", new[] { "*/editor/*" }),
                 "Game/Editor/Sample.cs");
             Assert.That(findings, Is.Empty);
         }

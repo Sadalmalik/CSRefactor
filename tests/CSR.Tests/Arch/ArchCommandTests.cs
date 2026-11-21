@@ -58,8 +58,17 @@ namespace CSR.Tests.Arch
             var config = folder.Write("arch.jsonc", Config);
             var layer = folder.Write("layer.jsonc", """{ "checks": { "type-branch": { "severity": "error" } } }""");
             var output = Path.Combine(folder.Path, "arch.md");
-            var result = Cli.Run("arch", folder.Path, "--config", config, "--config", layer, "--format", "md",
-                "--out", output);
+            var result = Cli.Run(
+                "arch",
+                folder.Path,
+                "--config",
+                config,
+                "--config",
+                layer,
+                "--format",
+                "md",
+                "--out",
+                output);
 
             Assert.That(result.ExitCode, Is.EqualTo(1));
             Assert.That(result.Output, Is.Empty);

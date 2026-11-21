@@ -15,8 +15,11 @@ namespace CSR.Core.Arch.Checks
         private static readonly CheckParameter[] AllParameters =
         [
             CheckParameter.Strings("names", "слова имен-номеров (без учета регистра)", "cell", "node", "area", "block"),
-            CheckParameter.Strings("indexWords", "последние слова, после которых слово из names тоже номер",
-                "index", "id"),
+            CheckParameter.Strings(
+                "indexWords",
+                "последние слова, после которых слово из names тоже номер",
+                "index",
+                "id"),
             CheckParameter.Int("minOutInts", 2, "сколько out-параметров целого типа - находка; 0 - не проверять"),
             CheckParameter.Bool("notFoundMarker", true, "искать return -1 и открытые константы -1"),
         ];

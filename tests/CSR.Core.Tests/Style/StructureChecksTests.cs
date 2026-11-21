@@ -28,7 +28,9 @@ namespace CSR.Core.Tests.Style
             }));
             Assert.That(findings.Select(finding => (finding.Line, finding.EndLine)), Is.EqualTo(new[]
             {
-                (4, 4), (5, 5), (6, 6),
+                (4, 4),
+                (5, 5),
+                (6, 6),
             }), "строка с атрибутом не входит в находку: замена - одна строка");
         }
 
@@ -86,6 +88,7 @@ namespace CSR.Core.Tests.Style
 
 #endregion
 
+
 #region forbidden-modifier
 
         [Test]
@@ -109,6 +112,7 @@ namespace CSR.Core.Tests.Style
         }
 
 #endregion
+
 
 #region custom-delegate
 

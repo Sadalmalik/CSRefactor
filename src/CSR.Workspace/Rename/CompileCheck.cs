@@ -25,7 +25,10 @@ namespace CSR.Workspace.Rename
     {
         private const int MaxReported = 20;
 
-        public static async Task<CompileResult> RunAsync(Solution before, Solution after, string root,
+        public static async Task<CompileResult> RunAsync(
+            Solution before,
+            Solution after,
+            string root,
             CancellationToken cancellation = default)
         {
             var stopwatch = Stopwatch.StartNew();
@@ -72,7 +75,9 @@ namespace CSR.Workspace.Rename
         }
 
         // Те же документы с пробелом в конце: правка без смысла
-        private static async Task<List<Diagnostic>> GetNoopErrorsAsync(Solution before, ProjectChanges change,
+        private static async Task<List<Diagnostic>> GetNoopErrorsAsync(
+            Solution before,
+            ProjectChanges change,
             CancellationToken cancellation)
         {
             var noop = before;
@@ -94,8 +99,11 @@ namespace CSR.Workspace.Rename
         }
 
         // Сверх базы по коду ошибки; первыми - ошибки, которых до правки не было (по коду, файлу и тексту)
-        private static IEnumerable<CodeLocation> GetExcess(List<Diagnostic> diagnostics, List<Diagnostic> original,
-            Dictionary<string, int> baseline, string root)
+        private static IEnumerable<CodeLocation> GetExcess(
+            List<Diagnostic> diagnostics,
+            List<Diagnostic> original,
+            Dictionary<string, int> baseline,
+            string root)
         {
             var known = original.Select(GetKey).ToHashSet();
             foreach (var group in diagnostics.GroupBy(diagnostic => diagnostic.Id))

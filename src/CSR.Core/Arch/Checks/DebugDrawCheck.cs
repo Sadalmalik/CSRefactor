@@ -13,15 +13,30 @@ namespace CSR.Core.Arch.Checks
     {
         private static readonly CheckParameter[] AllParameters =
         [
-            CheckParameter.Strings("drawMethods", "маски вызовов отрисовки (текст вызова без пробелов)",
-                "Debug.DrawLine", "Debug.DrawRay"),
+            CheckParameter.Strings(
+                "drawMethods",
+                "маски вызовов отрисовки (текст вызова без пробелов)",
+                "Debug.DrawLine",
+                "Debug.DrawRay"),
             CheckParameter.Int("durationArgument", 4, "номер аргумента длительности (с 1); 0 - не проверять"),
-            CheckParameter.Strings("debugMethods", "маски членов отладочной отрисовки, где вызовы не ищутся",
-                "OnDrawGizmos*", "Draw*", "*Debug*", "*Gizmo*"),
-            CheckParameter.Strings("flagNames", "маски имен bool-флагов отладки (без префикса m_, _)",
-                "*Debug*", "Draw*"),
-            CheckParameter.Strings("settingsTypes", "маски имен типов настроек, где флаги отладки - норма",
-                "*Settings", "*Config", "*Options"),
+            CheckParameter.Strings(
+                "debugMethods",
+                "маски членов отладочной отрисовки, где вызовы не ищутся",
+                "OnDrawGizmos*",
+                "Draw*",
+                "*Debug*",
+                "*Gizmo*"),
+            CheckParameter.Strings(
+                "flagNames",
+                "маски имен bool-флагов отладки (без префикса m_, _)",
+                "*Debug*",
+                "Draw*"),
+            CheckParameter.Strings(
+                "settingsTypes",
+                "маски имен типов настроек, где флаги отладки - норма",
+                "*Settings",
+                "*Config",
+                "*Options"),
         ];
 
         public override string Name

@@ -25,7 +25,10 @@ namespace CSR.Reports.Config
             }
         }
 
-        private static void ApplyCheck(CheckOptions options, IReadOnlyList<SyntaxCheck> catalog, string name,
+        private static void ApplyCheck(
+            CheckOptions options,
+            IReadOnlyList<SyntaxCheck> catalog,
+            string name,
             JsonElement element)
         {
             var check = catalog.FirstOrDefault(candidate => candidate.Name == name);
@@ -62,7 +65,10 @@ namespace CSR.Reports.Config
             }
         }
 
-        private static void ApplyParameter(SyntaxCheck check, CheckSettings settings, JsonProperty property,
+        private static void ApplyParameter(
+            SyntaxCheck check,
+            CheckSettings settings,
+            JsonProperty property,
             string path)
         {
             var parameter = check.Parameters.FirstOrDefault(candidate => candidate.Name == property.Name);

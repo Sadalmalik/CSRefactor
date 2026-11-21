@@ -10,8 +10,11 @@ namespace CSR.Core.Style.Checks
     {
         private static readonly CheckParameter[] AllParameters =
         [
-            CheckParameter.Choice("prefer", "equality - == null и != null, pattern - is null и is not null",
-                "equality", "pattern"),
+            CheckParameter.Choice(
+                "prefer",
+                "equality - == null и != null, pattern - is null и is not null",
+                "equality",
+                "pattern"),
         ];
 
         public override string Name

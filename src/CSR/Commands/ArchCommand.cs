@@ -78,7 +78,9 @@ namespace CSR.Commands
         }
 
         // Режим решения: в процессе CLI или на сервере csr serve
-        public static async Task<int> ExecuteAsync(WorkspaceContext context, string[] args,
+        public static async Task<int> ExecuteAsync(
+            WorkspaceContext context,
+            string[] args,
             CancellationToken cancellation)
         {
             var commandLine = CommandLine.Parse(args, OptionNames, FlagNames);
@@ -96,8 +98,12 @@ namespace CSR.Commands
             var stopwatch = Stopwatch.StartNew();
             var compilations = await GetCompilationsAsync(context, commandLine.GetOptions("--projects"), cancellation);
             var trees = ArchSolutionAnalyzer.GetTrees(compilations);
-            var findings = ArchSolutionAnalyzer.Analyze(compilations, options, project,
-                path => GetDisplayPath(path, directory), cancellation);
+            var findings = ArchSolutionAnalyzer.Analyze(
+                compilations,
+                options,
+                project,
+                path => GetDisplayPath(path, directory),
+                cancellation);
             var report = new CheckReport { FileCount = trees.Count, Scope = "solution", Findings = findings };
             var text = Write(report, format);
             var output = commandLine.GetOption("--out");
@@ -112,8 +118,10 @@ namespace CSR.Commands
             return report.HasErrors ? 1 : 0;
         }
 
-        private static async Task<List<Compilation>> GetCompilationsAsync(WorkspaceContext context,
-            IReadOnlyList<string> projectMasks, CancellationToken cancellation)
+        private static async Task<List<Compilation>> GetCompilationsAsync(
+            WorkspaceContext context,
+            IReadOnlyList<string> projectMasks,
+            CancellationToken cancellation)
         {
             var mask = NameMask.Get(projectMasks, true);
             var projects = context.Solution.Current.Projects

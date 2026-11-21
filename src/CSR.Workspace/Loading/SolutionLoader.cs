@@ -13,7 +13,9 @@ namespace CSR.Workspace.Loading
 
         // projectFilter: имя проекта (файл без расширения) -> грузить ли; проекты, на которые ссылаются
         // выбранные, грузятся тоже. null - все проекты решения
-        public static async Task<LoadedSolution> LoadAsync(string path, Func<string, bool>? projectFilter,
+        public static async Task<LoadedSolution> LoadAsync(
+            string path,
+            Func<string, bool>? projectFilter,
             CancellationToken cancellation = default)
         {
             var fullPath = Path.GetFullPath(path);
@@ -71,15 +73,22 @@ namespace CSR.Workspace.Loading
             };
         }
 
-        private static Task<Solution> OpenSolutionAsync(MSBuildWorkspace workspace, string path, bool isolated,
-            string cache, CancellationToken cancellation)
+        private static Task<Solution> OpenSolutionAsync(
+            MSBuildWorkspace workspace,
+            string path,
+            bool isolated,
+            string cache,
+            CancellationToken cancellation)
         {
             var openPath = isolated ? SolutionFile.WriteShadow(path, cache) : path;
             return workspace.OpenSolutionAsync(openPath, cancellationToken: cancellation);
         }
 
-        private static async Task<Solution> OpenProjectsAsync(MSBuildWorkspace workspace, List<string> projects,
-            Func<string, bool> projectFilter, CancellationToken cancellation)
+        private static async Task<Solution> OpenProjectsAsync(
+            MSBuildWorkspace workspace,
+            List<string> projects,
+            Func<string, bool> projectFilter,
+            CancellationToken cancellation)
         {
             var selected = projects
                 .Where(project => projectFilter(Path.GetFileNameWithoutExtension(project)))

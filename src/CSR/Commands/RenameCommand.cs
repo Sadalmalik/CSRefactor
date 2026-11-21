@@ -37,7 +37,9 @@ namespace CSR.Commands
         public static int Run(IEnumerable<string> args)
             => WorkspaceCommands.Run("rename", args, OptionNames, FlagNames);
 
-        public static async Task<int> ExecuteAsync(WorkspaceContext context, string[] args,
+        public static async Task<int> ExecuteAsync(
+            WorkspaceContext context,
+            string[] args,
             CancellationToken cancellation)
         {
             var commandLine = CommandLine.Parse(args, OptionNames, FlagNames);
@@ -59,7 +61,12 @@ namespace CSR.Commands
             var query = SymbolQuery.Parse(commandLine.Positional[0]);
             var directory = context.WorkingDirectory;
             var symbols = await SymbolResolver.ResolveAsync(loaded, query, directory, false, cancellation);
-            var plan = await RenameEngine.PlanAsync(loaded, symbols[0], commandLine.Positional[1], settings, options,
+            var plan = await RenameEngine.PlanAsync(
+                loaded,
+                symbols[0],
+                commandLine.Positional[1],
+                settings,
+                options,
                 cancellation);
             var status = GetStatus(plan, commandLine.HasFlag("--apply"), commandLine.HasFlag("--force"));
             if (status == RenameStatus.Applied)

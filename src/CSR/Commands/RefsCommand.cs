@@ -27,7 +27,9 @@ namespace CSR.Commands
         public static int Run(IEnumerable<string> args)
             => WorkspaceCommands.Run("refs", args, OptionNames, FlagNames);
 
-        public static async Task<int> ExecuteAsync(WorkspaceContext context, string[] args,
+        public static async Task<int> ExecuteAsync(
+            WorkspaceContext context,
+            string[] args,
             CancellationToken cancellation)
         {
             var commandLine = CommandLine.Parse(args, OptionNames, FlagNames);
@@ -43,7 +45,11 @@ namespace CSR.Commands
             var loaded = context.Solution;
             var directory = context.WorkingDirectory;
             var symbols = await SymbolResolver.ResolveAsync(loaded, query, directory, true, cancellation);
-            var report = await ReferenceFinder.FindAsync(loaded.Current, loaded.Root, query.Text, symbols,
+            var report = await ReferenceFinder.FindAsync(
+                loaded.Current,
+                loaded.Root,
+                query.Text,
+                symbols,
                 cancellation);
             var text = format == "json" ? ReferenceWriter.WriteJson(report) : ReferenceWriter.WriteText(report);
             context.Output.Write(text);

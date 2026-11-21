@@ -43,7 +43,8 @@ namespace CSR.Reports.Tests
         public void Config_EnablesChecksWithLabelsAndParameters()
         {
             var options = StyleConfig.Parse(Config);
-            Assert.That(options.Checks.Select(check => check.Check.Name),
+            Assert.That(
+                options.Checks.Select(check => check.Check.Name),
                 Is.EqualTo(new[] { "line-length", "null-check", "xml-doc" }));
 
             var findings = Analyze(options);
@@ -58,7 +59,8 @@ namespace CSR.Reports.Tests
         public void Config_SecondLayerOverridesAndDisables()
         {
             var options = StyleConfig.Parse(Config);
-            StyleConfig.Apply("""{ "checks": { "line-length": { "max": 120 }, "null-check": { "enabled": false } } }""",
+            StyleConfig.Apply(
+                """{ "checks": { "line-length": { "max": 120 }, "null-check": { "enabled": false } } }""",
                 options);
 
             Assert.That(Analyze(options), Is.Empty);
