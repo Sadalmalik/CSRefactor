@@ -16,6 +16,8 @@ namespace CSR.Core.Tests.Style
         [TestCase("Drain drain = o.Wall?.Drain;", "var drain = o.Wall?.Drain;")]
         [TestCase("Path path = c ? new Path() : (Path)o;", "var path = c ? new Path() : (Path)o;")]
         [TestCase("string text = c ? \"a\" : $\"{a}\";", "var text = c ? \"a\" : $\"{a}\";")]
+        [TestCase("Action<int> handler = CreateHandler();", "var handler = CreateHandler();")]
+        [TestCase("Action<int> handler = new Action<int>(OnEvent);", "var handler = new Action<int>(OnEvent);")]
         public void Explicit_ToVar(string body, string expected)
         {
             var finding = Run("local-type", InMethod(body)).Single();
@@ -34,6 +36,11 @@ namespace CSR.Core.Tests.Style
         [TestCase("IEnumerable<int> items = new[] { 1, 2 };")]
         [TestCase("List<int> items = [];")]
         [TestCase("Func<int, int> twice = x => x * 2;")]
+        [TestCase("Action handler = delegate { a++; };")]
+        [TestCase("Action<int> handler = OnEvent;")]
+        [TestCase("Action<int> handler = o.Items.Add;")]
+        [TestCase("System.Action<int> handler = (OnEvent);")]
+        [TestCase("EventHandler handler = OnChanged;")]
         [TestCase("Path path = c ? Find() : null;")]
         [TestCase("SyntaxNode node = c ? access : name;")]
         [TestCase("Shape shape = c ? FindCircle() : FindSquare();")]
@@ -71,6 +78,29 @@ namespace CSR.Core.Tests.Style
                 InMethod(body),
                 settings => settings.Set("foreachExplicitTypes", new[] { "Transform" }));
             Assert.That(findings.Single().Replacement, Is.EqualTo(new[] { "foreach (var cell in o.Cells)" }));
+        }
+
+        [Test]
+        public void Foreach_DelegateType_NoFinding()
+        {
+            const string body = """
+                foreach (Action<int> handler in o.Changed.GetInvocationList())
+                    a++;
+                foreach (Func<int, bool> filter in o.Filters)
+                    a++;
+                """;
+            Assert.That(Run("local-type", InMethod(body)), Is.Empty);
+        }
+
+        [Test]
+        public void DelegateTypes_Custom_NoFinding()
+        {
+            var findings = Run(
+                "local-type",
+                InMethod("Callback callback = o.OnDone;"),
+                settings => settings.Set("delegateTypes", new[] { "Callback" }));
+            Assert.That(findings, Is.Empty);
+            Assert.That(Run("local-type", InMethod("Callback callback = o.OnDone;")), Has.Count.EqualTo(1));
         }
 
         [Test]

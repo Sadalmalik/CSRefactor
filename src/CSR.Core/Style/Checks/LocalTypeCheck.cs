@@ -1,3 +1,4 @@
+using CSR.Core.Arch;
 using CSR.Core.Checks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -11,8 +12,10 @@ namespace CSR.Core.Style.Checks
     // nullable, без инициализатора, null / default / stackalloc / [] / лямбда, тернарник с веткой, тип которой
     // не виден в коде (null, вызов, поле: ветки разных типов с var не собираются), new другого типа
     // (объявлен базовый тип), переменная, которой дальше присваивается новое значение (тип мог быть выбран под него),
-    // const, несколько переменных; foreach - кроме типов из foreachExplicitTypes
-    // (необобщенный IEnumerable без семантики не отличить).
+    // const, несколько переменных, тип-делегат из delegateTypes с инициализатором-именем (может быть группой
+    // методов: в C# 9 без естественного типа, в C# 10+ тип может отличаться); foreach - кроме типов из
+    // foreachExplicitTypes (необобщенный IEnumerable без семантики не отличить) и типов-делегатов (элемент
+    // приводится, например Delegate из GetInvocationList).
     // prefer explicit: var -> находка без замены, кроме инициализатора, где тип виден (new T, приведение, as)
     public class LocalTypeCheck : SyntaxCheck
     {
@@ -45,6 +48,17 @@ namespace CSR.Core.Style.Checks
             CheckParameter.Strings(
                 "foreachExplicitTypes",
                 "типы элементов, у которых в foreach остается явный тип (необобщенный IEnumerable, например Transform)"),
+            CheckParameter.Strings(
+                "delegateTypes",
+                "маски типов-делегатов: явный тип остается при инициализаторе-имени (группа методов) и в foreach",
+                "Action",
+                "Action<*>",
+                "Func<*>",
+                "Predicate<*>",
+                "Comparison<*>",
+                "Converter<*>",
+                "EventHandler",
+                "EventHandler<*>"),
         ];
 
         public override string Name
@@ -61,16 +75,21 @@ namespace CSR.Core.Style.Checks
             bool preferVar = context.Settings.GetString("prefer") == "var";
             bool checkForeach = context.Settings.GetBool("foreach");
             var foreachExplicit = context.Settings.GetStrings("foreachExplicitTypes");
+            var delegateTypes = NameMask.Get(context.Settings.GetStrings("delegateTypes"));
             foreach (var node in context.Root.DescendantNodes())
             {
                 if (node is LocalDeclarationStatementSyntax local)
-                    CheckLocal(context, local, preferVar);
+                    CheckLocal(context, local, preferVar, delegateTypes);
                 else if (checkForeach && preferVar && node is ForEachStatementSyntax loop)
-                    CheckForeach(context, loop, foreachExplicit);
+                    CheckForeach(context, loop, foreachExplicit, delegateTypes);
             }
         }
 
-        private static void CheckLocal(CheckContext context, LocalDeclarationStatementSyntax local, bool preferVar)
+        private static void CheckLocal(
+            CheckContext context,
+            LocalDeclarationStatementSyntax local,
+            bool preferVar,
+            NameMask delegateTypes)
         {
             var declaration = local.Declaration;
             if (local.IsConst || declaration.Variables.Count != 1)
@@ -93,6 +112,9 @@ namespace CSR.Core.Style.Checks
             if (type.IsVar || IsSkippedType(type) || !IsVarCompatible(type, value) || IsReassigned(local, name))
                 return;
 
+            if (IsDelegateType(type, delegateTypes) && IsPossibleMethodGroup(value))
+                return;
+
             var changes = new List<TextChange> { new(type.Span, "var") };
             if (value is ImplicitObjectCreationExpressionSyntax creation)
                 changes.Add(new TextChange(creation.NewKeyword.Span, "new " + type.WithoutTrivia()));
@@ -106,15 +128,35 @@ namespace CSR.Core.Style.Checks
         private static void CheckForeach(
             CheckContext context,
             ForEachStatementSyntax loop,
-            IReadOnlyList<string> exceptions)
+            IReadOnlyList<string> exceptions,
+            NameMask delegateTypes)
         {
             var type = loop.Type;
-            if (type.IsVar || IsSkippedType(type) || exceptions.Contains(type.WithoutTrivia().ToString()))
+            if (type.IsVar || IsSkippedType(type) || exceptions.Contains(type.WithoutTrivia().ToString())
+                || IsDelegateType(type, delegateTypes))
                 return;
 
             var name = loop.Identifier.Text;
             var replacement = context.ReplaceInLines(type.Span, "var");
             context.Report(type.Span, $"'foreach ({type} {name}' -> 'foreach (var {name}'", replacement);
+        }
+
+        // Тип по маскам delegateTypes; у квалифицированного имени (System.Action) - по последней части
+        private static bool IsDelegateType(TypeSyntax type, NameMask delegateTypes)
+        {
+            var name = type is QualifiedNameSyntax qualified ? qualified.Right : type;
+            return delegateTypes.IsMatch(name.WithoutTrivia().ToString());
+        }
+
+        // Имя без вызова (OnEvent, o.OnEvent, Handle<T>): может быть группой методов, а не значением
+        private static bool IsPossibleMethodGroup(ExpressionSyntax value)
+        {
+            return value switch
+            {
+                ParenthesizedExpressionSyntax parenthesized => IsPossibleMethodGroup(parenthesized.Expression),
+                SimpleNameSyntax or MemberAccessExpressionSyntax => true,
+                _ => false,
+            };
         }
 
         private static bool IsSkippedType(TypeSyntax type)
