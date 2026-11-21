@@ -54,6 +54,13 @@ namespace CSR.Workspace.Tests
                         var text = a.ToString();
                         return text;
                     }
+
+                    public int Pair(int a)
+                    {
+                        var low = a - 1;
+                        int high = a + 1;
+                        return high - low;
+                    }
                 }
             }
 
@@ -133,6 +140,20 @@ namespace CSR.Workspace.Tests
 
             var text = plan.Changes.Single().After.ToString();
             Assert.That(text, Does.Contain("        private static string Text(int a)"));
+            Assert.That(plan.Compile!.NewErrors, Is.Empty);
+        }
+
+        [Test]
+        public async Task Extract_OutputsDeclaredInsideAsOut()
+        {
+            var plan = await PlanAsync(51, 52, "Split");
+
+            var text = plan.Changes.Single().After.ToString().Replace("\r\n", "\n");
+            var call = "            Split(a, out var low, out int high);\n            return high - low;";
+            Assert.That(text, Does.Contain(call));
+            var method = "        private static void Split(int a, out int low, out int high)\n        {\n"
+                + "            low = a - 1;\n            high = a + 1;\n        }";
+            Assert.That(text, Does.Contain(method));
             Assert.That(plan.Compile!.NewErrors, Is.Empty);
         }
 

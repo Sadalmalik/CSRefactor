@@ -11,7 +11,7 @@ namespace CSR.Workspace.Refactor
 {
     // Извлечение метода из строк файла: строки - целые инструкции одного блока. Свой анализ потоков данных
     // (ExtractMethod Roslyn - внутренний API пакета Features): входы - параметры, один выход - возврат,
-    // несколько выходов (объявленных до строк) - out-параметры. Отказ: переменная читается и меняется (нужен
+    // несколько выходов - out-параметры (объявленный в строках - out var в месте вызова). Отказ: переменная читается и меняется (нужен
     // ref), return / break / continue / goto из строк, await, yield, лямбда или локальная функция вокруг,
     // обобщенный метод, многострочная verbatim-строка. Метод - private, static, если не нужен экземпляр;
     // ставится после члена, строки сдвигаются на отступ тела метода без переформатирования
@@ -77,6 +77,8 @@ namespace CSR.Workspace.Refactor
             private List<ISymbol> m_Outputs = [];
             private HashSet<ISymbol> m_DeclaredInside = new(SymbolEqualityComparer.Default);
             private bool m_IsStatic;
+            private readonly List<TextChange> m_BodyChanges = [];
+            private readonly Dictionary<string, string> m_OutTypes = new();
 
             public Selection(
                 SourceText text,
@@ -212,7 +214,7 @@ namespace CSR.Workspace.Refactor
 
                 m_DeclaredInside = new HashSet<ISymbol>(data.VariablesDeclared, SymbolEqualityComparer.Default);
                 m_Inputs = Order(data.DataFlowsIn.Where(symbol => symbol is not IParameterSymbol { IsThis: true }));
-                m_Outputs = Order(data.DataFlowsOut);
+                m_Outputs = Order(data.DataFlowsOut.Where(symbol => symbol is not IParameterSymbol { IsThis: true }));
                 var both = m_Inputs.Intersect(m_Outputs, SymbolEqualityComparer.Default).Select(symbol => symbol.Name);
                 if (both.Any())
                     return $"переменная читается и меняется ({string.Join(", ", both)}) - нужен ref, не поддержано";
@@ -230,8 +232,35 @@ namespace CSR.Workspace.Refactor
                 if (leaked.Count > 0)
                     return $"переменная объявлена в строках и используется после ({string.Join(", ", leaked)})";
 
-                bool isMixed = m_Outputs.Count > 1 && m_Outputs.Any(m_DeclaredInside.Contains);
-                return isMixed ? "выходов несколько и часть объявлена в строках - не поддержано" : null;
+                if (m_Outputs.Count < 2)
+                    return null;
+
+                return m_Outputs
+                    .Where(m_DeclaredInside.Contains)
+                    .Select(AddOutDeclaration)
+                    .FirstOrDefault(item => item != null);
+            }
+
+            // Выход, объявленный в строках, при нескольких выходах - out-параметр: в теле объявление становится
+            // присваиванием, в месте вызова - out var (или out с явным типом, как в исходном объявлении)
+            private string? AddOutDeclaration(ISymbol output)
+            {
+                var declarator = m_Statements
+                    .SelectMany(statement => statement.DescendantNodes())
+                    .OfType<VariableDeclaratorSyntax>()
+                    .FirstOrDefault(
+                        node => SymbolEqualityComparer.Default.Equals(m_Model.GetDeclaredSymbol(node), output));
+                bool isPlain = declarator is { Initializer: not null, Parent: VariableDeclarationSyntax declaration }
+                    && declaration.Variables.Count == 1
+                    && declaration.Parent is LocalDeclarationStatementSyntax { Modifiers.Count: 0 };
+                if (!isPlain)
+                    return $"выход {output.Name}: объявлен не одной переменной с инициализатором - не поддержано";
+
+                var type = ((VariableDeclarationSyntax)declarator!.Parent!).Type;
+                m_BodyChanges.Add(
+                    new TextChange(TextSpan.FromBounds(type.SpanStart, declarator.Identifier.SpanStart), ""));
+                m_OutTypes[output.Name] = type.IsVar ? "var" : type.ToString();
+                return null;
             }
 
             private string? CheckTypes()
@@ -307,7 +336,7 @@ namespace CSR.Workspace.Refactor
                 var arguments = m_Inputs.Select(symbol => symbol.Name).ToList();
                 if (m_Outputs.Count > 1)
                 {
-                    arguments.AddRange(m_Outputs.Select(symbol => "out " + symbol.Name));
+                    arguments.AddRange(m_Outputs.Select(GetOutArgument));
                     return $"{name}({string.Join(", ", arguments)});";
                 }
 
@@ -321,6 +350,15 @@ namespace CSR.Workspace.Refactor
 
                 var declared = GetDeclaredType(output);
                 return $"{declared} {output.Name} = {call}";
+            }
+
+            // out var x (out T x) для выхода, объявленного в строках; out x - для объявленного до них
+            private string GetOutArgument(ISymbol output)
+            {
+                if (m_OutTypes.TryGetValue(output.Name, out string? type))
+                    return $"out {type} {output.Name}";
+
+                return "out " + output.Name;
             }
 
             private List<string> BuildMethod(string name)
@@ -365,11 +403,18 @@ namespace CSR.Workspace.Refactor
             }
 
             // Строки выделения со сдвигом отступа; директивы препроцессора и строки с меньшим отступом - как есть
+            // Строки выделения с правками тела (объявления выходов-out) и сдвигом отступа
             private IEnumerable<string> Reindent(string from, string to)
             {
-                for (var line = m_StartLine; line <= m_EndLine; line++)
+                var span = TextSpan.FromBounds(m_Text.Lines[m_StartLine].Start, m_Text.Lines[m_EndLine].End);
+                var changes = m_BodyChanges
+                    .Select(change => new TextSpan(change.Span.Start - span.Start, change.Span.Length))
+                    .Select(removed => new TextChange(removed, ""))
+                    .OrderBy(change => change.Span.Start);
+                var selected = SourceText.From(m_Text.ToString(span)).WithChanges(changes);
+                foreach (var line in selected.Lines)
                 {
-                    var content = m_Text.Lines[line].ToString();
+                    var content = line.ToString();
                     if (string.IsNullOrWhiteSpace(content))
                         yield return "";
                     else if (content.StartsWith(from, StringComparison.Ordinal) && !content.TrimStart().StartsWith("#"))
