@@ -1,0 +1,9 @@
+<Project>
+  <!-- Тестовое решение CSR.Workspace: не наследует настройки репозитория CSR -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>

@@ -12,11 +12,12 @@ namespace CSR
               metrics  метрики по синтаксису: сложность, длина, вложенность, размеры типов и файлов
               style    проверка стиля по конфигу: форматирование, комментарии, идиомы, модификаторы
               arch     архитектурные признаки по конфигу: находки-решения с вопросом
+              refs     все ссылки на символ по решению
+              rename   семантическое переименование с защитой сериализуемых имён; без --apply - только дифф
+              serve    держать решение загруженным для refs и rename
 
             В разработке:
               format   форматирование изменённых строк
-              refs     все ссылки на символ
-              rename   семантическое переименование с защитой сериализуемых имён
 
             csr help [команда] - справка
             Коды возврата: 0 - успех, 1 - есть находки уровня error (style, arch), 2 - ошибка запуска
@@ -36,6 +37,9 @@ namespace CSR
                     "metrics" => MetricsCommand.Run(args.Skip(1)),
                     "style" => StyleCommand.Run(args.Skip(1)),
                     "arch" => ArchCommand.Run(args.Skip(1)),
+                    "refs" => RefsCommand.Run(args.Skip(1)),
+                    "rename" => RenameCommand.Run(args.Skip(1)),
+                    "serve" => ServeCommand.Run(args.Skip(1)),
                     _ => throw new UsageException($"команда '{args[0]}' не реализована"),
                 };
             }
@@ -63,6 +67,9 @@ namespace CSR
                 "metrics" => MetricsCommand.Usage,
                 "style" => StyleCommand.Usage,
                 "arch" => ArchCommand.Usage,
+                "refs" => RefsCommand.Usage,
+                "rename" => RenameCommand.Usage,
+                "serve" => ServeCommand.Usage,
                 _ => Usage,
             };
 

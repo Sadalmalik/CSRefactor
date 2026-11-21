@@ -5,11 +5,13 @@
   <Folder Name="/src/">
     <Project Path="src/CSR.Core/CSR.Core.csproj" />
     <Project Path="src/CSR.Reports/CSR.Reports.csproj" />
+    <Project Path="src/CSR.Workspace/CSR.Workspace.csproj" />
     <Project Path="src/CSR/CSR.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/CSR.Core.Tests/CSR.Core.Tests.csproj" />
     <Project Path="tests/CSR.Reports.Tests/CSR.Reports.Tests.csproj" />
     <Project Path="tests/CSR.Tests/CSR.Tests.csproj" />
+    <Project Path="tests/CSR.Workspace.Tests/CSR.Workspace.Tests.csproj" />
   </Folder>
 </Solution>

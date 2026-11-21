@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CSR.Reports\CSR.Reports.csproj" />
+    <ProjectReference Include="..\CSR.Workspace\CSR.Workspace.csproj" />
   </ItemGroup>
 
 </Project>

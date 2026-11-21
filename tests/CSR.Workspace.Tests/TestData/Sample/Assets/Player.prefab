@@ -1,0 +1,7 @@
+%YAML 1.1
+--- !u!114 &1
+MonoBehaviour:
+  m_Name: Player
+  m_Speed: 5
+  Health: 100
+  <Nick>k__BackingField: hero
