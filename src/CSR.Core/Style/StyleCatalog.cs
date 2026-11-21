@@ -34,6 +34,7 @@ namespace CSR.Core.Style
             new RegionLayoutCheck(),
             new ConditionWrapCheck(),
             new InitializerLayoutCheck(),
+            new TernaryWrapCheck(),
         ];
 
         public static SyntaxCheck? Find(string name)

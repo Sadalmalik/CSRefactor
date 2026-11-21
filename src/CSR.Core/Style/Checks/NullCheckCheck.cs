@@ -60,7 +60,11 @@ namespace CSR.Core.Style.Checks
             if (!isEquals && !node.IsKind(SyntaxKind.NotEqualsExpression))
                 return;
 
-            ExpressionSyntax? operand = IsNull(node.Right) ? node.Left : IsNull(node.Left) ? node.Right : null;
+            ExpressionSyntax? operand = IsNull(node.Right)
+                ? node.Left
+                : IsNull(node.Left)
+                    ? node.Right
+                    : null;
             if (operand == null)
                 return;
 

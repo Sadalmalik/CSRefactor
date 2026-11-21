@@ -29,6 +29,7 @@
     "call-wrap": { "severity": "warning", "max": 120 },
     "region-layout": { "severity": "hint", "inside": 1, "between": 2, "outside": 1 },
     "condition-wrap": { "severity": "warning", "max": 120, "argumentIndent": true, "continuationIndent": true, "assignmentIndent": false },
-    "initializer-layout": { "severity": "warning", "max": 120, "trailingComma": true }
+    "initializer-layout": { "severity": "warning", "max": 120, "trailingComma": true },
+    "ternary-wrap": { "severity": "warning", "max": 120, "nested": true }
   }
 }

@@ -77,6 +77,7 @@ namespace CSR.Core.Style.Checks
                     case InvocationExpressionSyntax or BaseObjectCreationExpressionSyntax
                         when current is ArgumentListSyntax or InitializerExpressionSyntax:
                     case AssignmentExpressionSyntax assignment when assignment.Right == current:
+                    case ConditionalExpressionSyntax conditional when IsColumnBranch(conditional, current):
                         current = parent;
                         continue;
                     case EqualsValueClauseSyntax or ArrowExpressionClauseSyntax or LambdaExpressionSyntax:
@@ -89,6 +90,19 @@ namespace CSR.Core.Style.Checks
             }
 
             return false;
+        }
+
+        // Целая ветвь тернарника, уже разложенного столбиком ('?' / ':' в начале своей строки)
+        private static bool IsColumnBranch(ConditionalExpressionSyntax conditional, SyntaxNode branch)
+        {
+            var token = branch == conditional.WhenTrue ? conditional.QuestionToken
+                : branch == conditional.WhenFalse ? conditional.ColonToken
+                : default;
+            if (token == default)
+                return false;
+
+            var previousLine = token.GetPreviousToken().GetLocation().GetLineSpan().EndLinePosition.Line;
+            return previousLine < token.GetLocation().GetLineSpan().StartLinePosition.Line;
         }
 
         private static bool IsChecked(CheckContext context, ArgumentListSyntax list)
