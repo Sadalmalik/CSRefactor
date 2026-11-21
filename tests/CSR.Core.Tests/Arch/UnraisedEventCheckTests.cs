@@ -15,6 +15,8 @@ namespace CSR.Core.Tests.Arch
             public struct EndEvent : IEvent<object> { }
             public class TickEvent : IEvent<object> { }
             public abstract class BaseEvent : IEvent<object> { }
+            public class RuleEvent<T> : IEvent<object> where T : new() { public static T Request() => new T(); }
+            public class DamageRule : RuleEvent<DamageRule> { }
 
             public class Sender
             {
@@ -24,6 +26,7 @@ namespace CSR.Core.Tests.Arch
                     Bus.Raise<EndEvent>(this, default);
                     TickEvent tick = new();
                     Bus.Raise(this, tick);
+                    Bus.Raise(this, DamageRule.Request());
                 }
             }
 

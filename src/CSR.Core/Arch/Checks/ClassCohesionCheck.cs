@@ -9,14 +9,14 @@ namespace CSR.Core.Arch.Checks
     // Класс-комбайн: крупный класс (partial - все файлы), методы и свойства которого распадаются на части,
     // не связанные вызовами и общими полями (связные компоненты графа "член - член, который он использует";
     // мера LCOM4). Конструкторы и методы из ignoreNames (инициализация, очистка: трогают все поля) в связях
-    // не участвуют. Находка - от двух частей по minPartSize методов и свойств; у части - поля, регионы и
-    // внешние потребители
+    // не участвуют; свойства связывают, но в размер части не входят (класс данных - группы свойств вокруг полей).
+    // Находка - от двух частей по minPartSize методов; у части - поля, регионы и внешние потребители
     public class ClassCohesionCheck : SolutionCheck
     {
         private static readonly CheckParameter[] AllParameters =
         [
-            CheckParameter.Int("minMembers", 12, "методов и свойств с телом в классе, от которых он проверяется"),
-            CheckParameter.Int("minPartSize", 3, "методов и свойств в части, чтобы она считалась"),
+            CheckParameter.Int("minMethods", 12, "методов в классе, от которых он проверяется"),
+            CheckParameter.Int("minPartSize", 3, "методов в части, чтобы она считалась"),
             CheckParameter.Strings(
                 "ignoreNames",
                 "маски методов, которые не связывают части (инициализация, очистка)",
@@ -58,7 +58,7 @@ namespace CSR.Core.Arch.Checks
                     continue;
 
                 var graph = MemberGraph.Build(context, type, ignoredNames);
-                if (graph.OperationCount < context.Settings.GetInt("minMembers"))
+                if (graph.MethodCount < context.Settings.GetInt("minMethods"))
                     continue;
 
                 var parts = graph.GetParts(context.Settings.GetInt("minPartSize"));
@@ -69,8 +69,8 @@ namespace CSR.Core.Arch.Checks
                 var descriptions = parts.Select((part, index) => $"{index + 1}) "
                     + DescribePart(context, part, graph, regions, isSplit));
                 var location = type.Locations.First(candidate => candidate.IsInSource);
-                var message = $"'{type.Name}': несвязанных частей {parts.Count} (методов и свойств "
-                    + $"{graph.OperationCount}): {string.Join("; ", descriptions)}";
+                var message = $"'{type.Name}': несвязанных частей {parts.Count} (методов {graph.MethodCount}): "
+                    + string.Join("; ", descriptions);
                 context.Report(location, message);
             }
         }
@@ -82,7 +82,7 @@ namespace CSR.Core.Arch.Checks
             Dictionary<SyntaxTree, List<Region>> regions,
             bool isSplit)
         {
-            var operations = part.Where(graph.IsOperation).Select(member => member.Name).ToList();
+            var operations = part.Where(graph.IsOperation).Select(member => member.Name).Distinct().ToList();
             var fields = part.Where(member => !graph.IsOperation(member)).Select(member => member.Name).ToList();
             var text = ArchSyntax.JoinNames(operations, 4);
             if (fields.Count > 0)
@@ -161,7 +161,7 @@ namespace CSR.Core.Arch.Checks
             private readonly List<HashSet<string>> m_Consumers = new();
             private int[] m_Parents = Array.Empty<int>();
 
-            public int OperationCount { get; private set; }
+            public int MethodCount { get; private set; }
 
             public static MemberGraph Build(SolutionCheckContext context, INamedTypeSymbol type, NameMask ignoredNames)
             {
@@ -174,7 +174,7 @@ namespace CSR.Core.Arch.Checks
                 }
 
                 graph.m_Parents = Enumerable.Range(0, graph.m_Members.Count).ToArray();
-                if (graph.OperationCount == 0)
+                if (graph.MethodCount == 0)
                     return graph;
 
                 var typeKey = SolutionIndex.GetKey(type);
@@ -190,12 +190,12 @@ namespace CSR.Core.Arch.Checks
             public bool IsOperation(ISymbol member)
                 => m_IsOperation[m_Indices[SolutionIndex.GetKey(member)]];
 
-            // Связные части, в которых не меньше minSize операций; члены - в порядке объявления
+            // Связные части, в которых не меньше minSize методов; члены - в порядке объявления
             public List<List<ISymbol>> GetParts(int minSize)
             {
                 return Enumerable.Range(0, m_Members.Count)
                     .GroupBy(Find)
-                    .Where(group => group.Count(index => m_IsOperation[index]) >= minSize)
+                    .Where(group => group.Count(index => m_Members[index] is IMethodSymbol) >= minSize)
                     .Select(group => group.Select(index => m_Members[index]).ToList())
                     .ToList();
             }
@@ -219,8 +219,8 @@ namespace CSR.Core.Arch.Checks
                 m_Members.Add(member);
                 m_IsOperation.Add(isOperation);
                 m_Consumers.Add(new HashSet<string>());
-                if (isOperation)
-                    OperationCount++;
+                if (member is IMethodSymbol)
+                    MethodCount++;
             }
 
             private void Link(int target, SymbolReference reference, string typeKey, CancellationToken cancellation)

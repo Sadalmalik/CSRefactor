@@ -32,7 +32,7 @@
     // Тип события (база или интерфейс из eventTypes) без new, и event, на который подписываются, но не поднимают
     "unraised-event": { "severity": "warning", "eventTypes": ["IEvent", "IEvent<*>"], "raiseMethods": ["Raise*"] },
     // Класс из частей, не связанных вызовами и общими полями
-    "class-cohesion": { "severity": "hint", "minMembers": 12, "minPartSize": 3 },
+    "class-cohesion": { "severity": "hint", "minMethods": 12, "minPartSize": 3 },
     // По одному файлу: атрибуты сохранения проекта
     "persisted-class": { "severity": "warning", "saveAttributes": ["JsonProperty"], "ignoreAttributes": ["JsonIgnore"] }
   }

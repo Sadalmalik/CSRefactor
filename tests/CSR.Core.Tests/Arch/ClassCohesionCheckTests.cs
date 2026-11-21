@@ -29,6 +29,8 @@ namespace CSR.Core.Tests.Arch
 
                 private void Advance() => m_Step++;
 
+                private bool CanMove() => m_Step < 10;
+
                 public int Step => m_Step;
 
             #endregion
@@ -38,6 +40,8 @@ namespace CSR.Core.Tests.Arch
                 public void Climb() => Lift();
 
                 private void Lift() => m_Height += LINK;
+
+                private bool CanClimb() => m_Height < 10;
 
                 public float Height => m_Height;
 
@@ -66,6 +70,8 @@ namespace CSR.Core.Tests.Arch
 
                 private void Lift() => m_Height += 1;
 
+                private bool CanClimb() => m_Height < 10;
+
                 public float Height => m_Height;
 
             #endregion
@@ -82,6 +88,8 @@ namespace CSR.Core.Tests.Arch
 
                 private void Advance() => m_Step++;
 
+                private bool CanMove() => m_Step < 10;
+
                 public int Step => m_Step;
             }
             """;
@@ -90,7 +98,7 @@ namespace CSR.Core.Tests.Arch
         {
             return Analyze([Compile("Game", files)], "class-cohesion", settings =>
             {
-                settings.Set("minMembers", 6);
+                settings.Set("minMethods", 4);
             });
         }
 
@@ -99,9 +107,9 @@ namespace CSR.Core.Tests.Arch
         {
             var finding = Run("Handler.cs", Handler.Replace("LINK", "1")).Single();
             Assert.That(finding.Line, Is.EqualTo(1));
-            const string message = "'Handler': несвязанных частей 2 (методов и свойств 7): "
-                + "1) Move, Advance, Step | поля m_Step | регион Path | потребители Mover; "
-                + "2) Climb, Lift, Height | поля m_Height | регион Wall | потребители Climber";
+            const string message = "'Handler': несвязанных частей 2 (методов 7): "
+                + "1) Move, Advance, CanMove, Step | поля m_Step | регион Path | потребители Mover; "
+                + "2) Climb, Lift, CanClimb, Height | поля m_Height | регион Wall | потребители Climber";
             Assert.That(finding.Message, Is.EqualTo(message));
         }
 
@@ -123,8 +131,8 @@ namespace CSR.Core.Tests.Arch
         {
             var finding = Run("Chain.cs", PathPart, "Chain.Wall.cs", WallPart).Single();
             Assert.That(finding.File, Is.EqualTo("Chain.cs"));
-            Assert.That(finding.Message, Does.Contain("1) Move, Advance, Step | поля m_Step | Chain.cs;"));
-            const string wall = "2) Climb, Lift, Height | поля m_Height | регион Wall | Chain.Wall.cs";
+            Assert.That(finding.Message, Does.Contain("1) Move, Advance, CanMove, Step | поля m_Step | Chain.cs;"));
+            const string wall = "2) Climb, Lift, CanClimb, Height | поля m_Height | регион Wall | Chain.Wall.cs";
             Assert.That(finding.Message, Does.EndWith(wall));
         }
     }

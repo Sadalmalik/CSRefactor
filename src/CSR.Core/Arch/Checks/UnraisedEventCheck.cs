@@ -9,7 +9,7 @@ namespace CSR.Core.Arch.Checks
     // Тип события (наследник базы или интерфейса из eventTypes) нигде не создается: нет new, default(T) и вызова
     // метода из raiseMethods с типом события в аргументе типа (Raise<T>()), - а обработчики есть или нет.
     // Событие C# (event-поле) не поднимается в своем типе (нет вызова и чтения), но на него подписываются.
-    // Абстрактные типы событий, override и abstract события не ищутся
+    // Абстрактные типы событий и базы других типов, override и abstract события не ищутся
     public class UnraisedEventCheck : SolutionCheck
     {
         private static readonly CheckParameter[] AllParameters =
@@ -40,11 +40,15 @@ namespace CSR.Core.Arch.Checks
             var eventTypes = NameMask.Get(context.Settings.GetStrings("eventTypes"));
             var raiseMethods = NameMask.Get(context.Settings.GetStrings("raiseMethods"));
             bool checkFields = context.Settings.GetBool("fieldEvents");
+            var baseTypes = new HashSet<string>(context.Index.Types
+                .Select(declared => declared.Symbol.BaseType)
+                .Where(baseType => baseType != null)
+                .Select(baseType => SolutionIndex.GetKey(baseType!)));
             foreach (var declared in context.Index.Types)
             {
                 context.Cancellation.ThrowIfCancellationRequested();
                 var type = declared.Symbol;
-                if (IsEventType(type, eventTypes))
+                if (IsEventType(type, eventTypes) && !baseTypes.Contains(SolutionIndex.GetKey(type)))
                     CheckEventType(context, type, raiseMethods);
 
                 if (!checkFields)
@@ -78,7 +82,8 @@ namespace CSR.Core.Arch.Checks
         private static void CheckEventType(SolutionCheckContext context, INamedTypeSymbol type, NameMask raiseMethods)
         {
             var references = context.Index.GetReferences(type);
-            if (references.Any(reference => IsRaise(reference.Node, raiseMethods))
+            var typeKey = SolutionIndex.GetKey(type);
+            if (references.Any(reference => IsRaise(reference, raiseMethods, typeKey))
                 || IsCreatedByConstructor(context, type))
                 return;
 
@@ -97,10 +102,10 @@ namespace CSR.Core.Arch.Checks
             context.Report(location, message);
         }
 
-        // Отправка по имени типа: new T(...), new T { }, default(T), Raise<T>(...)
-        private static bool IsRaise(SyntaxNode node, NameMask raiseMethods)
+        // Отправка по имени типа: new T(...), new T { }, default(T), Raise<T>(...), фабрика T.Create()
+        private static bool IsRaise(SymbolReference reference, NameMask raiseMethods, string typeKey)
         {
-            SyntaxNode name = node;
+            SyntaxNode name = reference.Node;
             while (name.Parent is QualifiedNameSyntax qualified && qualified.Right == name
                 || name.Parent is AliasQualifiedNameSyntax)
                 name = name.Parent;
@@ -112,9 +117,26 @@ namespace CSR.Core.Arch.Checks
                     return true;
                 case TypeArgumentListSyntax { Parent: GenericNameSyntax method }:
                     return IsInvoked(method) && raiseMethods.IsMatch(method.Identifier.Text);
+                case MemberAccessExpressionSyntax access when access.Expression == name:
+                    return IsFactoryCall(reference.Model, access, typeKey);
                 default:
                     return false;
             }
+        }
+
+        // Статический метод типа, который возвращает его экземпляр (или обертку с ним в аргументе типа)
+        private static bool IsFactoryCall(SemanticModel model, MemberAccessExpressionSyntax access, string typeKey)
+        {
+            if (access.Parent is not InvocationExpressionSyntax invocation || invocation.Expression != access)
+                return false;
+
+            if (model.GetSymbolInfo(invocation).Symbol is not IMethodSymbol { IsStatic: true } method)
+                return false;
+
+            var result = method.ReturnType;
+            return SolutionIndex.GetKey(result) == typeKey
+                || result is INamedTypeSymbol named
+                && named.TypeArguments.Any(argument => SolutionIndex.GetKey(argument) == typeKey);
         }
 
         private static bool IsInvoked(GenericNameSyntax method)
