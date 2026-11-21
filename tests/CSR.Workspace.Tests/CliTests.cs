@@ -165,5 +165,21 @@ namespace CSR.Workspace.Tests
             Assert.That(File.ReadAllText(sample.GetPath("Game/IDamageable.cs")), Does.Contain("interface IDamageable"));
             Assert.That(File.ReadAllText(sample.GetPath("Game/Player.cs")), Does.Not.Contain("interface IDamageable"));
         }
+
+        [Test]
+        public void Extract_FindsSolutionFromFileRange()
+        {
+            using var sample = SampleSolution.Create();
+            var file = sample.GetPath("Game/Inventory.cs");
+
+            var result = Cli.Run("extract", file + ":27-28", "Store", "--no-server");
+            var invalid = Cli.Run("extract", file + ":27", "Store", "--no-server");
+
+            Assert.That(result.ExitCode, Is.Zero, result.Error);
+            Assert.That(result.Output, Does.Contain("+            Store(item, count);"));
+            Assert.That(result.Output, Does.Contain("+        private void Store(Item item, int count)"));
+            Assert.That(invalid.ExitCode, Is.EqualTo(2));
+            Assert.That(invalid.Error, Does.Contain("файл.cs:строка-строка"));
+        }
     }
 }

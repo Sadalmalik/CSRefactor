@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using CSR.Reports.Config;
 using CSR.Workspace.Loading;
 using CSR.Workspace.Server;
@@ -6,11 +7,14 @@ using CSR.Workspace.Symbols;
 
 namespace CSR.Commands
 {
-    // Команды над загруженным решением (refs, rename, move, arch): через живой csr serve этого решения, иначе загрузка
+    // Команды над загруженным решением (refs, rename, move, extract, arch): через живой csr serve этого решения, иначе загрузка
     // решения в процессе. Одна и та же обработка - в CLI и на сервере (Execute)
     public static class WorkspaceCommands
     {
         private const string ServeHint = "csr serve держит решение загруженным";
+
+        // Файл в позиции символа (файл.cs:строка[:колонка]) или в строках extract (файл.cs:строка-строка)
+        private static readonly Regex SourceFilePattern = new(@"^(?<file>.+\.cs):\d+", RegexOptions.IgnoreCase);
 
         public static int Run(
             string command,
@@ -59,6 +63,7 @@ namespace CSR.Commands
                     "refs" => await RefsCommand.ExecuteAsync(context, request.Arguments, cancellation),
                     "rename" => await RenameCommand.ExecuteAsync(context, request.Arguments, cancellation),
                     "move" => await MoveCommand.ExecuteAsync(context, request.Arguments, cancellation),
+                    "extract" => await ExtractCommand.ExecuteAsync(context, request.Arguments, cancellation),
                     "arch" => await ArchCommand.ExecuteAsync(context, request.Arguments, cancellation),
                     _ => throw new UsageException($"команда '{request.Command}' не работает с решением"),
                 };
@@ -104,9 +109,12 @@ namespace CSR.Commands
             }
 
             var starts = new List<string>();
-            var symbol = commandLine.Positional.Count > 0 ? TryParse(commandLine.Positional[0]) : null;
-            if (symbol is { IsPosition: true })
-                starts.Add(Path.GetDirectoryName(Path.GetFullPath(Path.Combine(workingDirectory, symbol.File!)))!);
+            var file = commandLine.Positional.Count > 0 ? SourceFilePattern.Match(commandLine.Positional[0]) : null;
+            if (file is { Success: true })
+            {
+                var path = Path.GetFullPath(Path.Combine(workingDirectory, file.Groups["file"].Value));
+                starts.Add(Path.GetDirectoryName(path)!);
+            }
 
             starts.Add(workingDirectory);
             foreach (var start in starts)
@@ -138,18 +146,6 @@ namespace CSR.Commands
                 throw new UsageException($"в {folder} несколько решений: задайте --solution");
 
             return solutions.Count == 1 ? solutions[0] : null;
-        }
-
-        private static SymbolQuery? TryParse(string text)
-        {
-            try
-            {
-                return SymbolQuery.Parse(text);
-            }
-            catch (SymbolException)
-            {
-                return null;
-            }
         }
 
         private static int Print(WorkspaceResponse response)
