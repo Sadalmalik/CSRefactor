@@ -24,6 +24,8 @@ namespace CSR.Core.Arch
             new SingleImplementationCheck(),
             new DeadMemberCheck(),
             new ParameterSetCheck(),
+            new UnraisedEventCheck(),
+            new ClassCohesionCheck(),
         ];
 
         public static ArchCheck? Find(string name)
