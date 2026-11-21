@@ -76,7 +76,7 @@ csr style <файлы | папки>... --config style.jsonc [--config ещё.jso
 |---|---|---|
 | `line-length` | строка длиннее порога | `max`, `ignoreComments`, `ignoreStringLines` |
 | `directive-column` | директива `#region`, `#if` и др. не с колонки 0 | `directives` |
-| `binary-op-wrap` | место `&&` / `\|\|` при переносе | `prefer`: `leading` / `trailing`, `operators` |
+| `binary-op-wrap` | место `&&` / `\|\|` при переносе (замена — перенос оператора на соседнюю строку) | `prefer`: `leading` / `trailing`, `operators` |
 | `xml-doc` | документационный комментарий `///` | — |
 | `comment-separator` | комментарий-разделитель `// ---`, `// ===` | `minRun` |
 | `comment-typography` | `—`, `«»`, `→`, `×`, `≈`, `≤` в комментариях, текстах логов, атрибутов-подсказок, `ToString` | `replace`, `attributes`, `logs`, `toString` |
@@ -98,6 +98,8 @@ csr style <файлы | папки>... --config style.jsonc [--config ещё.jso
 | `signature-wrap` | сигнатура не столбиком: однострочная длиннее `max` или с `minParameters`+ параметрами, перенос посреди списка, `)` на отдельной строке (замена — параметр на строку +4, `: base(…)` отдельной строкой) | `max`, `minParameters`, `initializerOnOwnLine` |
 | `call-wrap` | длинный вызов в одну строку, перенос посреди списка аргументов (замена — аргумент на строку +4; вложенный — следующим проходом `csr fix`); не трогает условия `if` / `while`, логгер, многострочные аргументы | `max` |
 | `region-layout` | пустые строки вокруг `#region` / `#endregion`: внутри, между регионами, до члена вне региона; у `{` и `}` типа — вплотную | `inside`, `between`, `outside` |
+| `condition-wrap` | цепочка `&&` / `\|\|` в строке длиннее `max` (`if`, `while`, `return`, инициализатор переменной) — по операнду на строку с оператором в начале, +4; аргументы вызова в перенесённом условии `if` / `while` на уровне тела — на +8 | `max`, `argumentIndent` |
+| `initializer-layout` | инициализатор объекта, коллекции, массива: однострочный длиннее `max`; в многострочном — `{` в строке с `new`, два элемента в строке, нет запятой после последнего (замена — `{` под `new`, элемент на строку +4) | `max`, `trailingComma` |
 
 Методы логгера для `log-call-wrap`, `message-text` и `comment-typography` — в `project.jsonc` (`logger.methods`, маски с `*`). Пример конфига — `examples/style.example.jsonc`.
 

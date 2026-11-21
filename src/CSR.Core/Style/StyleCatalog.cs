@@ -32,6 +32,8 @@ namespace CSR.Core.Style
             new SignatureWrapCheck(),
             new CallWrapCheck(),
             new RegionLayoutCheck(),
+            new ConditionWrapCheck(),
+            new InitializerLayoutCheck(),
         ];
 
         public static SyntaxCheck? Find(string name)

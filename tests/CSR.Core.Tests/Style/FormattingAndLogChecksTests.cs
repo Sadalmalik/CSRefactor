@@ -74,7 +74,8 @@ namespace CSR.Core.Tests.Style
                     return;
                 """;
             var finding = Run("binary-op-wrap", InMethod(body)).Single();
-            Assert.That(finding.Line, Is.EqualTo(7));
+            Assert.That((finding.Line, finding.EndLine), Is.EqualTo((7, 8)));
+            Assert.That(finding.Replacement, Is.EqualTo(new[] { "if (c", "    && a > 0)" }));
         }
 
         [Test]
@@ -85,8 +86,12 @@ namespace CSR.Core.Tests.Style
                     || a > 0)
                     return;
                 """;
-            var findings = Run("binary-op-wrap", InMethod(body), settings => settings.Set("prefer", "trailing"));
-            Assert.That(findings.Single().Line, Is.EqualTo(8));
+            var finding = Run(
+                "binary-op-wrap",
+                InMethod(body),
+                settings => settings.Set("prefer", "trailing")).Single();
+            Assert.That((finding.Line, finding.EndLine), Is.EqualTo((7, 8)));
+            Assert.That(finding.Replacement, Is.EqualTo(new[] { "if (c ||", "    a > 0)" }));
         }
 
 #endregion

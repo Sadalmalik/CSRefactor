@@ -27,6 +27,8 @@
     "expression-arrow": { "severity": "warning", "properties": "next-line", "methods": "fit", "max": 120 },
     "signature-wrap": { "severity": "warning", "max": 120, "minParameters": 5, "initializerOnOwnLine": true },
     "call-wrap": { "severity": "warning", "max": 120 },
-    "region-layout": { "severity": "hint", "inside": 1, "between": 2, "outside": 1 }
+    "region-layout": { "severity": "hint", "inside": 1, "between": 2, "outside": 1 },
+    "condition-wrap": { "severity": "warning", "max": 120, "argumentIndent": true },
+    "initializer-layout": { "severity": "warning", "max": 120, "trailingComma": true }
   }
 }
