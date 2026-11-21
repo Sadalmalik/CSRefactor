@@ -13,10 +13,13 @@ namespace CSR.Commands
     public static class StyleCommand
     {
         public const string Usage = """
-            csr style <файлы | папки>... --config <style.jsonc>... [опции]
+            csr style <файлы | папки>... [--config <style.jsonc>]... [опции]
 
-              --config <style.jsonc>         проверки, уровни, метки правил, параметры; несколько - накладываются
-              --project <project.jsonc>      символы препроцессора, методы логгера
+              --config <style.jsonc>         проверки, уровни, метки правил, параметры; несколько - накладываются;
+                                             без --config - config/style.jsonc рядом с csr.exe, затем
+                                             .csr/style.jsonc в папке цели или выше (до корня репозитория)
+              --project <project.jsonc>      символы препроцессора, методы логгера; без --project - .csr/project.jsonc,
+                                             иначе config/project.jsonc рядом с csr.exe
               --diff <ревизия | файл.diff>   измененные строки: git diff -U0 от ревизии или готовый дифф
               --scope file | changed-lines   все находки файла или только на измененных строках
                                              (без --diff - file; с --diff - changed-lines; changed-lines без --diff - от HEAD)
@@ -100,9 +103,10 @@ namespace CSR.Commands
 
         private static CheckOptions LoadOptions(CommandLine commandLine)
         {
-            var paths = commandLine.GetOptions("--config");
+            var start = ConfigFiles.GetStart(commandLine.Positional[0], Environment.CurrentDirectory);
+            var paths = ConfigFiles.GetLayers(commandLine.GetOptions("--config"), "style.jsonc", start);
             if (paths.Count == 0)
-                throw new UsageException("не задан --config: без конфига все проверки выключены");
+                throw new UsageException(ConfigFiles.GetMissingMessage("style.jsonc"));
 
             var options = new CheckOptions();
             foreach (var path in paths)
@@ -113,7 +117,8 @@ namespace CSR.Commands
 
         internal static ProjectOptions LoadProject(CommandLine commandLine)
         {
-            var path = commandLine.GetOption("--project");
+            var start = ConfigFiles.GetStart(commandLine.Positional[0], Environment.CurrentDirectory);
+            var path = ConfigFiles.Find(commandLine.GetOption("--project"), "project.jsonc", start);
             return path == null ? new ProjectOptions() : ProjectConfig.Parse(ReadConfig(path));
         }
 

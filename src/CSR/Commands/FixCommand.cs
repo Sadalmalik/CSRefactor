@@ -18,7 +18,7 @@ namespace CSR.Commands
     public static class FixCommand
     {
         public const string Usage = """
-            csr fix <файлы | папки>... --config <style.jsonc>... [опции]
+            csr fix <файлы | папки>... [--config <style.jsonc>]... [опции]
 
               --config, --project, --diff, --scope   как у csr style
               --checks <a,b,...>             только эти проверки
@@ -198,9 +198,10 @@ namespace CSR.Commands
 
         private static CheckOptions LoadOptions(CommandLine commandLine)
         {
-            var paths = commandLine.GetOptions("--config");
+            var start = ConfigFiles.GetStart(commandLine.Positional[0], Environment.CurrentDirectory);
+            var paths = ConfigFiles.GetLayers(commandLine.GetOptions("--config"), "style.jsonc", start);
             if (paths.Count == 0)
-                throw new UsageException("не задан --config: без конфига все проверки выключены");
+                throw new UsageException(ConfigFiles.GetMissingMessage("style.jsonc"));
 
             var options = new CheckOptions();
             foreach (var path in paths)

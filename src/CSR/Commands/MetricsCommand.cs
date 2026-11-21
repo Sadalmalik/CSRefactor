@@ -14,8 +14,9 @@ namespace CSR.Commands
         public const string Usage = """
             csr metrics <файлы | папки>... [опции]
 
-              --config <metrics.jsonc>   пороги, включение метрик, размер топа
-              --project <project.jsonc>  символы препроцессора (по умолчанию UNITY_EDITOR)
+              --config <metrics.jsonc>   пороги, включение метрик, размер топа; без --config - .csr/metrics.jsonc
+                                         в папке цели или выше, иначе config/metrics.jsonc рядом с csr.exe
+              --project <project.jsonc>  символы препроцессора (по умолчанию UNITY_EDITOR); поиск - как у --config
               --format json | md         формат отчета (по умолчанию json)
               --top <N>                  размер топа по каждой метрике (по умолчанию 10)
               --all                      в JSON - все функции и типы по файлам
@@ -113,7 +114,8 @@ namespace CSR.Commands
 
         private static MetricsOptions LoadOptions(CommandLine commandLine)
         {
-            string? path = commandLine.GetOption("--config");
+            var start = ConfigFiles.GetStart(commandLine.Positional[0], Environment.CurrentDirectory);
+            var path = ConfigFiles.Find(commandLine.GetOption("--config"), "metrics.jsonc", start);
             var options = path == null ? new MetricsOptions() : MetricsConfig.Parse(ReadConfig(path));
 
             string? top = commandLine.GetOption("--top");
@@ -129,7 +131,8 @@ namespace CSR.Commands
 
         private static ProjectOptions LoadProject(CommandLine commandLine)
         {
-            string? path = commandLine.GetOption("--project");
+            var start = ConfigFiles.GetStart(commandLine.Positional[0], Environment.CurrentDirectory);
+            var path = ConfigFiles.Find(commandLine.GetOption("--project"), "project.jsonc", start);
             return path == null ? new ProjectOptions() : ProjectConfig.Parse(ReadConfig(path));
         }
 

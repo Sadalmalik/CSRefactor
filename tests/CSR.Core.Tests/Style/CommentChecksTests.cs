@@ -102,6 +102,13 @@ namespace CSR.Core.Tests.Style
         }
 
         [Test]
+        public void Typography_Multiplication_Asterisk()
+        {
+            var finding = Run("comment-typography", InMethod("// ширина × высота")).Single();
+            Assert.That(finding.Replacement, Is.EqualTo(new[] { "// ширина * высота" }), "буква x читается как имя");
+        }
+
+        [Test]
         public void Typography_InLogAndToString_Found()
         {
             const string source = """

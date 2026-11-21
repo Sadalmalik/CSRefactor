@@ -14,11 +14,13 @@ namespace CSR.Commands
     public static class ArchCommand
     {
         public const string Usage = """
-            csr arch <файлы | папки>... --config <arch.jsonc>... [опции]
-            csr arch --solution <файл> [--projects <маска>]... --config <arch.jsonc>... [опции]
+            csr arch <файлы | папки>... [--config <arch.jsonc>]... [опции]
+            csr arch --solution <файл> [--projects <маска>]... [--config <arch.jsonc>]... [опции]
 
-              --config <arch.jsonc>          признаки, уровни, метки правил, параметры; несколько - накладываются
-              --project <project.jsonc>      символы препроцессора, логгер, механизмы проекта
+              --config <arch.jsonc>          признаки, уровни, метки правил, параметры; несколько - накладываются;
+                                             без --config - как у csr style (config/arch.jsonc, .csr/arch.jsonc)
+              --project <project.jsonc>      символы препроцессора, логгер, механизмы проекта; без --project -
+                                             как у csr style
               --diff <ревизия | файл.diff>   измененные строки: git diff -U0 от ревизии или готовый дифф
               --scope file | changed-lines   все находки файла или только на измененных строках
                                              (без --diff - file; с --diff - changed-lines; changed-lines без --diff - от HEAD)
@@ -51,8 +53,9 @@ namespace CSR.Commands
 
             var format = GetFormat(commandLine);
             var directory = Environment.CurrentDirectory;
-            var options = LoadOptions(commandLine, directory);
-            var project = LoadProject(commandLine, directory);
+            var start = ConfigFiles.GetStart(commandLine.Positional[0], directory);
+            var options = LoadOptions(commandLine, directory, start);
+            var project = LoadProject(commandLine, directory, start);
             var diff = commandLine.GetOption("--diff");
             var scope = commandLine.GetOption("--scope") ?? (diff == null ? "file" : "changed-lines");
             if (scope is not ("file" or "changed-lines"))
@@ -92,8 +95,8 @@ namespace CSR.Commands
 
             var format = GetFormat(commandLine);
             var directory = context.WorkingDirectory;
-            var options = LoadOptions(commandLine, directory);
-            var project = LoadProject(commandLine, directory);
+            var options = LoadOptions(commandLine, directory, context.Solution.Root);
+            var project = LoadProject(commandLine, directory, context.Solution.Root);
 
             var stopwatch = Stopwatch.StartNew();
             var compilations = await GetCompilationsAsync(context, commandLine.GetOptions("--projects"), cancellation);
@@ -153,11 +156,12 @@ namespace CSR.Commands
         private static string Write(CheckReport report, string format)
             => format == "md" ? ArchMarkdownWriter.Write(report) : ArchJsonWriter.Write(report);
 
-        private static CheckOptions LoadOptions(CommandLine commandLine, string directory)
+        // Конфиги - явные или найденные от start (ConfigFiles)
+        private static CheckOptions LoadOptions(CommandLine commandLine, string directory, string start)
         {
-            var paths = commandLine.GetOptions("--config");
+            var paths = ConfigFiles.GetLayers(commandLine.GetOptions("--config"), "arch.jsonc", start);
             if (paths.Count == 0)
-                throw new UsageException("не задан --config: без конфига все признаки выключены");
+                throw new UsageException(ConfigFiles.GetMissingMessage("arch.jsonc"));
 
             var options = new CheckOptions();
             foreach (var path in paths)
@@ -166,9 +170,9 @@ namespace CSR.Commands
             return options;
         }
 
-        private static ProjectOptions LoadProject(CommandLine commandLine, string directory)
+        private static ProjectOptions LoadProject(CommandLine commandLine, string directory, string start)
         {
-            var path = commandLine.GetOption("--project");
+            var path = ConfigFiles.Find(commandLine.GetOption("--project"), "project.jsonc", start);
             return path == null ? new ProjectOptions() : ProjectConfig.Parse(ReadConfig(path, directory));
         }
 

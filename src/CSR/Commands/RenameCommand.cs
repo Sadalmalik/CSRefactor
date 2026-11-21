@@ -11,7 +11,8 @@ namespace CSR.Commands
 
               символ                     как в csr refs: Namespace.Type.Member или файл.cs:строка[:колонка]
               --solution <файл>          .sln, .slnx или .csproj (по умолчанию - ближайшее решение вверх по папкам)
-              --config <refactor.jsonc>  атрибуты сериализации проекта, где и что искать в строках
+              --config <refactor.jsonc>  атрибуты сериализации проекта, где и что искать в строках; без --config -
+                                         .csr/refactor.jsonc от папки решения вверх, иначе config/ рядом с csr.exe
               --format diff | json       diff (по умолчанию): дифф в stdout, сводка в stderr; json - все в stdout
               --apply                    записать файлы (без него ничего не пишется)
               --migrate                  сохранить старое имя для данных: [FormerlySerializedAs] (Unity),
@@ -50,7 +51,7 @@ namespace CSR.Commands
             if (format is not ("diff" or "json"))
                 throw new UsageException($"неизвестный формат '{format}'");
 
-            var options = LoadOptions(commandLine.GetOption("--config"), context.WorkingDirectory);
+            var options = LoadOptions(commandLine.GetOption("--config"), context);
             var settings = new RenameSettings
             {
                 Migrate = commandLine.HasFlag("--migrate"),
@@ -99,12 +100,14 @@ namespace CSR.Commands
             return RenameStatus.Applied;
         }
 
-        private static RefactorOptions LoadOptions(string? path, string workingDirectory)
+        // Явный --config (от папки вызова), иначе .csr/refactor.jsonc от папки решения, иначе config/ у csr.exe
+        private static RefactorOptions LoadOptions(string? path, WorkspaceContext context)
         {
-            if (path == null)
+            var found = ConfigFiles.Find(path, "refactor.jsonc", context.Solution.Root);
+            if (found == null)
                 return new RefactorOptions();
 
-            var full = Path.GetFullPath(Path.Combine(workingDirectory, path));
+            var full = Path.GetFullPath(Path.Combine(context.WorkingDirectory, found));
             if (!File.Exists(full))
                 throw new UsageException($"нет файла конфига: {path}");
 
