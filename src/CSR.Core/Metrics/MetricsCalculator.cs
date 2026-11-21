@@ -10,15 +10,15 @@ namespace CSR.Core.Metrics
     {
         public static FileMetrics Calculate(SyntaxTree tree)
         {
-            SyntaxNode root = tree.GetRoot();
-            SourceText text = tree.GetText();
+            var root = tree.GetRoot();
+            var text = tree.GetText();
 
-            List<MetricItem> types = root.DescendantNodes()
+            var types = root.DescendantNodes()
                 .OfType<BaseTypeDeclarationSyntax>()
                 .Select(type => MeasureType(type, text, tree.FilePath))
                 .ToList();
 
-            List<MetricItem> functions = root.DescendantNodes()
+            var functions = root.DescendantNodes()
                 .Where(Functions.IsFunction)
                 .Select(function => MeasureFunction(function, text, tree.FilePath))
                 .ToList();
@@ -60,9 +60,9 @@ namespace CSR.Core.Metrics
                 [MetricKeys.Parameters] = Functions.GetParameters(function)?.Parameters.Count ?? 0,
             };
 
-            string container = GetContainer(function);
-            string name = Functions.GetName(function);
-            FileLinePositionSpan span = function.GetLocation().GetLineSpan();
+            var container = GetContainer(function);
+            var name = Functions.GetName(function);
+            var span = function.GetLocation().GetLineSpan();
             return new MetricItem
             {
                 Level = MetricLevel.Function,
@@ -88,9 +88,9 @@ namespace CSR.Core.Metrics
                 [MetricKeys.Regions] = regions,
             };
 
-            string container = GetContainer(type);
-            string name = TypeMembers.GetName(type);
-            FileLinePositionSpan span = type.GetLocation().GetLineSpan();
+            var container = GetContainer(type);
+            var name = TypeMembers.GetName(type);
+            var span = type.GetLocation().GetLineSpan();
             return new MetricItem
             {
                 Level = MetricLevel.Type,
@@ -109,7 +109,7 @@ namespace CSR.Core.Metrics
         private static string GetContainer(SyntaxNode node)
         {
             var parts = new List<string>();
-            foreach (SyntaxNode ancestor in node.Ancestors())
+            foreach (var ancestor in node.Ancestors())
             {
                 if (ancestor is BaseTypeDeclarationSyntax type)
                     parts.Add(TypeMembers.GetName(type));
@@ -123,7 +123,7 @@ namespace CSR.Core.Metrics
 
         private static string GetNamespace(SyntaxNode node)
         {
-            IEnumerable<string> names = node.Ancestors()
+            var names = node.Ancestors()
                 .OfType<BaseNamespaceDeclarationSyntax>()
                 .Select(declaration => declaration.Name.ToString())
                 .Reverse();

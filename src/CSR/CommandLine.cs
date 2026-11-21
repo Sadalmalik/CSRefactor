@@ -13,10 +13,10 @@ namespace CSR
         public static CommandLine Parse(IEnumerable<string> args, ISet<string> optionNames, ISet<string> flagNames)
         {
             var commandLine = new CommandLine();
-            using IEnumerator<string> enumerator = args.GetEnumerator();
+            using var enumerator = args.GetEnumerator();
             while (enumerator.MoveNext())
             {
-                string arg = enumerator.Current;
+                var arg = enumerator.Current;
                 if (!arg.StartsWith("--", StringComparison.Ordinal))
                 {
                     commandLine.m_Positional.Add(arg);
@@ -49,6 +49,9 @@ namespace CSR
 
         public bool HasFlag(string name)
             => m_Flags.Contains(name);
+
+        public IReadOnlyList<string> GetOptions(string name)
+            => m_Options.TryGetValue(name, out List<string>? values) ? values : Array.Empty<string>();
 
         public string? GetOption(string name)
         {

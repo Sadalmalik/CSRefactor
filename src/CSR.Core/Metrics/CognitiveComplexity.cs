@@ -91,7 +91,7 @@ namespace CSR.Core.Metrics
         {
             IncreaseWithNesting();
             Visit(node.Expression);
-            foreach (SwitchSectionSyntax section in node.Sections)
+            foreach (var section in node.Sections)
                 VisitNested(section);
         }
 
@@ -99,7 +99,7 @@ namespace CSR.Core.Metrics
         {
             IncreaseWithNesting();
             Visit(node.GoverningExpression);
-            foreach (SwitchExpressionArmSyntax arm in node.Arms)
+            foreach (var arm in node.Arms)
                 VisitNested(arm);
         }
 
@@ -187,7 +187,7 @@ namespace CSR.Core.Metrics
         private void VisitLoop(StatementSyntax loop, StatementSyntax body)
         {
             IncreaseWithNesting();
-            foreach (SyntaxNode child in loop.ChildNodes())
+            foreach (var child in loop.ChildNodes())
             {
                 if (child == body)
                     VisitNested(child);

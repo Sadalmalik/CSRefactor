@@ -1,5 +1,10 @@
 // Общие сведения о проекте для режимов metrics, style и arch
 {
   // Символы препроцессора при разборе (по умолчанию UNITY_EDITOR): код под #if без символа не анализируется
-  "preprocessorSymbols": ["UNITY_EDITOR"]
+  "preprocessorSymbols": ["UNITY_EDITOR"],
+
+  // Методы логгера для проверок текста лога: текст вызова без пробелов; * - любые символы
+  "logger": {
+    "methods": ["Debug.Log", "Debug.LogWarning", "Debug.LogError", "*.Logger.Error"]
+  }
 }

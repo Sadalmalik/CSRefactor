@@ -19,16 +19,16 @@ namespace CSR.Reports.Metrics
             builder.AppendLine();
             builder.AppendLine("| Уровень | Метрика | p50 | p90 | p99 | max | Порог | Выше порога |");
             builder.AppendLine("|---|---|---:|---:|---:|---:|---:|---:|");
-            foreach (MetricSummary summary in report.Metrics)
+            foreach (var summary in report.Metrics)
             {
-                MetricDefinition metric = summary.Metric;
-                string threshold = summary.Threshold?.ToString() ?? "—";
-                string above = summary.Threshold == null ? "—" : summary.AboveThreshold.ToString();
+                var metric = summary.Metric;
+                var threshold = summary.Threshold?.ToString() ?? "—";
+                var above = summary.Threshold == null ? "—" : summary.AboveThreshold.ToString();
                 builder.AppendLine($"| {MetricCatalog.GetLevelTitle(metric.Level)} | {metric.Title} | {summary.P50} "
                     + $"| {summary.P90} | {summary.P99} | {summary.Max} | {threshold} | {above} |");
             }
 
-            foreach (MetricSummary summary in report.Metrics)
+            foreach (var summary in report.Metrics)
                 WriteTop(builder, summary);
 
             return builder.ToString();
@@ -39,7 +39,7 @@ namespace CSR.Reports.Metrics
             if (summary.Top.Count == 0)
                 return;
 
-            MetricDefinition metric = summary.Metric;
+            var metric = summary.Metric;
             builder.AppendLine();
             builder.AppendLine($"## {MetricCatalog.GetLevelTitle(metric.Level)}: {metric.Title.ToLowerInvariant()}");
             builder.AppendLine();
@@ -48,14 +48,14 @@ namespace CSR.Reports.Metrics
             {
                 builder.AppendLine("| Значение | Файл |");
                 builder.AppendLine("|---:|---|");
-                foreach (MetricItem item in summary.Top)
+                foreach (var item in summary.Top)
                     builder.AppendLine($"| {item.Values[metric.Key]} | `{Escape(item.File)}` |");
                 return;
             }
 
             builder.AppendLine("| Значение | Имя | Место |");
             builder.AppendLine("|---:|---|---|");
-            foreach (MetricItem item in summary.Top)
+            foreach (var item in summary.Top)
             {
                 builder.AppendLine(
                     $"| {item.Values[metric.Key]} | `{Escape(item.Name)}` | `{Escape(item.File)}:{item.Line}` |");

@@ -88,7 +88,7 @@ namespace CSR.Core.Tests.Metrics
                     void Call() { }
                 }
                 """;
-            MetricItem method = TestCode.Function(source, "Sample.Method");
+            var method = TestCode.Function(source, "Sample.Method");
             Assert.That(method.Line, Is.EqualTo(3));
             Assert.That(method.EndLine, Is.EqualTo(14));
             Assert.That(method.Values[MetricKeys.Lines], Is.EqualTo(12));
@@ -133,7 +133,7 @@ namespace CSR.Core.Tests.Metrics
                     int this[string key] => 0;
                 }
                 """;
-            FileMetrics file = TestCode.Measure(source);
+            var file = TestCode.Measure(source);
             Assert.That(file.Functions.Select(function => function.Values[MetricKeys.Parameters]),
                 Is.EqualTo(new[] { 2, 2, 1 }));
         }
@@ -151,8 +151,8 @@ namespace CSR.Core.Tests.Metrics
                     int Plain { get; set; } = 1;
                 }
                 """;
-            FileMetrics file = TestCode.Measure(source);
-            string[] names = file.Functions.Select(function => $"{function.Kind} {function.Name}").ToArray();
+            var file = TestCode.Measure(source);
+            var names = file.Functions.Select(function => $"{function.Kind} {function.Name}").ToArray();
             Assert.That(names, Is.EqualTo(new[]
             {
                 "accessor Sample.Value.get",
@@ -198,8 +198,8 @@ namespace CSR.Core.Tests.Metrics
                     }
                 }
                 """;
-            FileMetrics file = TestCode.Measure(source);
-            string[] names = file.Functions.Select(function => $"{function.Kind} {function.Name}").ToArray();
+            var file = TestCode.Measure(source);
+            var names = file.Functions.Select(function => $"{function.Kind} {function.Name}").ToArray();
             Assert.That(names, Is.EqualTo(new[]
             {
                 "constructor Sample<T>.Sample",

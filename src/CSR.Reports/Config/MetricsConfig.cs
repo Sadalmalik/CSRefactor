@@ -10,12 +10,12 @@ namespace CSR.Reports.Config
     {
         public static MetricsOptions Parse(string json)
         {
-            using JsonDocument document = JsonConfig.Parse(json);
-            JsonElement root = document.RootElement;
+            using var document = JsonConfig.Parse(json);
+            var root = document.RootElement;
             JsonConfig.RequireObject(root, "metrics");
 
             var options = new MetricsOptions();
-            foreach (JsonProperty property in root.EnumerateObject())
+            foreach (var property in root.EnumerateObject())
             {
                 if (property.Name == "top")
                 {
@@ -35,9 +35,9 @@ namespace CSR.Reports.Config
 
         private static void ReadLevel(MetricsOptions options, MetricLevel level, JsonElement element)
         {
-            string levelKey = MetricCatalog.GetLevelKey(level);
+            var levelKey = MetricCatalog.GetLevelKey(level);
             JsonConfig.RequireObject(element, levelKey);
-            foreach (JsonProperty property in element.EnumerateObject())
+            foreach (var property in element.EnumerateObject())
             {
                 MetricDefinition? metric = MetricCatalog.All.FirstOrDefault(
                     definition => definition.Level == level && definition.Key == property.Name);
@@ -51,9 +51,9 @@ namespace CSR.Reports.Config
         private static void ReadMetric(MetricsOptions options, MetricDefinition metric, JsonElement element)
         {
             JsonConfig.RequireObject(element, metric.Id);
-            foreach (JsonProperty property in element.EnumerateObject())
+            foreach (var property in element.EnumerateObject())
             {
-                string path = metric.Id + "." + property.Name;
+                var path = metric.Id + "." + property.Name;
                 switch (property.Name)
                 {
                     case "enabled":
@@ -73,7 +73,7 @@ namespace CSR.Reports.Config
 
         private static MetricLevel? FindLevel(string key)
         {
-            foreach (MetricLevel level in Enum.GetValues<MetricLevel>())
+            foreach (var level in Enum.GetValues<MetricLevel>())
             {
                 if (MetricCatalog.GetLevelKey(level) == key)
                     return level;

@@ -38,7 +38,7 @@ namespace CSR.Core.Metrics
 
         public static MetricsReport Build(IReadOnlyList<FileMetrics> files, MetricsOptions options)
         {
-            List<MetricSummary> metrics = MetricCatalog.All
+            var metrics = MetricCatalog.All
                 .Where(options.IsEnabled)
                 .Select(metric => Summarize(metric, GetItems(files, metric.Level), options))
                 .ToList();
@@ -69,10 +69,10 @@ namespace CSR.Core.Metrics
         private static MetricSummary Summarize(MetricDefinition metric, IEnumerable<MetricItem> items,
             MetricsOptions options)
         {
-            List<MetricItem> list = items.ToList();
-            List<int> values = list.Select(item => item.Values[metric.Key]).OrderBy(value => value).ToList();
+            var list = items.ToList();
+            var values = list.Select(item => item.Values[metric.Key]).OrderBy(value => value).ToList();
             int? threshold = options.GetThreshold(metric);
-            List<MetricItem> top = list
+            var top = list
                 .OrderByDescending(item => item.Values[metric.Key])
                 .ThenBy(item => item.File, StringComparer.Ordinal)
                 .ThenBy(item => item.Line)

@@ -25,14 +25,14 @@ namespace CSR.Reports.Metrics
                 writer.WriteNumber("functions", report.FunctionCount);
 
                 writer.WriteStartArray("metrics");
-                foreach (MetricSummary summary in report.Metrics)
+                foreach (var summary in report.Metrics)
                     WriteSummary(writer, summary);
                 writer.WriteEndArray();
 
                 if (includeItems)
                 {
                     writer.WriteStartArray("items");
-                    foreach (FileMetrics file in report.Files)
+                    foreach (var file in report.Files)
                         WriteFile(writer, file);
                     writer.WriteEndArray();
                 }
@@ -45,7 +45,7 @@ namespace CSR.Reports.Metrics
 
         private static void WriteSummary(Utf8JsonWriter writer, MetricSummary summary)
         {
-            MetricDefinition metric = summary.Metric;
+            var metric = summary.Metric;
             writer.WriteStartObject();
             writer.WriteString("id", metric.Id);
             writer.WriteString("title", metric.Title);
@@ -61,7 +61,7 @@ namespace CSR.Reports.Metrics
             writer.WriteNumber("aboveThreshold", summary.AboveThreshold);
 
             writer.WriteStartArray("top");
-            foreach (MetricItem item in summary.Top)
+            foreach (var item in summary.Top)
             {
                 writer.WriteStartObject();
                 writer.WriteNumber("value", item.Values[metric.Key]);
@@ -80,12 +80,12 @@ namespace CSR.Reports.Metrics
             WriteValues(writer, "values", file.File.Values);
 
             writer.WriteStartArray("types");
-            foreach (MetricItem type in file.Types)
+            foreach (var type in file.Types)
                 WriteItem(writer, type);
             writer.WriteEndArray();
 
             writer.WriteStartArray("functions");
-            foreach (MetricItem function in file.Functions)
+            foreach (var function in file.Functions)
                 WriteItem(writer, function);
             writer.WriteEndArray();
 
@@ -121,7 +121,7 @@ namespace CSR.Reports.Metrics
         private static void WriteValues(Utf8JsonWriter writer, string name, IReadOnlyDictionary<string, int> values)
         {
             writer.WriteStartObject(name);
-            foreach (KeyValuePair<string, int> pair in values)
+            foreach (var pair in values)
                 writer.WriteNumber(pair.Key, pair.Value);
             writer.WriteEndObject();
         }

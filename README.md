@@ -2,11 +2,11 @@
 
 Консольный инструмент анализа и рефакторинга C# для ИИ-агентов. Механику проверяет и правит инструмент, агенту остаются суждения: агент получает готовый отчёт и не читает длинные инструкции по стилю.
 
-Статус: работает `csr metrics`; остальные команды в разработке.
+Статус: работают `csr metrics` и `csr style`; остальные команды в разработке.
 
 ## Что будет уметь
 
-- `csr style` — проверка стиля по конфигу: форматирование, имена, порядок членов, комментарии.
+- `csr style` — проверка стиля по конфигу (работает: форматирование, комментарии, идиомы, модификаторы; дальше — имена и порядок членов).
 - `csr arch` — проверка архитектурных признаков; отдельный режим и отдельный конфиг.
 - `csr format` — форматирование только изменённых строк (движок — ReSharper Command Line Tools).
 - `csr refs`, `csr rename` — ссылки на символ и семантическое переименование с защитой сериализуемых имён.
@@ -52,9 +52,47 @@ csr metrics <файлы | папки>... [--config metrics.jsonc] [--project pro
 
 Конфиги — JSON с комментариями:
 - `metrics.jsonc` — размер топа, включение метрик и пороги, пример — `examples/metrics.example.jsonc`;
-- `project.jsonc` — общие сведения о проекте для всех режимов: символы препроцессора (по умолчанию `UNITY_EDITOR`), пример — `examples/project.example.jsonc`.
+- `project.jsonc` — общие сведения о проекте для всех режимов: символы препроцессора (по умолчанию `UNITY_EDITOR`) и методы логгера, пример — `examples/project.example.jsonc`.
 
 Коды возврата: 0 — отчёт построен, 2 — ошибка запуска (аргументы, конфиг).
+
+## `csr style`
+
+Находки стиля по синтаксису каждого файла, без загрузки решения: файлы только читаются.
+
+```
+csr style <файлы | папки>... --config style.jsonc [--config ещё.jsonc]... [--project project.jsonc] [--diff <ревизия | файл.diff>] [--scope file | changed-lines] [--format json | md] [--out файл]
+```
+
+- Проверки движка нейтральны: что считать нарушением, задаёт конфиг. Проверка, которой нет в конфиге, выключена. У проверки — уровень (`error`, `warning`, `hint`), метка правила `rule` (ID правила вашего гайда, попадает в находку) и параметры; правило-выбор между двумя записями — параметр `prefer`.
+- Несколько `--config` накладываются по порядку: следующий меняет уровень, метку и параметры, `"enabled": false` выключает проверку.
+- `--scope changed-lines` оставляет находки только на изменённых строках: `git diff -U0` от ревизии `--diff` (по умолчанию `HEAD`) или готовый файл диффа; неотслеживаемые файлы — целиком. С `--diff` режим по умолчанию — `changed-lines`.
+- JSON: `findings[]` (`file`, `line`, `endLine`, `column`, `check`, `rule`, `severity`, `message`, `replacement`) и `summary[]`. `replacement` — новый текст строк `line..endLine`; пустой список — удалить строки.
+- Коды возврата: 0 — нет находок уровня `error`, 1 — есть, 2 — ошибка запуска.
+
+| Проверка | Что ловит | Параметры |
+|---|---|---|
+| `line-length` | строка длиннее порога | `max`, `ignoreComments`, `ignoreStringLines` |
+| `directive-column` | директива `#region`, `#if` и др. не с колонки 0 | `directives` |
+| `binary-op-wrap` | место `&&` / `\|\|` при переносе | `prefer`: `leading` / `trailing`, `operators` |
+| `xml-doc` | документационный комментарий `///` | — |
+| `comment-separator` | комментарий-разделитель `// ---`, `// ===` | `minRun` |
+| `comment-typography` | `—`, `«»`, `→`, `×`, `≈`, `≤` в комментариях, текстах логов, атрибутов-подсказок, `ToString` | `replace`, `attributes`, `logs`, `toString` |
+| `comment-ending` | точка в конце однострочного комментария, заменяемые буквы | `prefer`: `no-period` / `period` / `any`, `letters`, `standaloneOnly` |
+| `commented-code` | закомментированный код, в том числе хвост после кода | — |
+| `todo-format` | TODO не в форме `// TODO: …`, с автором, датой, номером задачи | `forbidMetadata`, `requireCyrillic` |
+| `log-call-wrap` | вызов лога в несколько строк или длиннее порога | `maxLength` |
+| `message-text` | конкатенация и точка в конце текста лога или исключения | `concatenation`, `trailingPeriod`, `exceptions` |
+| `null-check` | `is null` или `== null` | `prefer`: `equality` / `pattern` |
+| `coalesce-assignment` | `if (x == null) x = …` вместо `??=` | — |
+| `out-var` | `out var x` или `out T x`; непрочитанная переменная → `out _` | `prefer`: `explicit` / `var`, `discardUnused` |
+| `bool-local-type` | `var` или `bool` у локальной с булевым инициализатором | `prefer`: `explicit` / `var` |
+| `tuple-type` | кортеж в сигнатуре, поле, свойстве | — |
+| `explicit-private` | `private` у членов класса | `prefer`: `explicit` / `implicit`, `members` |
+| `forbidden-modifier` | запрещённые модификаторы (`sealed`, `private protected`, …) | `modifiers` |
+| `custom-delegate` | свой `delegate` вместо `Action` / `Func` | — |
+
+Методы логгера для `log-call-wrap`, `message-text` и `comment-typography` — в `project.jsonc` (`logger.methods`, маски с `*`). Пример конфига — `examples/style.example.jsonc`.
 
 ## Тесты
 
@@ -67,8 +105,8 @@ dotnet test CSR.slnx
 | Путь | Что |
 |---|---|
 | `src/CSR` | консольное приложение `csr`: разбор аргументов, файлы, вывод |
-| `src/CSR.Core` | ядро (`netstandard2.0` и `net10.0`): на вход синтаксическое дерево и параметры, на выход метрики; без консоли, файловой системы и JSON; основа будущего пакета анализаторов Roslyn |
-| `src/CSR.Reports` | разбор конфигов `.jsonc`, отчёты JSON и Markdown |
+| `src/CSR.Core` | ядро (`netstandard2.0` и `net10.0`): на вход синтаксическое дерево и параметры, на выход метрики и находки стиля; без консоли, файловой системы и JSON; основа будущего пакета анализаторов Roslyn |
+| `src/CSR.Reports` | разбор конфигов `.jsonc` и диффа, отчёты JSON и Markdown |
 | `tests/CSR.Core.Tests`, `tests/CSR.Reports.Tests` | тесты (NUnit) |
 | `examples/` | примеры конфигов |
 | `spikes/` | прототипы замеров, не часть инструмента |

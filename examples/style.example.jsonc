@@ -1,0 +1,27 @@
+// Пример конфига csr style: csr style <папка> --config style.jsonc --project project.jsonc
+// Проверка, которой нет в конфиге, выключена. У проверки: "severity" (error | warning | hint), "rule" - метка правила
+// вашего гайда (попадает в находку), "enabled": false - выключить в следующем слое, остальное - параметры.
+// Список проверок и параметров - README
+{
+  "checks": {
+    "line-length": { "severity": "error", "rule": "STYLE-1", "max": 120 },
+    "directive-column": { "severity": "warning" },
+    "binary-op-wrap": { "severity": "warning", "prefer": "leading", "operators": ["&&", "||"] },
+    "xml-doc": { "severity": "hint" },
+    "comment-separator": { "severity": "warning" },
+    "comment-typography": { "severity": "warning", "attributes": ["Tooltip"] },
+    "comment-ending": { "severity": "hint", "prefer": "no-period" },
+    "commented-code": { "severity": "hint" },
+    "todo-format": { "severity": "hint", "forbidMetadata": true },
+    "log-call-wrap": { "severity": "warning", "maxLength": 120 },
+    "message-text": { "severity": "warning", "concatenation": true, "trailingPeriod": true },
+    "null-check": { "severity": "warning", "prefer": "equality" },
+    "coalesce-assignment": { "severity": "hint" },
+    "out-var": { "severity": "warning", "prefer": "explicit", "discardUnused": true },
+    "bool-local-type": { "severity": "warning", "prefer": "explicit" },
+    "tuple-type": { "severity": "warning" },
+    "explicit-private": { "severity": "warning", "prefer": "explicit", "members": ["field", "method"] },
+    "forbidden-modifier": { "severity": "warning", "modifiers": ["sealed"] },
+    "custom-delegate": { "severity": "hint" }
+  }
+}

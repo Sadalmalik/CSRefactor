@@ -54,7 +54,7 @@ namespace CSR.Core.Metrics
             if (type is not TypeDeclarationSyntax declaration)
                 return counts;
 
-            foreach (MemberDeclarationSyntax member in declaration.Members)
+            foreach (var member in declaration.Members)
                 Add(counts, GetMemberKind(member), GetMemberCount(member));
 
             return counts;

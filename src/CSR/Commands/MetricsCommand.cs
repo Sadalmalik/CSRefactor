@@ -27,22 +27,22 @@ namespace CSR.Commands
 
         public static int Run(IEnumerable<string> args)
         {
-            CommandLine commandLine = CommandLine.Parse(args, OptionNames, FlagNames);
+            var commandLine = CommandLine.Parse(args, OptionNames, FlagNames);
             if (commandLine.Positional.Count == 0)
                 throw new UsageException("не заданы файлы или папки");
 
-            string format = commandLine.GetOption("--format") ?? "json";
+            var format = commandLine.GetOption("--format") ?? "json";
             if (format is not ("json" or "md"))
                 throw new UsageException($"неизвестный формат '{format}'");
 
-            MetricsOptions options = LoadOptions(commandLine);
-            ProjectOptions project = LoadProject(commandLine);
-            List<string> files = SourceFiles.Collect(commandLine.Positional);
+            var options = LoadOptions(commandLine);
+            var project = LoadProject(commandLine);
+            var files = SourceFiles.Collect(commandLine.Positional);
 
             var stopwatch = Stopwatch.StartNew();
-            List<FileMetrics> results = Measure(files, project.ParseOptions);
-            MetricsReport report = MetricsReport.Build(results, options);
-            string text = format == "md"
+            var results = Measure(files, project.ParseOptions);
+            var report = MetricsReport.Build(results, options);
+            var text = format == "md"
                 ? MetricsMarkdownWriter.Write(report)
                 : MetricsJsonWriter.Write(report, commandLine.HasFlag("--all"));
 
@@ -62,14 +62,14 @@ namespace CSR.Commands
 
         private static FileMetrics MeasureFile(string file, CSharpParseOptions parseOptions)
         {
-            string source = File.ReadAllText(file);
+            var source = File.ReadAllText(file);
             return MetricsCalculator.Calculate(source, SourceFiles.GetDisplayPath(file), parseOptions);
         }
 
         private static MetricsOptions LoadOptions(CommandLine commandLine)
         {
             string? path = commandLine.GetOption("--config");
-            MetricsOptions options = path == null ? new MetricsOptions() : MetricsConfig.Parse(ReadConfig(path));
+            var options = path == null ? new MetricsOptions() : MetricsConfig.Parse(ReadConfig(path));
 
             string? top = commandLine.GetOption("--top");
             if (top == null)

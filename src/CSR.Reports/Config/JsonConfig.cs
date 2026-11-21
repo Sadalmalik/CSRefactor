@@ -42,7 +42,7 @@ namespace CSR.Reports.Config
                 throw new ConfigException($"{path}: ожидается массив строк");
 
             var values = new List<string>();
-            foreach (JsonElement item in element.EnumerateArray())
+            foreach (var item in element.EnumerateArray())
             {
                 if (item.ValueKind != JsonValueKind.String)
                     throw new ConfigException($"{path}: ожидается массив строк");

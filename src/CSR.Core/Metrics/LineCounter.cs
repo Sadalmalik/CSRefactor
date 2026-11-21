@@ -9,7 +9,7 @@ namespace CSR.Core.Metrics
     {
         public static int CountPhysical(SyntaxNode node)
         {
-            FileLinePositionSpan span = node.GetLocation().GetLineSpan();
+            var span = node.GetLocation().GetLineSpan();
             return span.EndLinePosition.Line - span.StartLinePosition.Line + 1;
         }
 
@@ -17,7 +17,7 @@ namespace CSR.Core.Metrics
         {
             int count = 0;
             int lastCounted = -1;
-            foreach (SyntaxToken token in node.DescendantTokens())
+            foreach (var token in node.DescendantTokens())
             {
                 if (token.Span.IsEmpty)
                     continue;

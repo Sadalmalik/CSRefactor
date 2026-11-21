@@ -8,7 +8,7 @@ namespace CSR
         public static List<string> Collect(IEnumerable<string> paths)
         {
             var files = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (string path in paths)
+            foreach (var path in paths)
             {
                 if (File.Exists(path))
                     files.Add(Path.GetFullPath(path));
@@ -24,19 +24,19 @@ namespace CSR
         // Путь для отчета: относительно текущей папки, если файл внутри нее, иначе полный; разделитель - '/'
         public static string GetDisplayPath(string fullPath)
         {
-            string relative = Path.GetRelativePath(Environment.CurrentDirectory, fullPath);
+            var relative = Path.GetRelativePath(Environment.CurrentDirectory, fullPath);
             bool isOutside = relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative);
             return (isOutside ? fullPath : relative).Replace('\\', '/');
         }
 
         private static void AddFolder(SortedSet<string> files, string folder)
         {
-            foreach (string file in Directory.EnumerateFiles(folder, "*.cs"))
+            foreach (var file in Directory.EnumerateFiles(folder, "*.cs"))
                 files.Add(file);
 
-            foreach (string child in Directory.EnumerateDirectories(folder))
+            foreach (var child in Directory.EnumerateDirectories(folder))
             {
-                string name = Path.GetFileName(child);
+                var name = Path.GetFileName(child);
                 if (name.StartsWith('.') || SkippedFolders.Contains(name))
                     continue;
 
