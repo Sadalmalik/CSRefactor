@@ -155,24 +155,9 @@ namespace CSR.Core.Fix
             var count = SourceLines.Parse(source).Count;
             var flags = new List<bool>(count);
             for (var line = 1; line <= count; line++)
-                flags.Add(changed.Intersects(CreateProbe(line)));
+                flags.Add(changed.Contains(line));
 
             return flags;
-        }
-
-        // Строка измененная - через Intersects: у ChangedLines нет проверки одной строки
-        private static Finding CreateProbe(int line)
-        {
-            return new Finding
-            {
-                Check = "",
-                Severity = Severity.Hint,
-                Message = "",
-                File = "",
-                Line = line,
-                EndLine = line,
-                Column = 1,
-            };
         }
 
         // Новые строки замены - измененные, если измененной была хоть одна заменяемая
