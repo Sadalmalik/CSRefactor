@@ -19,6 +19,7 @@
     "coalesce-assignment": { "severity": "hint" },
     "out-var": { "severity": "warning", "prefer": "explicit", "discardUnused": true },
     "bool-local-type": { "severity": "warning", "prefer": "explicit" },
+    "local-type": { "severity": "hint", "prefer": "var", "foreach": true, "foreachExplicitTypes": [] },
     "tuple-type": { "severity": "warning" },
     "explicit-private": { "severity": "warning", "prefer": "explicit", "members": ["field", "method"] },
     "forbidden-modifier": { "severity": "warning", "modifiers": ["sealed"] },

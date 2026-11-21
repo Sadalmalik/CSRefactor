@@ -22,6 +22,7 @@ namespace CSR.Core.Style
             new CoalesceAssignmentCheck(),
             new OutVarCheck(),
             new BoolLocalTypeCheck(),
+            new LocalTypeCheck(),
             new TupleTypeCheck(),
             new ExplicitPrivateCheck(),
             new ForbiddenModifierCheck(),

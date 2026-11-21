@@ -87,6 +87,7 @@ csr style <файлы | папки>... --config style.jsonc [--config ещё.jso
 | `coalesce-assignment` | `if (x == null) x = …` вместо `??=` | — |
 | `out-var` | `out var x` или `out T x`; непрочитанная переменная → `out _` | `prefer`: `explicit` / `var`, `discardUnused` |
 | `bool-local-type` | `var` или `bool` у локальной с булевым инициализатором | `prefer`: `explicit` / `var` |
+| `local-type` | явный тип у локальной и переменной `foreach`, где `var` дает тот же тип (или `var` при `prefer: explicit`) | `prefer`: `var` / `explicit`, `foreach`, `foreachExplicitTypes` |
 | `tuple-type` | кортеж в сигнатуре, поле, свойстве | — |
 | `explicit-private` | `private` у членов класса | `prefer`: `explicit` / `implicit`, `members` |
 | `forbidden-modifier` | запрещённые модификаторы (`sealed`, `private protected`, …) | `modifiers` |

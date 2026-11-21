@@ -78,7 +78,7 @@ namespace CSR.Core.Metrics
 
         private static MetricItem MeasureType(BaseTypeDeclarationSyntax type, SourceText text, string path)
         {
-            Dictionary<string, int> members = TypeMembers.Count(type);
+            var members = TypeMembers.Count(type);
             int regions = type.DescendantTrivia().Count(trivia => trivia.IsKind(SyntaxKind.RegionDirectiveTrivia));
             var values = new Dictionary<string, int>
             {
