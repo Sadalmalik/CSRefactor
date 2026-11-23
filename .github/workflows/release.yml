@@ -1,0 +1,45 @@
+# Релиз на тег v*: тесты, архив csr-<тег>-win-x64.zip (scripts/build-release.ps1) и релиз GitHub с ним.
+# Тег с суффиксом (v1.2.0-rc.1) - пререлиз: install-release.ps1 без -Version его не берет
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '11.0.x'
+
+      - name: Тесты
+        run: dotnet test CSR.slnx -c Release
+
+      - name: Архив
+        shell: powershell
+        run: ./scripts/build-release.ps1 -Tag $env:GITHUB_REF_NAME
+
+      - name: Релиз
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          $options = @('--title', $tag, '--generate-notes', '--verify-tag')
+          if ($tag.Contains('-'))
+          {
+              $options += '--prerelease'
+          }
+
+          gh release create $tag "dist/csr-$tag-win-x64.zip" @options
+          if ($LASTEXITCODE -ne 0)
+          {
+              exit $LASTEXITCODE
+          }

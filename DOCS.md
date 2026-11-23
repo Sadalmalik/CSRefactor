@@ -10,6 +10,7 @@
   - [Проверки `style`](#проверки-style-сводная-таблица)
   - [Признаки `arch`](#признаки-arch-сводная-таблица)
 - [1. Общее](#1-общее)
+  - [Требования к машине](#требования-к-машине)
 - [2. Команды](#2-команды)
   - [`csr metrics`](#csr-metrics)
   - [`csr style`](#csr-style)
@@ -102,6 +103,28 @@
 - Коды возврата: `0` — успех (для `style`, `fix`, `arch` — нет находок уровня `error`); `1` — есть находки уровня `error` (`style`, `fix`, `arch`), отказ или новые ошибки компиляции (`rename`), сервер не запущен (`serve --status`, `--stop`); `2` — ошибка запуска (аргументы, конфиг, нет файла, символ не найден).
 - Режимы выборки находок: `file` — все находки файла; `changed-lines` — только на изменённых строках (`--diff`, `--scope`).
 - Конфиг нужен проверкам: проверки движка нейтральны, что считать нарушением, задаёт конфиг (раздел [3](#3-конфиги)). Без `--config` `csr style`, `csr fix` и `csr arch` ищут конфиги сами ([поиск конфигов](#где-искать-конфиги)); нет ни одного — код 2.
+
+### Требования к машине
+
+Установка — [README.md](README.md#установка). `csr.exe` — self-contained (.NET внутри): для команд по файлам (`metrics`, `style`, `fix`, `arch` без `--solution`) на машине ничего не нужно. Команды по решению загружают проекты через `MSBuildWorkspace`: MSBuild работает в отдельном процессе BuildHost из папок рядом с `csr.exe`. Вид процесса зависит от формата проекта:
+
+| Проект | BuildHost | Что нужно на машине |
+|---|---|---|
+| SDK-стиль: `<Project Sdk="Microsoft.NET.Sdk">` | `BuildHost-netcore`, запускается через `dotnet` | .NET SDK, которым собирается проект (с учётом `global.json`), `dotnet` в `PATH` |
+| старый формат: `<Project ToolsVersion="4.0">` (Unity) | `BuildHost-net472` | .NET Framework 4.7.2+ и MSBuild: Visual Studio 2017+ (любая редакция) или Build Tools for Visual Studio с компонентом MSBuild |
+
+- MSBuild для старого формата ищется через `Microsoft.Build.Locator`: экземпляры Visual Studio и Build Tools, зарегистрированные установщиком Visual Studio, и окружение Developer Command Prompt (`VSINSTALLDIR`, `VSCMD_VER`). Из найденных берётся экземпляр с наибольшей версией.
+- Rider: свой MSBuild (`<Rider>\tools\MSBuild`) в установщике Visual Studio не регистрирует, и без Visual Studio или Build Tools MSBuild не находится. Обход — окружение Developer Command Prompt, указывающее на Rider (проверено на Rider 2026.1: старый `.csproj` загружен MSBuild из Rider):
+
+  ```
+  $env:VSINSTALLDIR = 'C:\Program Files\JetBrains\JetBrains Rider 2026.1.1\tools\'
+  $env:VSCMD_VER = '17.0'
+  csr refs Game.Player.Move
+  ```
+
+  `VSCMD_VER` — версия этого экземпляра; при установленной Visual Studio с большей версией берётся Visual Studio.
+- Проекты Unity ссылаются на сборки редактора по полным путям (`<HintPath>` в папке установки Unity): нужна версия редактора, из которой сгенерированы `.csproj`, иначе ссылки на `UnityEngine` не разрешаются и семантика неполная.
+- Нет нужного MSBuild или `dotnet` — загрузка решения завершается необработанным исключением BuildHost (`No compatible MSBuild instance`, `Could not load Microsoft.Build`, `error trying to start process 'dotnet.exe'`): требование выше не выполнено.
 
 ## 2. Команды
 
@@ -1281,7 +1304,7 @@ public class Report
 
 Если `--config` или `--project` заданы, используются только они: `--config` — слои по порядку, как перечислены. Без них `csr` ищет конфиги сам. Два места:
 
-- **По умолчанию** — папка `config` рядом с `csr.exe`: `config/style.jsonc`, `config/arch.jsonc`, `config/project.jsonc`, `config/metrics.jsonc`, `config/refactor.jsonc`. Туда её кладёт установщик ([README.md](README.md#установка), параметр `-Configs`).
+- **По умолчанию** — папка `config` рядом с `csr.exe`: `config/style.jsonc`, `config/arch.jsonc`, `config/project.jsonc`, `config/metrics.jsonc`, `config/refactor.jsonc`. Туда её кладёт установщик ([README.md](README.md#установка)): из релиза — примеры конфигов, если папки ещё нет; параметр `-Configs` — свои конфиги.
 - **Проектный** — папка `.csr` с файлами тех же имён: `.csr/style.jsonc` и т. д. Поиск идёт от папки цели вверх: папка первого аргумента (у файла — его папка; у `csr arch --solution` и `csr rename` — папка решения). Берётся ближайшая `.csr`, где есть нужный файл. Поиск останавливается на корне репозитория — папке с `.git` (она проверяется последней), выше не идёт.
 
 Как места сочетаются:

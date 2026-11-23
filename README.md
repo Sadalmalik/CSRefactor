@@ -24,25 +24,49 @@
 
 ## Требования
 
-- .NET SDK 10 или новее.
-- Для загрузки старых `.csproj` (Unity) — MSBuild из Visual Studio или Build Tools. Нужен только `refs`, `rename`, `move`, `extract`, `serve` и `arch --solution`.
+- Windows x64. `csr.exe` из релиза — self-contained: .NET внутри, установленный .NET для `metrics`, `style`, `fix`, `arch` по файлам не нужен.
+- Команды по решению (`refs`, `rename`, `move`, `extract`, `serve`, `arch --solution`) грузят проекты через MSBuild отдельным процессом (BuildHost Roslyn из папок `BuildHost-*` рядом с `csr.exe`):
+  - проекты SDK-стиля (`<Project Sdk="...">`) — .NET SDK, которым собирается проект (`dotnet` в `PATH`);
+  - старые `.csproj` (Unity: `<Project ToolsVersion="4.0">`) — .NET Framework 4.7.2 или новее (в Windows 10/11 есть) и MSBuild из Visual Studio 2017+ или Build Tools for Visual Studio с компонентом MSBuild; ссылки проекта Unity указывают на сборки редактора Unity — нужна та же версия редактора. Rider свой MSBuild не регистрирует, и без Visual Studio или Build Tools он не находится; обход — в [DOCS.md](DOCS.md#требования-к-машине).
+- Сборка из исходников — .NET SDK 10 или новее.
 
 ## Установка
 
-Скрипт `scripts/install.ps1` (PowerShell, Windows) публикует `src/CSR` из текущей ветки (`win-x64`, один файл, .NET внутри), копирует `csr.exe` и папки `BuildHost-*` в папку установки и добавляет её в `PATH` пользователя. После установки `csr` вызывается по имени из любого каталога (в новых терминалах). Нужен .NET SDK 10.
+### Из релиза
+
+Одна команда PowerShell (Windows PowerShell 5.1 или PowerShell 7) скачивает архив последнего релиза, распаковывает его в `%LOCALAPPDATA%\Programs\csr` и добавляет папку в `PATH` пользователя. Клонировать репозиторий и ставить .NET SDK не нужно. Повторный запуск — обновление.
+
+```
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Sadalmalik/CSRefactor/main/scripts/install-release.ps1).TrimStart([char]0xFEFF)))
+```
+
+Скрипт выполняется из памяти: политика выполнения `.ps1` его не касается; `TrimStart` убирает метку UTF-8 (BOM) в начале файла — с ней `ScriptBlock.Create` не разбирает скрипт. Параметры дописываются после команды, например конкретная версия и остановка запущенного `csr serve`:
+
+```
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Sadalmalik/CSRefactor/main/scripts/install-release.ps1).TrimStart([char]0xFEFF))) -Version v1.0.0 -Stop
+```
+
+| Параметр | Назначение |
+|---|---|
+| `-Version` | тег релиза (`v1.0.0`); по умолчанию — последний релиз (пререлизы не берутся) |
+| `-Zip` | архив `csr-<тег>-win-x64.zip`: путь к файлу или URL — вместо поиска релиза на GitHub |
+| `-Configs` | папка с конфигами по умолчанию (`*.jsonc`): заменяет папку `config` рядом с `csr.exe` |
+| `-Link` | вместо копии — ссылка (junction) `config` → `-Configs`; требует `-Configs` |
+| `-Destination` | папка установки; по умолчанию `%LOCALAPPDATA%\Programs\csr` |
+| `-NoPath` | не менять `PATH` пользователя |
+| `-Stop` | остановить процессы из папки установки (`csr serve` и его BuildHost); без параметра — ошибка со списком процессов |
+
+В архиве — `csr.exe`, папки `BuildHost-net472` и `BuildHost-netcore`, `version.txt` и папка `config` с примерами конфигов (`examples/`). Конфиги: без `-Configs` примеры из архива кладутся, только если папки `config` в установке ещё нет; при обновлении свои конфиги не заменяются. Версия установки и источник конфигов — в `version.txt` рядом с `csr.exe`. Проектный слой конфигов — папка `.csr` в репозитории проекта; порядок поиска — в [DOCS.md](DOCS.md#где-искать-конфиги).
+
+### Из исходников
+
+Скрипт `scripts/install.ps1` публикует `src/CSR` из текущей ветки (`scripts/publish.ps1`: `win-x64`, один файл, .NET внутри) и ставит результат тем же `install-release.ps1`. Нужен .NET SDK 10 или новее.
 
 ```
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 [-Configs <папка>] [-Link] [-Destination <папка>] [-NoPath]
 ```
 
-`-ExecutionPolicy Bypass` действует только на этот запуск: политика по умолчанию в Windows (`Restricted`) запрещает запуск `.ps1`, системная настройка не меняется.
-
-| Параметр | Назначение |
-|---|---|
-| `-Configs` | папка с конфигами по умолчанию (`*.jsonc`): копируются в `config` рядом с `csr.exe`; `csr` берёт их первым слоем без `--config`. Без параметра `config` установки не меняется |
-| `-Link` | вместо копии — ссылка (junction) `config` → `-Configs`: правки конфигов действуют без переустановки; требует `-Configs` |
-| `-Destination` | папка установки; по умолчанию `%LOCALAPPDATA%\Programs\csr` |
-| `-NoPath` | не менять `PATH` пользователя |
+`-ExecutionPolicy Bypass` действует только на этот запуск: политика по умолчанию в Windows (`Restricted`) запрещает запуск `.ps1`, системная настройка не меняется. Параметры — как у установки из релиза; без `-Configs` папка `config` установки не меняется. Запущенный из папки установки `csr` (в том числе `csr serve`) — ошибка, процесс нужно остановить. В `version.txt` — коммит, ветка и дата.
 
 Пример: установка с личными конфигами по ссылке:
 
@@ -50,16 +74,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 [-Conf
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1 -Configs D:\my\csr-configs -Link
 ```
 
-Скрипт ничего не удаляет за пределами папки установки; запущенный из неё `csr` (в том числе `csr serve`) — ошибка, процесс нужно остановить. Версия установки (коммит, ветка, дата) — в `version.txt` рядом с `csr.exe`. Проектный слой конфигов — папка `.csr` в репозитории проекта; порядок поиска — в [DOCS.md](DOCS.md#где-искать-конфиги).
+Архив релиза локально (то же делает workflow `.github/workflows/release.yml` на тег `v*`): `scripts/build-release.ps1 -Tag v1.0.0` → `dist/csr-v1.0.0-win-x64.zip`.
 
-Сборка и запуск из исходников без установки:
+Сборка и запуск без установки:
 
 ```
 dotnet build CSR.slnx
 dotnet run --project src/CSR -- help
 ```
 
-Установка как dotnet tool из локальной сборки:
+Установка как dotnet tool из локальной сборки (нужен .NET 10 на машине):
 
 ```
 dotnet pack src/CSR -c Release -o artifacts
@@ -106,6 +130,8 @@ dotnet test CSR.slnx
 | `src/CSR.Workspace` | загрузка решения (`MSBuildWorkspace`), символы, ссылки, переименование, сервер `csr serve`; отдельно от ядра |
 | `tests/` | тесты (NUnit): ядро, конфиги и отчёты, CLI, `refs` / `rename` / `serve` на маленьком решении |
 | `examples/` | примеры конфигов |
+| `scripts/` | установка (`install.ps1` из исходников, `install-release.ps1` из релиза), публикация и архив релиза |
+| `.github/workflows/` | релиз на тег `v*` |
 | `spikes/` | прототипы замеров, не часть инструмента |
 
 ## Лицензия
