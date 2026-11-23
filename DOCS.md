@@ -29,7 +29,7 @@
   - Идиомы и типы: [`null-check`](#null-check), [`coalesce-assignment`](#coalesce-assignment), [`out-var`](#out-var), [`bool-local-type`](#bool-local-type), [`local-type`](#local-type), [`tuple-type`](#tuple-type)
   - Модификаторы: [`explicit-private`](#explicit-private), [`forbidden-modifier`](#forbidden-modifier), [`custom-delegate`](#custom-delegate)
   - Раскладка кода столбиком: [`expression-arrow`](#expression-arrow), [`signature-wrap`](#signature-wrap), [`call-wrap`](#call-wrap), [`region-layout`](#region-layout), [`condition-wrap`](#condition-wrap), [`initializer-layout`](#initializer-layout), [`ternary-wrap`](#ternary-wrap)
-  - Именование: [`naming`](#naming), [старые проверки](#старые-проверки-именования-до-v04), [`field-prefix`](#field-prefix)
+  - Именование: [`naming`](#naming), [старые проверки](#старые-проверки-именования-до-v04)
   - Запрещённые конструкции: [`forbidden-call`](#forbidden-call), [`forbidden-type`](#forbidden-type), [`coroutine`](#coroutine), [`static-state`](#static-state), [`local-function`](#local-function), [`path-concat`](#path-concat), [`bool-field-count`](#bool-field-count), [`type-per-file`](#type-per-file), [`closure-in-method`](#closure-in-method), [`nested-loop`](#nested-loop)
 - [5. Признаки `arch`](#5-признаки-arch)
   - По одному файлу: [`type-branch`](#type-branch), [`behaviour-logic`](#behaviour-logic), [`index-api`](#index-api), [`static-data-methods`](#static-data-methods), [`project-mechanism`](#project-mechanism), [`numeric-constant`](#numeric-constant), [`numeric-literal`](#numeric-literal), [`tuple-type`](#tuple-type-arch), [`partial-file`](#partial-file), [`debug-draw`](#debug-draw), [`obsolete-reason`](#obsolete-reason), [`persisted-class`](#persisted-class)
@@ -71,7 +71,7 @@
 | [`condition-wrap`](#condition-wrap) | перенос логического условия | да | `max`, `argumentIndent`, `continuationIndent`, `assignmentIndent` |
 | [`initializer-layout`](#initializer-layout) | инициализатор столбиком | да | `max`, `trailingComma` |
 | [`ternary-wrap`](#ternary-wrap) | тернарный оператор столбиком | часть | `max`, `nested` |
-| [`field-prefix`](#field-prefix) | префиксы полей, регистр констант | нет | `instancePrefix`, `staticPrefix`, `staticReadonly`, `constants`, `prefixedAccess`, `pascalAfterPrefix`, `properties` |
+| `field-prefix` | устарела до v0.4: [`naming`](#старые-проверки-именования-до-v04) | нет | `instancePrefix`, `staticPrefix`, `staticReadonly`, `constants`, `prefixedAccess`, `pascalAfterPrefix`, `properties` |
 | `bool-name` | устарела до v0.4: [`naming`](#старые-проверки-именования-до-v04) | нет | `members`, `forbiddenWords`, `negationPrefixes`, `ignoreWords` |
 | [`naming`](#naming) | имена по правилам конфига: символы → требование → уровень и метка | нет | `rules` |
 | `event-name` | устарела до v0.4: [`naming`](#старые-проверки-именования-до-v04) | нет | `allowed`, `forbidden`, `delegatePrefixes` |
@@ -4667,7 +4667,8 @@ public class Report
 | `number` | `number`: `plural` или `singular` — число по последнему слову имени без префикса поля; множественное — слово из `pluralWords` или на `s`, кроме окончаний `singularEndings` (по умолчанию `ss`, `us`, `is`: `Status`, `Class`, `Axis`) | `enum 'DamageType': имя во множественном числе`, с `label: "коллекция"` — `коллекция 'm_Item': имя во множественном числе` |
 | `namespace` | `roots` — корни: пространство начинается с корня (`Company` или `Company.*`); у типа верхнего уровня — тип вне пространства имён; вложенные типы и типы внутри пространства не проверяются | `пространство 'Tools.Debug' вне корня: Company`, с `label: "тип"` — `тип 'Helper' вне пространства имен` |
 | `depth` | `maxParts` — не больше частей в имени пространства | `пространство 'Company.Game.Ui.Hud.Bars': частей 5, предел 4` |
-| `prefix` | `prefix` с `prefixStyle: "word"` — обязательный префикс перед заглавной буквой или цифрой (`IStorage`, `TValue`), `prefixAlone: true` — имя может быть самим префиксом (`T`); `forbiddenPrefixes` — запрещённые префиксы перед заглавной буквой или цифрой (`OnChanged`; `Onboarding` — не префикс) | `интерфейс 'Storage': префикс 'I'`, `delegate 'OnSpawnHandler': без префикса 'On'` |
+| `prefix` | `prefix` — обязательный префикс. `prefixStyle: "field"` (по умолчанию): префикс поля (`m_Name`), `pascalAfterPrefix: true` — после префикса заглавная буква; `""` — без префикса полей (`m_`, `s_`, `k_`, `_` и префиксы из `knownPrefixes`); `"*"` — не проверять (занимает вид в каскаде: константа не получает префикс следующих правил). `prefixStyle: "word"`: префикс перед заглавной буквой или цифрой (`IStorage`, `TValue`), `prefixAlone: true` — имя может быть самим префиксом (`T`). `forbiddenPrefixes` — запрещённые префиксы перед заглавной буквой или цифрой (`OnChanged`; `Onboarding` — не префикс) | `'count': закрытое поле с префиксом 'm_' - 'm_Count'`, `'m_total': после префикса - заглавная буква - 'm_Total'`, `'m_Value': свойство без префикса 'm_' - 'Value'`, `интерфейс 'Storage': префикс 'I'`, `delegate 'OnSpawnHandler': без префикса 'On'` |
+| `case` | `case`: `pascal` (`MaxSize`; без `_`; короткая аббревиатура `UI`, `ID` допустима), `upper` (`MAX_SIZE`), `any` — не проверять | `'MAX_COUNT': константа в PascalCase - 'MaxCount'` |
 
 Не проверяются имена, которые задаёт база: члены `override`, явные реализации интерфейса, параметры таких методов и индексаторов. Вид `local` — объявление локальной (`int x = 0;`) и `out`-переменная с типом; переменные `for`, `foreach`, `using`, `catch` и шаблонов не собираются.
 
@@ -4726,92 +4727,13 @@ public class Spawner
 
 | Старая проверка | Правила `naming` |
 |---|---|
+| `field-prefix` | по порядку: `{ "symbols": { "kinds": ["field"], "modifiers": ["const"] }, "case": <constants>, "prefix": "*" }`; доступы не из `prefixedAccess` — `{ "symbols": { "kinds": ["field"], "access": [<доступы>] }, "prefix": "", "label": "поле" }`; при `staticReadonly: "pascal"` — `{ "symbols": { "kinds": ["field"], "modifiers": ["static", "readonly"] }, "prefix": "", "label": "static readonly" }`; `{ "symbols": { "kinds": ["field"], "modifiers": ["static"] }, "prefix": <staticPrefix>, "pascalAfterPrefix": <pascalAfterPrefix> }`; `{ "symbols": { "kinds": ["field"] }, "prefix": <instancePrefix>, "pascalAfterPrefix": … }`; при `properties` — `{ "symbols": { "kinds": ["property"] }, "prefix": "" }`; везде `knownPrefixes: [<instancePrefix>, <staticPrefix>]`. Свойство `override` больше не находка: его имя задаёт база, находка — на базовом свойстве |
 | `event-name` | `{ "symbols": { "kinds": ["event"] }, "allowed": <allowed>, "forbidden": <forbidden> }`, `{ "symbols": { "kinds": ["delegate"] }, "forbiddenPrefixes": <delegatePrefixes> }`; по умолчанию `allowed: ["On*"]`, `forbidden: ["OnWill*", "OnDid*"]`, `delegatePrefixes: ["On"]` |
 | `bool-name` | `{ "symbols": { "kinds": <members>, "types": ["bool", "Boolean"] }, "forbiddenWords": <forbiddenWords>, "negationPrefixes": <negationPrefixes>, "ignoreWords": <ignoreWords>, "negation": true, "label": "bool" }`; по умолчанию `members: ["field", "property", "parameter", "local"]`, `forbiddenWords: ["Not", "No", "Non", "Dont"]` |
 | `enum-plural` | `{ "symbols": { "kinds": ["enum"], "attributes": ["Flags"] }, "number": "plural", "pluralWords": <pluralWords>, "singularEndings": <singularEndings> }`, `{ "symbols": { "kinds": ["enum"] }, "number": "singular", … }`; по умолчанию `pluralWords: ["Mask"]`. Текст: `enum 'DamageType': имя во множественном числе` (раньше `enum 'DamageType' с [Flags]: …`) |
 | `collection-name` | `{ "symbols": { "kinds": <members>, "types": <collectionTypes> и "*[*]" при arrays }, "number": "plural", "pluralWords": <pluralWords>, "singularEndings": <singularEndings>, "label": "коллекция" }`; по умолчанию `members: ["field", "property"]`, `arrays: true`, типы и слова — как у прежней проверки |
 | `namespace-name` | при `roots`: `{ "symbols": { "kinds": ["namespace"] }, "roots": <roots> }`, `{ "symbols": { "kinds": ["class", "struct", "record", "interface", "enum"] }, "roots": <roots>, "label": "тип" }`; при `forbiddenWords`: `{ "symbols": { "kinds": ["namespace"] }, "forbiddenWords": <forbiddenWords> }`; при `maxDepth` > 0: `{ "symbols": { "kinds": ["namespace"] }, "maxParts": <maxDepth> }` |
 | `type-name` | `{ "symbols": { "kinds": ["interface"] }, "prefix": <interfacePrefix>, "prefixStyle": "word" }`, `{ "symbols": { "kinds": ["typeParameter"] }, "prefix": <typeParameterPrefix>, "prefixStyle": "word", "prefixAlone": true }`; на каждую пару `derivedNames` — `{ "symbols": { "kinds": ["class", "struct", "record", "interface"], "bases": [<база>] }, "allowed": [<маска имени>] }`; по умолчанию `interfacePrefix: "I"`, `typeParameterPrefix: "T"`. Текст находки наследника — как у `masks`: `класс 'Save': допустимо *Command` (раньше `'Save' наследует 'CommandBase': имя по маске '*Command'`) |
-
-#### `field-prefix`
-
-Префиксы полей и регистр констант:
-- у поля с доступом из `prefixedAccess` (по умолчанию закрытого) обязателен префикс: `instancePrefix` у поля экземпляра, `staticPrefix` у статического;
-- закрытое `static readonly` проверяется по параметру `staticReadonly`;
-- остальные поля и свойства должны быть без префиксов полей: `instancePrefix`, `staticPrefix` и общего вида (`m_`, `k_`, `_`);
-- константа проверяется по `constants`: PascalCase или UPPER_CASE.
-
-**Замена:** нет. В сообщении указано ожидаемое имя.
-
-**Параметры**
-
-| Параметр | Значения | По умолчанию | Описание |
-|---|---|---|---|
-| `instancePrefix` | строка | `"m_"` | префикс поля экземпляра; пусто — без префикса |
-| `staticPrefix` | строка | `"s_"` | префикс статического поля; пусто — без префикса |
-| `staticReadonly` | `static`, `pascal` | `static` | закрытое `static readonly`: `static` — префикс `staticPrefix`, `pascal` — без префикса, как константа |
-| `constants` | `pascal`, `upper`, `any` | `pascal` | регистр константы: `MaxSize`, `MAX_SIZE` или не проверять |
-| `prefixedAccess` | список: `private`, `protected`, `internal`, `public` | `["private"]` | доступ полей, у которых обязателен префикс. Поле без модификатора считается `private`; `protected internal` и `private protected` — `protected` |
-| `pascalAfterPrefix` | `true`, `false` | `true` | после префикса — заглавная буква (`m_Name`, не `m_name`) |
-| `properties` | `true`, `false` | `true` | проверять, что у свойств нет префиксов полей |
-
-**Пример**
-
-Конфиг:
-
-```jsonc
-{ "checks": { "field-prefix": { "severity": "warning", "staticReadonly": "pascal" } } }
-```
-
-Было (`Demo.cs`):
-
-```csharp
-public class Counter
-{
-    public const int MAX_COUNT = 10;
-    private const int Step = 1;
-    private static int s_Instances;
-    private static readonly string Prefix = "c";
-    private int count;
-    private int m_total;
-    protected int m_Limit;
-    public int m_Value;
-}
-```
-
-Находки (`--format md`):
-
-````markdown
-- 3: `field-prefix` (warning) - 'MAX_COUNT': константа в PascalCase - 'MaxCount'
-- 7: `field-prefix` (warning) - 'count': закрытое поле с префиксом 'm_' - 'm_Count'
-- 8: `field-prefix` (warning) - 'm_total': после префикса - заглавная буква - 'm_Total'
-- 9: `field-prefix` (warning) - 'm_Limit': поле без префикса 'm_' - 'Limit'
-- 10: `field-prefix` (warning) - 'm_Value': поле без префикса 'm_' - 'Value'
-````
-
-Стало (после `csr rename` по каждой находке):
-
-```csharp
-public class Counter
-{
-    public const int MaxCount = 10;
-    private const int Step = 1;
-    private static int s_Instances;
-    private static readonly string Prefix = "c";
-    private int m_Count;
-    private int m_Total;
-    protected int Limit;
-    public int Value;
-}
-```
-
-Если `protected`-поля тоже пишутся с `m_`, задайте `"prefixedAccess": ["private", "protected"]`: тогда `m_Limit` не даёт находку, а `protected int limit` даёт.
-
-**Ограничения**
-
-- Доступ определяется только по модификаторам: поле без модификатора считается закрытым.
-- В UPPER_CASE-имени цифра после `_` склеивается с предыдущим словом: для `Prime64_1` предлагается `Prime641`. Имя в сообщении — подсказка, а не замена.
-- Короткое имя константы из заглавных букв (`ID`, `UI`, до трёх букв) считается аббревиатурой и находки не даёт.
 
 
 ### Запрещённые конструкции

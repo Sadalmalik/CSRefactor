@@ -36,7 +36,6 @@ namespace CSR.Core.Style
             new ConditionWrapCheck(),
             new InitializerLayoutCheck(),
             new TernaryWrapCheck(),
-            new FieldPrefixCheck(),
             new ForbiddenCallCheck(),
             new ForbiddenTypeCheck(),
             new CoroutineCheck(),

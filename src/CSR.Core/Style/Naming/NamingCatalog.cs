@@ -11,6 +11,7 @@ namespace CSR.Core.Style.Naming
         public static readonly IReadOnlyList<NameRequirementKind> Kinds =
         [
             PrefixRequirement.Kind,
+            CaseRequirement.Kind,
             MaskRequirement.Kind,
             WordsRequirement.Kind,
             NumberRequirement.Kind,
@@ -20,6 +21,7 @@ namespace CSR.Core.Style.Naming
 
         public static readonly IReadOnlyList<SyntaxCheck> Aliases =
         [
+            FieldPrefixLegacy.Check,
             EventNameLegacy.Check,
             TypeNameLegacy.Check,
             BoolNameLegacy.Check,

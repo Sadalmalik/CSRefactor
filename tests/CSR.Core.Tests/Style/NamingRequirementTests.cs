@@ -193,6 +193,56 @@ namespace CSR.Core.Tests.Style
             }));
         }
 
+        // Каскад полей: константа занимает вид prefix значением "*", дальше - открытые поля без префикса, затем m_
+        [Test]
+        public void FieldPrefixAndCase_Cascade()
+        {
+            const string source = """
+                public class Sample
+                {
+                    private const int MAX_COUNT = 3;
+                    private int count;
+                    private int m_total;
+                    public int m_Limit;
+                    public int Value { get; set; }
+                    public int m_Size { get; set; }
+                }
+                """;
+            var constants = Rule(new()
+            {
+                ["symbols"] = Fields(new() { ["kinds"] = new[] { "field" }, ["modifiers"] = new[] { "const" } }),
+                ["case"] = "pascal",
+                ["prefix"] = "*",
+            });
+            var publicFields = Rule(new()
+            {
+                ["symbols"] = Fields(new() { ["kinds"] = new[] { "field" }, ["access"] = new[] { "public" } }),
+                ["prefix"] = "",
+            });
+            var fields = Rule(new()
+            {
+                ["symbols"] = Fields(new() { ["kinds"] = new[] { "field" } }),
+                ["prefix"] = "m_",
+                ["pascalAfterPrefix"] = true,
+            });
+            var properties = Rule(new()
+            {
+                ["symbols"] = Fields(new() { ["kinds"] = new[] { "property" } }),
+                ["prefix"] = "",
+            });
+
+            var messages = RunRules(source, constants, publicFields, fields, properties).Select(finding => finding.Message);
+
+            Assert.That(messages, Is.EqualTo(new[]
+            {
+                "'MAX_COUNT': константа в PascalCase - 'MaxCount'",
+                "'count': закрытое поле с префиксом 'm_' - 'm_Count'",
+                "'m_total': после префикса - заглавная буква - 'm_Total'",
+                "'m_Limit': открытое поле без префикса 'm_' - 'Limit'",
+                "'m_Size': свойство без префикса 'm_' - 'Size'",
+            }));
+        }
+
         public static List<Finding> RunRules(string source, params NamingRule[] rules)
             => Run("naming", source, settings => settings.Set("rules", rules.Cast<object>().ToList()));
 

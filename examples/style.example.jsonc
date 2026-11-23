@@ -31,13 +31,29 @@
     "condition-wrap": { "severity": "warning", "max": 120, "argumentIndent": true, "continuationIndent": true, "assignmentIndent": false },
     "initializer-layout": { "severity": "warning", "max": 120, "trailingComma": true },
     "ternary-wrap": { "severity": "warning", "max": 120, "nested": true },
-    "field-prefix": { "severity": "warning", "instancePrefix": "m_", "staticPrefix": "s_", "staticReadonly": "pascal", "constants": "pascal" },
-    "bool-name": { "severity": "warning", "forbiddenWords": ["Not", "No", "Non", "Dont"], "negationPrefixes": [], "ignoreWords": [] },
-    "event-name": { "severity": "warning", "allowed": ["On*"], "forbidden": ["OnWill*", "OnDid*"], "delegatePrefixes": ["On"] },
-    "type-name": { "severity": "warning", "interfacePrefix": "I", "typeParameterPrefix": "T", "derivedNames": { "CommandBase": "*Command" } },
-    "namespace-name": { "severity": "warning", "roots": ["Company"], "forbiddenWords": ["Editor"], "maxDepth": 4 },
-    "enum-plural": { "severity": "hint" },
-    "collection-name": { "severity": "hint", "members": ["field", "property"] },
+    // Именование: правила по порядку; для каждого вида требования действует первое подходящее правило
+    "naming": {
+      "severity": "warning",
+      "rules": [
+        { "symbols": { "kinds": ["field"], "modifiers": ["const"] }, "case": "pascal", "prefix": "*" },
+        { "symbols": { "kinds": ["field"], "access": ["protected", "internal", "public"] }, "prefix": "" },
+        { "symbols": { "kinds": ["field"], "modifiers": ["static", "readonly"] }, "prefix": "" },
+        { "symbols": { "kinds": ["field"], "modifiers": ["static"] }, "prefix": "s_", "pascalAfterPrefix": true },
+        { "symbols": { "kinds": ["field"] }, "prefix": "m_", "pascalAfterPrefix": true },
+        { "symbols": { "kinds": ["property"] }, "prefix": "" },
+        { "symbols": { "types": ["bool", "Boolean"] }, "forbiddenWords": ["Not", "No", "Non", "Dont"], "negation": true, "label": "bool" },
+        { "symbols": { "kinds": ["event"] }, "allowed": ["On*"], "forbidden": ["OnWill*", "OnDid*"] },
+        { "symbols": { "kinds": ["delegate"] }, "forbiddenPrefixes": ["On"] },
+        { "symbols": { "kinds": ["interface"] }, "prefix": "I", "prefixStyle": "word" },
+        { "symbols": { "kinds": ["typeParameter"] }, "prefix": "T", "prefixStyle": "word", "prefixAlone": true },
+        { "symbols": { "kinds": ["class"], "bases": ["CommandBase"] }, "allowed": ["*Command"] },
+        { "symbols": { "kinds": ["namespace"] }, "roots": ["Company"], "forbiddenWords": ["Editor"], "maxParts": 4 },
+        { "symbols": { "kinds": ["class", "struct", "record", "interface", "enum"] }, "roots": ["Company"], "label": "тип" },
+        { "symbols": { "kinds": ["enum"], "attributes": ["Flags"] }, "number": "plural", "pluralWords": ["Mask"], "severity": "hint" },
+        { "symbols": { "kinds": ["enum"] }, "number": "singular", "pluralWords": ["Mask"], "severity": "hint" },
+        { "symbols": { "kinds": ["field", "property"], "types": ["List<*>", "HashSet<*>", "Dictionary<*>", "*[*]"] }, "number": "plural", "pluralWords": ["List", "Set", "Map", "Data"], "label": "коллекция", "severity": "hint" }
+      ]
+    },
     // Запреты команды: что запрещено и чем заменить; excludePaths - где проверка не работает
     "forbidden-call": {
       "severity": "error",

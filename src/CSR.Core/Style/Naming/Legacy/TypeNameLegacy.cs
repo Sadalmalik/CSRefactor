@@ -30,14 +30,14 @@ namespace CSR.Core.Style.Naming.Legacy
             var interfacePrefix = settings.GetString("interfacePrefix");
             if (interfacePrefix.Length > 0)
             {
-                var requirement = new PrefixRequirement(interfacePrefix, false, []);
+                var requirement = new PrefixRequirement(interfacePrefix, isWordStyle: true);
                 rules.Add(LegacyRules.Create("interface", PrefixRequirement.Kind, requirement));
             }
 
             var typeParameterPrefix = settings.GetString("typeParameterPrefix");
             if (typeParameterPrefix.Length > 0)
             {
-                var requirement = new PrefixRequirement(typeParameterPrefix, true, []);
+                var requirement = new PrefixRequirement(typeParameterPrefix, isWordStyle: true, isAloneAllowed: true);
                 rules.Add(LegacyRules.Create("typeParameter", PrefixRequirement.Kind, requirement));
             }
 
