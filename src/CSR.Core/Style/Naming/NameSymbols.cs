@@ -29,13 +29,62 @@ namespace CSR.Core.Style.Naming
 
         public static readonly IReadOnlyList<string> Access = ["private", "protected", "internal", "public"];
 
-        public static IEnumerable<NameSymbol> Collect(SyntaxNode root)
+        // kinds - только эти виды (null - все): правила с видами не платят за сбор параметров и локальных.
+        // Пространство имен и вложенность в тип - по предкам, только у отобранных узлов
+        public static IEnumerable<NameSymbol> Collect(SyntaxNode root, IReadOnlyCollection<string>? kinds = null)
         {
+            var namespaces = new Dictionary<SyntaxNode, string>();
             foreach (var node in root.DescendantNodes())
             {
+                var kind = GetKind(node);
+                if (kind == null || kinds != null && !kinds.Contains(kind))
+                    continue;
+
+                BaseNamespaceDeclarationSyntax? declaration = null;
+                bool isNested = false;
+                foreach (var ancestor in node.Ancestors())
+                {
+                    if (ancestor is BaseTypeDeclarationSyntax)
+                        isNested = true;
+                    else if (ancestor is BaseNamespaceDeclarationSyntax found)
+                    {
+                        declaration = found;
+                        break;
+                    }
+                }
+
+                string? namespaceName = null;
+                if (declaration != null && !namespaces.TryGetValue(declaration, out namespaceName))
+                {
+                    namespaceName = GetNamespace(declaration);
+                    namespaces[declaration] = namespaceName;
+                }
+
                 foreach (var symbol in FromNode(node))
-                    yield return symbol;
+                    yield return symbol with { Namespace = namespaceName, IsNested = isNested };
             }
+        }
+
+        // Вид имени, которое может объявить узел; null - узел имен не объявляет
+        private static string? GetKind(SyntaxNode node)
+        {
+            return node switch
+            {
+                BaseNamespaceDeclarationSyntax => "namespace",
+                InterfaceDeclarationSyntax => "interface",
+                StructDeclarationSyntax => "struct",
+                RecordDeclarationSyntax => "record",
+                EnumDeclarationSyntax => "enum",
+                ClassDeclarationSyntax => "class",
+                DelegateDeclarationSyntax => "delegate",
+                TypeParameterSyntax => "typeParameter",
+                FieldDeclarationSyntax => "field",
+                EventFieldDeclarationSyntax or EventDeclarationSyntax => "event",
+                PropertyDeclarationSyntax => "property",
+                ParameterSyntax => "parameter",
+                LocalDeclarationStatementSyntax or DeclarationExpressionSyntax => "local",
+                _ => null,
+            };
         }
 
         private static IEnumerable<NameSymbol> FromNode(SyntaxNode node)
@@ -106,7 +155,6 @@ namespace CSR.Core.Style.Naming
                 DelegateDeclarationSyntax => ("delegate", "delegate"),
                 _ => ("class", "класс"),
             };
-            var namespaceDeclaration = type.Ancestors().OfType<BaseNamespaceDeclarationSyntax>().FirstOrDefault();
             return new NameSymbol
             {
                 Kind = kind,
@@ -117,8 +165,6 @@ namespace CSR.Core.Style.Naming
                 Modifiers = GetModifiers(modifiers),
                 Attributes = GetAttributes(attributes),
                 Bases = bases?.Types.Select(item => ArchSyntax.GetSimpleTypeName(item.Type)).ToList() ?? [],
-                IsNested = type.Parent is BaseTypeDeclarationSyntax,
-                Namespace = namespaceDeclaration == null ? null : GetNamespace(namespaceDeclaration),
             };
         }
 

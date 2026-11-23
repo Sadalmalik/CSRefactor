@@ -198,7 +198,7 @@ namespace CSR.Core.Tests.Style
             => NameSelector.Parse(new Record(fields));
 
         // Одно тестовое требование под ключом key
-        private static Dictionary<string, INameRequirement> Requirements(string key, string message)
+        private static Dictionary<string, INameRequirement?> Requirements(string key, string message)
             => new() { [key] = new Fail(message) };
 
         // Тестовое требование: любое имя - нарушение с заданным текстом

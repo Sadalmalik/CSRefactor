@@ -1,5 +1,4 @@
 using CSR.Core.Checks;
-using CSR.Core.Style.Naming.Requirements;
 
 namespace CSR.Core.Style.Naming.Legacy
 {
@@ -18,12 +17,19 @@ namespace CSR.Core.Style.Naming.Legacy
 
         private static IReadOnlyList<NamingRule> Translate(CheckSettings settings)
         {
-            var events = new MaskRequirement(settings.GetStrings("allowed"), settings.GetStrings("forbidden"));
-            var delegates = new PrefixRequirement(null, forbidden: settings.GetStrings("delegatePrefixes"));
             return
             [
-                LegacyRules.Create("event", MaskRequirement.Kind, events),
-                LegacyRules.Create("delegate", PrefixRequirement.Kind, delegates),
+                LegacyRules.Rule(new()
+                {
+                    ["symbols"] = LegacyRules.Symbols(new() { ["kinds"] = new[] { "event" } }),
+                    ["allowed"] = settings.GetStrings("allowed"),
+                    ["forbidden"] = settings.GetStrings("forbidden"),
+                }),
+                LegacyRules.Rule(new()
+                {
+                    ["symbols"] = LegacyRules.Symbols(new() { ["kinds"] = new[] { "delegate" } }),
+                    ["forbiddenPrefixes"] = settings.GetStrings("delegatePrefixes"),
+                }),
             ];
         }
     }

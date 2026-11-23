@@ -16,6 +16,7 @@ namespace CSR.Core.Style.Naming
             WordsRequirement.Kind,
             NumberRequirement.Kind,
             NamespaceRequirement.Kind,
+            InNamespaceRequirement.Kind,
             DepthRequirement.Kind,
         ];
 

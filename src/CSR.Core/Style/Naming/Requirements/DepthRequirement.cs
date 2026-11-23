@@ -5,11 +5,11 @@ namespace CSR.Core.Style.Naming.Requirements
     // Глубина пространства имен: не больше maxParts частей
     public class DepthRequirement : INameRequirement
     {
-        public static readonly NameRequirementKind Kind = new("depth", ["maxParts"], Create);
+        public static readonly NameRequirementKind Kind = new("depth", ["maxParts"], [], Create);
 
         private readonly int m_MaxParts;
 
-        public DepthRequirement(int maxParts)
+        private DepthRequirement(int maxParts)
         {
             m_MaxParts = maxParts;
         }
@@ -21,6 +21,12 @@ namespace CSR.Core.Style.Naming.Requirements
         }
 
         private static INameRequirement Create(Record record)
-            => new DepthRequirement(record.GetInt("maxParts") ?? 0);
+        {
+            var maxParts = record.GetInt("maxParts");
+            if (maxParts is not > 0)
+                throw new FormatException("maxParts: число больше 0");
+
+            return new DepthRequirement(maxParts.Value);
+        }
     }
 }

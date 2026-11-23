@@ -28,10 +28,10 @@ namespace CSR.Core.Style.Naming
         // Прямые базовые типы без пространства имен и аргументов типа
         public IReadOnlyList<string> Bases { get; init; } = Array.Empty<string>();
 
-        // Тип вложен в другой тип
+        // Объявлено внутри типа (член, вложенный тип, параметр, локальная)
         public bool IsNested { get; init; }
 
-        // Пространство имен типа; null - глобальное
+        // Пространство имен, где объявлено имя (у пространства - внешнее); null - глобальное
         public string? Namespace { get; init; }
     }
 }

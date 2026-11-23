@@ -1,5 +1,4 @@
 using CSR.Core.Checks;
-using CSR.Core.Style.Naming.Requirements;
 
 namespace CSR.Core.Style.Naming.Legacy
 {
@@ -67,12 +66,19 @@ namespace CSR.Core.Style.Naming.Legacy
             if (settings.GetBool("arrays"))
                 types.Add("*[*]");
 
-            var symbols = LegacyRules.Selector(new() { ["kinds"] = settings.GetStrings("members"), ["types"] = types });
-            var requirement = new NumberRequirement(
-                true,
-                settings.GetStrings("pluralWords"),
-                settings.GetStrings("singularEndings"));
-            return [LegacyRules.Create(symbols, NumberRequirement.Kind, requirement, "коллекция")];
+            var fields = new Dictionary<string, object>
+            {
+                ["symbols"] = LegacyRules.Symbols(new()
+                {
+                    ["kinds"] = LegacyRules.KnownKinds(settings.GetStrings("members")),
+                    ["types"] = types,
+                }),
+                ["number"] = "plural",
+                ["pluralWords"] = settings.GetStrings("pluralWords"),
+                ["singularEndings"] = settings.GetStrings("singularEndings"),
+                ["subject"] = "коллекция",
+            };
+            return [LegacyRules.Rule(fields)];
         }
     }
 }

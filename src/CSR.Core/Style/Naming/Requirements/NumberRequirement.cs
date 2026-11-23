@@ -3,10 +3,10 @@ using CSR.Core.Checks;
 namespace CSR.Core.Style.Naming.Requirements
 {
     // Число имени по последнему слову (без префикса поля): множественное - слово из pluralWords или на 's', кроме
-    // окончаний singularEndings (Status, Class, Axis); number plural или singular
+    // окончаний singularEndings (по умолчанию ss, us, is: Status, Class, Axis); number plural или singular
     public class NumberRequirement : INameRequirement
     {
-        public static readonly NameRequirementKind Kind = new("number", ["number", "pluralWords", "singularEndings"], Create);
+        public static readonly NameRequirementKind Kind = new("number", ["number"], ["pluralWords", "singularEndings"], Create);
 
         private static readonly IReadOnlyList<string> DefaultSingularEndings = ["ss", "us", "is"];
 
@@ -14,7 +14,7 @@ namespace CSR.Core.Style.Naming.Requirements
         private readonly IReadOnlyList<string> m_PluralWords;
         private readonly IReadOnlyList<string> m_SingularEndings;
 
-        public NumberRequirement(bool isPlural, IReadOnlyList<string> pluralWords, IReadOnlyList<string> singularEndings)
+        private NumberRequirement(bool isPlural, IReadOnlyList<string> pluralWords, IReadOnlyList<string> singularEndings)
         {
             m_IsPlural = isPlural;
             m_PluralWords = pluralWords;
@@ -35,9 +35,6 @@ namespace CSR.Core.Style.Naming.Requirements
         private static INameRequirement Create(Record record)
         {
             var number = record.GetChoice("number", "plural", "singular");
-            if (number == null)
-                throw new FormatException("number: нужно plural или singular");
-
             var endings = record.Has("singularEndings") ? record.GetStrings("singularEndings") : DefaultSingularEndings;
             return new NumberRequirement(number == "plural", record.GetStrings("pluralWords"), endings);
         }

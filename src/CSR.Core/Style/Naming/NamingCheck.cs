@@ -8,7 +8,10 @@ namespace CSR.Core.Style.Naming
     {
         private static readonly CheckParameter[] AllParameters =
         [
-            CheckParameter.Records("rules", "правила: symbols (селектор), требования, severity, rule", NamingRule.Parse),
+            CheckParameter.Records(
+                "rules",
+                "правила: symbols (селектор), требования, skip, severity, rule, subject",
+                NamingRule.Parse),
         ];
 
         public override string Name
@@ -29,8 +32,11 @@ namespace CSR.Core.Style.Naming
             if (rules.Count == 0)
                 return;
 
+            var kinds = rules.Any(rule => rule.Symbols.Kinds.Count == 0)
+                ? null
+                : new HashSet<string>(rules.SelectMany(rule => rule.Symbols.Kinds));
             var taken = new HashSet<string>();
-            foreach (var symbol in NameSymbols.Collect(context.Root))
+            foreach (var symbol in NameSymbols.Collect(context.Root, kinds))
             {
                 taken.Clear();
                 foreach (var rule in rules)
@@ -38,10 +44,10 @@ namespace CSR.Core.Style.Naming
                     if (!rule.Symbols.IsMatch(symbol))
                         continue;
 
-                    var subject = rule.Label == null ? symbol : symbol with { Label = rule.Label };
+                    var subject = rule.Subject == null ? symbol : symbol with { Label = rule.Subject };
                     foreach (var requirement in rule.Requirements)
                     {
-                        if (!taken.Add(requirement.Key))
+                        if (!taken.Add(requirement.Key) || requirement.Value == null)
                             continue;
 
                         var problem = requirement.Value.Check(subject);

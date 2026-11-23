@@ -9,7 +9,8 @@ namespace CSR.Core.Style.Naming.Requirements
     {
         public static readonly NameRequirementKind Kind = new(
             "words",
-            ["forbiddenWords", "negationPrefixes", "ignoreWords", "negation"],
+            ["forbiddenWords", "negationPrefixes"],
+            ["ignoreWords", "negation"],
             Create);
 
         private readonly IReadOnlyList<string> m_Forbidden;
@@ -17,7 +18,7 @@ namespace CSR.Core.Style.Naming.Requirements
         private readonly IReadOnlyList<string> m_Ignored;
         private readonly bool m_IsNegation;
 
-        public WordsRequirement(
+        private WordsRequirement(
             IReadOnlyList<string> forbidden,
             IReadOnlyList<string> prefixes,
             IReadOnlyList<string> ignored,

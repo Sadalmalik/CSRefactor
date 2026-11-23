@@ -102,7 +102,7 @@ namespace CSR.Core.Tests.Style
                 ["negationPrefixes"] = new[] { "Dis" },
                 ["ignoreWords"] = new[] { "Displayed" },
                 ["negation"] = true,
-                ["label"] = "bool",
+                ["subject"] = "bool",
             });
             var namespaces = Rule(new()
             {
@@ -138,7 +138,7 @@ namespace CSR.Core.Tests.Style
                 ["symbols"] = Fields(new() { ["types"] = new[] { "List<*>", "Dictionary<*>", "*[*]" } }),
                 ["number"] = "plural",
                 ["pluralWords"] = new[] { "Data" },
-                ["label"] = "коллекция",
+                ["subject"] = "коллекция",
             });
 
             var messages = RunRules(source, rule).Select(finding => finding.Message);
@@ -179,8 +179,8 @@ namespace CSR.Core.Tests.Style
             var types = Rule(new()
             {
                 ["symbols"] = Fields(new() { ["kinds"] = new[] { "class" } }),
-                ["roots"] = new[] { "Company" },
-                ["label"] = "тип",
+                ["inNamespace"] = true,
+                ["subject"] = "тип",
             });
 
             var messages = RunRules(source, namespaces, types).Select(finding => finding.Message);
@@ -212,7 +212,7 @@ namespace CSR.Core.Tests.Style
             {
                 ["symbols"] = Fields(new() { ["kinds"] = new[] { "field" }, ["modifiers"] = new[] { "const" } }),
                 ["case"] = "pascal",
-                ["prefix"] = "*",
+                ["skip"] = new[] { "prefix" },
             });
             var publicFields = Rule(new()
             {
@@ -241,6 +241,37 @@ namespace CSR.Core.Tests.Style
                 "'m_Limit': открытое поле без префикса 'm_' - 'Limit'",
                 "'m_Size': свойство без префикса 'm_' - 'Size'",
             }));
+        }
+
+        // Ошибки схемы: уточняющее поле без главного, поле не своего стиля, пустые значения, skip и требование вместе
+        [TestCase("pascalAfterPrefix", true, "pascalAfterPrefix: нужно одно из prefix, forbiddenPrefixes")]
+        [TestCase("negation", true, "negation: нужно одно из forbiddenWords, negationPrefixes")]
+        [TestCase("roots", new string[0], "roots: нужен хотя бы один корень")]
+        [TestCase("maxParts", 0, "maxParts: число больше 0")]
+        public void Schema_InvalidField_FormatError(string field, object value, string message)
+        {
+            var exception = Assert.Throws<FormatException>(() => Rule(new() { [field] = value }));
+
+            Assert.That(exception!.Message, Is.EqualTo(message));
+        }
+
+        [Test]
+        public void Schema_PrefixStyleFieldsAndSkip_FormatError()
+        {
+            var word = Assert.Throws<FormatException>(() => Rule(new()
+            {
+                ["prefix"] = "I",
+                ["prefixStyle"] = "word",
+                ["pascalAfterPrefix"] = true,
+            }));
+            var skip = Assert.Throws<FormatException>(() => Rule(new()
+            {
+                ["prefix"] = "m_",
+                ["skip"] = new[] { "prefix" },
+            }));
+
+            Assert.That(word!.Message, Is.EqualTo("pascalAfterPrefix: не для этого prefixStyle"));
+            Assert.That(skip!.Message, Is.EqualTo("skip: вид 'prefix' и задан, и пропущен"));
         }
 
         public static List<Finding> RunRules(string source, params NamingRule[] rules)

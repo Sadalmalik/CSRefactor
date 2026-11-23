@@ -1,5 +1,4 @@
 using CSR.Core.Checks;
-using CSR.Core.Style.Naming.Requirements;
 
 namespace CSR.Core.Style.Naming.Legacy
 {
@@ -33,17 +32,20 @@ namespace CSR.Core.Style.Naming.Legacy
 
         private static IReadOnlyList<NamingRule> Translate(CheckSettings settings)
         {
-            var symbols = LegacyRules.Selector(new()
+            var fields = new Dictionary<string, object>
             {
-                ["kinds"] = settings.GetStrings("members"),
-                ["types"] = ["bool", "Boolean"],
-            });
-            var requirement = new WordsRequirement(
-                settings.GetStrings("forbiddenWords"),
-                settings.GetStrings("negationPrefixes"),
-                settings.GetStrings("ignoreWords"),
-                true);
-            return [LegacyRules.Create(symbols, WordsRequirement.Kind, requirement, "bool")];
+                ["symbols"] = LegacyRules.Symbols(new()
+                {
+                    ["kinds"] = LegacyRules.KnownKinds(settings.GetStrings("members")),
+                    ["types"] = new[] { "bool", "Boolean" },
+                }),
+                ["forbiddenWords"] = settings.GetStrings("forbiddenWords"),
+                ["negationPrefixes"] = settings.GetStrings("negationPrefixes"),
+                ["ignoreWords"] = settings.GetStrings("ignoreWords"),
+                ["negation"] = true,
+                ["subject"] = "bool",
+            };
+            return [LegacyRules.Rule(fields)];
         }
     }
 }

@@ -2,26 +2,25 @@ using CSR.Core.Checks;
 
 namespace CSR.Core.Style.Naming.Requirements
 {
-    // Регистр имени: pascal - MaxSize (без '_', не UPPER_CASE; короткая аббревиатура UI, ID допустима), upper - MAX_SIZE,
-    // any - не проверять (занимает вид в каскаде)
+    // Регистр имени: pascal - MaxSize (без '_', не UPPER_CASE; короткая аббревиатура UI, ID допустима), upper - MAX_SIZE
     public class CaseRequirement : INameRequirement
     {
-        public static readonly NameRequirementKind Kind = new("case", ["case"], Create);
+        public static readonly NameRequirementKind Kind = new("case", ["case"], [], Create);
 
-        private readonly string m_Case;
+        private readonly bool m_IsUpper;
 
-        public CaseRequirement(string nameCase)
+        private CaseRequirement(bool isUpper)
         {
-            m_Case = nameCase;
+            m_IsUpper = isUpper;
         }
 
         public string? Check(NameSymbol symbol)
         {
             var name = symbol.Name;
-            if (m_Case == "pascal" && !IsPascal(name))
+            if (!m_IsUpper && !IsPascal(name))
                 return $"'{name}': {symbol.Label} в PascalCase - '{NameWords.ToPascal(name)}'";
 
-            if (m_Case == "upper" && name.Any(char.IsLower))
+            if (m_IsUpper && name.Any(char.IsLower))
                 return $"'{name}': {symbol.Label} в UPPER_CASE - '{NameWords.ToUpperSnake(name)}'";
 
             return null;
@@ -36,6 +35,6 @@ namespace CSR.Core.Style.Naming.Requirements
         }
 
         private static INameRequirement Create(Record record)
-            => new CaseRequirement(record.GetChoice("case", "pascal", "upper", "any")!);
+            => new CaseRequirement(record.GetChoice("case", "pascal", "upper") == "upper");
     }
 }

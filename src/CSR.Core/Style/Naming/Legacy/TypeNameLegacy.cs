@@ -1,12 +1,11 @@
 using CSR.Core.Checks;
-using CSR.Core.Style.Naming.Requirements;
 
 namespace CSR.Core.Style.Naming.Legacy
 {
     // type-name до v0.4: префиксы интерфейса и параметра-типа, имена наследников -> правила naming
     public static class TypeNameLegacy
     {
-        private static readonly IReadOnlyList<string> TypeKinds = ["class", "struct", "record", "interface"];
+        private static readonly string[] TypeKinds = ["class", "struct", "record", "interface"];
 
         public static readonly NamingAlias Check = new(
             "type-name",
@@ -30,21 +29,33 @@ namespace CSR.Core.Style.Naming.Legacy
             var interfacePrefix = settings.GetString("interfacePrefix");
             if (interfacePrefix.Length > 0)
             {
-                var requirement = new PrefixRequirement(interfacePrefix, isWordStyle: true);
-                rules.Add(LegacyRules.Create("interface", PrefixRequirement.Kind, requirement));
+                rules.Add(LegacyRules.Rule(new()
+                {
+                    ["symbols"] = LegacyRules.Symbols(new() { ["kinds"] = new[] { "interface" } }),
+                    ["prefix"] = interfacePrefix,
+                    ["prefixStyle"] = "word",
+                }));
             }
 
             var typeParameterPrefix = settings.GetString("typeParameterPrefix");
             if (typeParameterPrefix.Length > 0)
             {
-                var requirement = new PrefixRequirement(typeParameterPrefix, isWordStyle: true, isAloneAllowed: true);
-                rules.Add(LegacyRules.Create("typeParameter", PrefixRequirement.Kind, requirement));
+                rules.Add(LegacyRules.Rule(new()
+                {
+                    ["symbols"] = LegacyRules.Symbols(new() { ["kinds"] = new[] { "typeParameter" } }),
+                    ["prefix"] = typeParameterPrefix,
+                    ["prefixStyle"] = "word",
+                    ["prefixAlone"] = true,
+                }));
             }
 
             foreach (var pair in settings.GetMap("derivedNames"))
             {
-                var symbols = LegacyRules.Selector(new() { ["kinds"] = TypeKinds, ["bases"] = [pair.Key] });
-                rules.Add(LegacyRules.Create(symbols, MaskRequirement.Kind, new MaskRequirement([pair.Value], [])));
+                rules.Add(LegacyRules.Rule(new()
+                {
+                    ["symbols"] = LegacyRules.Symbols(new() { ["kinds"] = TypeKinds, ["bases"] = new[] { pair.Key } }),
+                    ["allowed"] = new[] { pair.Value },
+                }));
             }
 
             return rules;

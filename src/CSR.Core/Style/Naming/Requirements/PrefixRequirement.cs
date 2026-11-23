@@ -3,17 +3,16 @@ using CSR.Core.Checks;
 namespace CSR.Core.Style.Naming.Requirements
 {
     // Префикс имени. prefixStyle field (по умолчанию): prefix - обязательный префикс поля (m_Name, pascalAfterPrefix -
-    // заглавная после префикса), "" - без префикса полей (m_, s_, k_, _ и knownPrefixes), "*" - не проверять.
-    // prefixStyle word: префикс перед заглавной буквой или цифрой (IStorage, TValue), prefixAlone - имя может быть
-    // самим префиксом (T). forbiddenPrefixes - имя не начинается с префикса перед заглавной буквой или цифрой
-    // (OnChanged для delegate; Onboarding - не префикс)
+    // заглавная после префикса), "" - без префикса полей (m_, s_, k_, _ и knownPrefixes). prefixStyle word: префикс
+    // перед заглавной буквой или цифрой (IStorage, TValue), prefixAlone - имя может быть самим префиксом (T).
+    // forbiddenPrefixes - имя не начинается с префикса перед заглавной буквой или цифрой (OnChanged; Onboarding -
+    // не префикс). Поле не своего стиля - ошибка конфига
     public class PrefixRequirement : INameRequirement
     {
-        public const string Any = "*";
-
         public static readonly NameRequirementKind Kind = new(
             "prefix",
-            ["prefix", "prefixStyle", "prefixAlone", "pascalAfterPrefix", "knownPrefixes", "forbiddenPrefixes"],
+            ["prefix", "forbiddenPrefixes"],
+            ["prefixStyle", "prefixAlone", "pascalAfterPrefix", "knownPrefixes"],
             Create);
 
         private readonly string? m_Prefix;
@@ -23,28 +22,30 @@ namespace CSR.Core.Style.Naming.Requirements
         private readonly IReadOnlyList<string> m_Known;
         private readonly IReadOnlyList<string> m_Forbidden;
 
-        public PrefixRequirement(
+        private PrefixRequirement(
             string? prefix,
-            bool isWordStyle = false,
-            bool isAloneAllowed = false,
-            bool isPascalAfterPrefix = false,
-            IReadOnlyList<string>? known = null,
-            IReadOnlyList<string>? forbidden = null)
+            bool isWordStyle,
+            bool isAloneAllowed,
+            bool isPascalAfterPrefix,
+            IReadOnlyList<string> known,
+            IReadOnlyList<string> forbidden)
         {
             m_Prefix = prefix;
             m_IsWordStyle = isWordStyle;
             m_IsAloneAllowed = isAloneAllowed;
             m_IsPascalAfterPrefix = isPascalAfterPrefix;
-            m_Known = known ?? [];
-            m_Forbidden = forbidden ?? [];
+            m_Known = known;
+            m_Forbidden = forbidden;
         }
 
         public string? Check(NameSymbol symbol)
         {
             var name = symbol.Name;
-            var problem = m_Prefix == null || m_Prefix == Any
+            var problem = m_Prefix == null
                 ? null
-                : m_IsWordStyle ? CheckWord(symbol, m_Prefix) : CheckField(symbol, m_Prefix);
+                : m_IsWordStyle
+                    ? CheckWord(symbol, m_Prefix)
+                    : CheckField(symbol, m_Prefix);
             if (problem != null)
                 return problem;
 
@@ -103,14 +104,36 @@ namespace CSR.Core.Style.Naming.Requirements
 
         private static INameRequirement Create(Record record)
         {
-            var style = record.GetChoice("prefixStyle", "field", "word") ?? "field";
+            var prefix = record.GetString("prefix");
+            bool isWordStyle = (record.GetChoice("prefixStyle", "field", "word") ?? "field") == "word";
+            if (prefix == null && record.Has("prefixStyle"))
+                throw new FormatException("prefixStyle: только вместе с prefix");
+
+            if (isWordStyle)
+                RequireAbsent(record, "pascalAfterPrefix", "knownPrefixes");
+            else
+                RequireAbsent(record, "prefixAlone");
+
+            if (isWordStyle && prefix?.Length == 0)
+                throw new FormatException("prefix: в стиле word префикс не пустой");
+
+            if (prefix?.Length > 0 && record.Has("knownPrefixes"))
+                throw new FormatException("knownPrefixes: только с prefix \"\"");
+
             return new PrefixRequirement(
-                record.GetString("prefix"),
-                style == "word",
+                prefix,
+                isWordStyle,
                 record.GetBool("prefixAlone") ?? false,
                 record.GetBool("pascalAfterPrefix") ?? false,
                 record.GetStrings("knownPrefixes"),
                 record.GetStrings("forbiddenPrefixes"));
+        }
+
+        private static void RequireAbsent(Record record, params string[] fields)
+        {
+            var field = fields.FirstOrDefault(record.Has);
+            if (field != null)
+                throw new FormatException($"{field}: не для этого prefixStyle");
         }
     }
 }

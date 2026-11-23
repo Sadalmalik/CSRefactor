@@ -7,6 +7,7 @@ namespace CSR.Core.Style.Naming
     public class NamingAlias : SyntaxCheck
     {
         private readonly Func<CheckSettings, IReadOnlyList<NamingRule>> m_Translate;
+        private Translation? m_Last;
 
         public NamingAlias(
             string name,
@@ -29,7 +30,31 @@ namespace CSR.Core.Style.Naming
         public override string Deprecated
             => "naming (правила - DOCS.md, раздел naming, таблица перевода старых проверок)";
 
+        // Перевод - один раз на набор параметров (параметры не меняются после загрузки конфига): разбор записей на
+        // каждом файле заметен на прогоне в тысячи файлов. Без блокировки: гонка потоков только повторит перевод
         public override void Analyze(CheckContext context)
-            => NamingCheck.Run(context, m_Translate(context.Settings));
+        {
+            var last = m_Last;
+            if (last == null || last.Settings != context.Settings)
+            {
+                last = new Translation(context.Settings, m_Translate(context.Settings));
+                m_Last = last;
+            }
+
+            NamingCheck.Run(context, last.Rules);
+        }
+
+        private class Translation
+        {
+            public Translation(CheckSettings settings, IReadOnlyList<NamingRule> rules)
+            {
+                Settings = settings;
+                Rules = rules;
+            }
+
+            public CheckSettings Settings { get; }
+
+            public IReadOnlyList<NamingRule> Rules { get; }
+        }
     }
 }

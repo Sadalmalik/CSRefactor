@@ -1,5 +1,4 @@
 using CSR.Core.Checks;
-using CSR.Core.Style.Naming.Requirements;
 
 namespace CSR.Core.Style.Naming.Legacy
 {
@@ -7,7 +6,8 @@ namespace CSR.Core.Style.Naming.Legacy
     // поля без префикса по доступу, static readonly, статическое поле, поле, свойства
     public static class FieldPrefixLegacy
     {
-        private static readonly IReadOnlyList<string> AllAccess = ["private", "protected", "internal", "public"];
+        private static readonly string[] AllAccess = ["private", "protected", "internal", "public"];
+        private static readonly string[] Field = ["field"];
 
         public static readonly NamingAlias Check = new(
             "field-prefix",
@@ -37,57 +37,72 @@ namespace CSR.Core.Style.Naming.Legacy
 
         private static IReadOnlyList<NamingRule> Translate(CheckSettings settings)
         {
-            var instancePrefix = settings.GetString("instancePrefix");
-            var staticPrefix = settings.GetString("staticPrefix");
-            bool isPascalAfterPrefix = settings.GetBool("pascalAfterPrefix");
-            IReadOnlyList<string> known = [instancePrefix, staticPrefix];
+            var known = new[] { settings.GetString("instancePrefix"), settings.GetString("staticPrefix") };
             var prefixedAccess = settings.GetStrings("prefixedAccess");
-            var unprefixed = new PrefixRequirement("", known: known);
-            var rules = new List<NamingRule>
+            var constants = settings.GetString("constants");
+            var constant = new Dictionary<string, object>
             {
-                Rule(
-                    new() { ["kinds"] = ["field"], ["modifiers"] = ["const"] },
-                    new()
-                    {
-                        [CaseRequirement.Kind.Key] = new CaseRequirement(settings.GetString("constants")),
-                        [PrefixRequirement.Kind.Key] = new PrefixRequirement(PrefixRequirement.Any),
-                    }),
+                ["symbols"] = LegacyRules.Symbols(new() { ["kinds"] = Field, ["modifiers"] = new[] { "const" } }),
             };
+            if (constants == "any")
+                constant["skip"] = new[] { "case", "prefix" };
+            else
+            {
+                constant["case"] = constants;
+                constant["skip"] = new[] { "prefix" };
+            }
 
-            var openAccess = AllAccess.Where(access => !prefixedAccess.Contains(access)).ToList();
-            if (openAccess.Count > 0)
-                rules.Add(Rule(new() { ["kinds"] = ["field"], ["access"] = openAccess }, unprefixed, "поле"));
+            var rules = new List<NamingRule> { LegacyRules.Rule(constant) };
+            var openAccess = AllAccess.Where(access => !prefixedAccess.Contains(access)).ToArray();
+            if (openAccess.Length > 0)
+                rules.Add(Unprefixed(new() { ["kinds"] = Field, ["access"] = openAccess }, known, "поле"));
 
             if (settings.GetString("staticReadonly") == "pascal")
                 rules.Add(
-                    Rule(new() { ["kinds"] = ["field"], ["modifiers"] = ["static", "readonly"] }, unprefixed, "static readonly"));
+                    Unprefixed(
+                        new() { ["kinds"] = Field, ["modifiers"] = new[] { "static", "readonly" } },
+                        known,
+                        "static readonly"));
 
-            var staticRequirement = new PrefixRequirement(staticPrefix, isPascalAfterPrefix: isPascalAfterPrefix, known: known);
-            var instanceRequirement = new PrefixRequirement(
-                instancePrefix,
-                isPascalAfterPrefix: isPascalAfterPrefix,
-                known: known);
-            rules.Add(Rule(new() { ["kinds"] = ["field"], ["modifiers"] = ["static"] }, staticRequirement));
-            rules.Add(Rule(new() { ["kinds"] = ["field"] }, instanceRequirement));
+            rules.Add(Prefixed(settings, new() { ["kinds"] = Field, ["modifiers"] = new[] { "static" } }, "staticPrefix", known));
+            rules.Add(Prefixed(settings, new() { ["kinds"] = Field }, "instancePrefix", known));
             if (settings.GetBool("properties"))
-                rules.Add(Rule(new() { ["kinds"] = ["property"] }, unprefixed));
+                rules.Add(Unprefixed(new() { ["kinds"] = new[] { "property" } }, known, null));
 
             return rules;
         }
 
-        private static NamingRule Rule(
-            Dictionary<string, IReadOnlyList<string>> symbols,
-            PrefixRequirement requirement,
-            string? label = null)
+        // Поле с префиксом параметра; пустой префикс - без префикса полей
+        private static NamingRule Prefixed(
+            CheckSettings settings,
+            Dictionary<string, object> symbols,
+            string parameter,
+            string[] known)
         {
-            return LegacyRules.Create(LegacyRules.Selector(symbols), PrefixRequirement.Kind, requirement, label);
+            var prefix = settings.GetString(parameter);
+            if (prefix.Length == 0)
+                return Unprefixed(symbols, known, null);
+
+            return LegacyRules.Rule(new()
+            {
+                ["symbols"] = LegacyRules.Symbols(symbols),
+                ["prefix"] = prefix,
+                ["pascalAfterPrefix"] = settings.GetBool("pascalAfterPrefix"),
+            });
         }
 
-        private static NamingRule Rule(
-            Dictionary<string, IReadOnlyList<string>> symbols,
-            Dictionary<string, INameRequirement> requirements)
+        private static NamingRule Unprefixed(Dictionary<string, object> symbols, string[] known, string? subject)
         {
-            return new NamingRule(LegacyRules.Selector(symbols), requirements);
+            var fields = new Dictionary<string, object>
+            {
+                ["symbols"] = LegacyRules.Symbols(symbols),
+                ["prefix"] = "",
+                ["knownPrefixes"] = known,
+            };
+            if (subject != null)
+                fields["subject"] = subject;
+
+            return LegacyRules.Rule(fields);
         }
     }
 }

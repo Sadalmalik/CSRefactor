@@ -1,5 +1,4 @@
 using CSR.Core.Checks;
-using CSR.Core.Style.Naming.Requirements;
 
 namespace CSR.Core.Style.Naming.Legacy
 {
@@ -18,14 +17,22 @@ namespace CSR.Core.Style.Naming.Legacy
 
         private static IReadOnlyList<NamingRule> Translate(CheckSettings settings)
         {
-            var pluralWords = settings.GetStrings("pluralWords");
-            var singularEndings = settings.GetStrings("singularEndings");
-            var flags = LegacyRules.Selector(new() { ["kinds"] = ["enum"], ["attributes"] = ["Flags"] });
             return
             [
-                LegacyRules.Create(flags, NumberRequirement.Kind, new NumberRequirement(true, pluralWords, singularEndings)),
-                LegacyRules.Create("enum", NumberRequirement.Kind, new NumberRequirement(false, pluralWords, singularEndings)),
+                Rule(settings, new() { ["kinds"] = new[] { "enum" }, ["attributes"] = new[] { "Flags" } }, "plural"),
+                Rule(settings, new() { ["kinds"] = new[] { "enum" } }, "singular"),
             ];
+        }
+
+        private static NamingRule Rule(CheckSettings settings, Dictionary<string, object> symbols, string number)
+        {
+            return LegacyRules.Rule(new()
+            {
+                ["symbols"] = LegacyRules.Symbols(symbols),
+                ["number"] = number,
+                ["pluralWords"] = settings.GetStrings("pluralWords"),
+                ["singularEndings"] = settings.GetStrings("singularEndings"),
+            });
         }
     }
 }

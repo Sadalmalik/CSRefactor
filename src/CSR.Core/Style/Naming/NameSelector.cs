@@ -51,6 +51,10 @@ namespace CSR.Core.Style.Naming
             return selector;
         }
 
+        // Виды правила; пусто - любой вид
+        public IReadOnlyList<string> Kinds
+            => m_Kinds;
+
         public bool IsMatch(NameSymbol symbol)
         {
             if (m_Kinds.Count > 0 && !m_Kinds.Contains(symbol.Kind))

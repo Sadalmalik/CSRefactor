@@ -35,23 +35,23 @@
     "naming": {
       "severity": "warning",
       "rules": [
-        { "symbols": { "kinds": ["field"], "modifiers": ["const"] }, "case": "pascal", "prefix": "*" },
+        { "symbols": { "kinds": ["field"], "modifiers": ["const"] }, "case": "pascal", "skip": ["prefix"] },
         { "symbols": { "kinds": ["field"], "access": ["protected", "internal", "public"] }, "prefix": "" },
         { "symbols": { "kinds": ["field"], "modifiers": ["static", "readonly"] }, "prefix": "" },
         { "symbols": { "kinds": ["field"], "modifiers": ["static"] }, "prefix": "s_", "pascalAfterPrefix": true },
         { "symbols": { "kinds": ["field"] }, "prefix": "m_", "pascalAfterPrefix": true },
         { "symbols": { "kinds": ["property"] }, "prefix": "" },
-        { "symbols": { "types": ["bool", "Boolean"] }, "forbiddenWords": ["Not", "No", "Non", "Dont"], "negation": true, "label": "bool" },
+        { "symbols": { "types": ["bool", "Boolean"] }, "forbiddenWords": ["Not", "No", "Non", "Dont"], "negation": true, "subject": "bool" },
         { "symbols": { "kinds": ["event"] }, "allowed": ["On*"], "forbidden": ["OnWill*", "OnDid*"] },
         { "symbols": { "kinds": ["delegate"] }, "forbiddenPrefixes": ["On"] },
         { "symbols": { "kinds": ["interface"] }, "prefix": "I", "prefixStyle": "word" },
         { "symbols": { "kinds": ["typeParameter"] }, "prefix": "T", "prefixStyle": "word", "prefixAlone": true },
         { "symbols": { "kinds": ["class"], "bases": ["CommandBase"] }, "allowed": ["*Command"] },
         { "symbols": { "kinds": ["namespace"] }, "roots": ["Company"], "forbiddenWords": ["Editor"], "maxParts": 4 },
-        { "symbols": { "kinds": ["class", "struct", "record", "interface", "enum"] }, "roots": ["Company"], "label": "тип" },
+        { "symbols": { "kinds": ["class", "struct", "record", "interface", "enum"] }, "inNamespace": true, "subject": "тип" },
         { "symbols": { "kinds": ["enum"], "attributes": ["Flags"] }, "number": "plural", "pluralWords": ["Mask"], "severity": "hint" },
         { "symbols": { "kinds": ["enum"] }, "number": "singular", "pluralWords": ["Mask"], "severity": "hint" },
-        { "symbols": { "kinds": ["field", "property"], "types": ["List<*>", "HashSet<*>", "Dictionary<*>", "*[*]"] }, "number": "plural", "pluralWords": ["List", "Set", "Map", "Data"], "label": "коллекция", "severity": "hint" }
+        { "symbols": { "kinds": ["field", "property"], "types": ["List<*>", "HashSet<*>", "Dictionary<*>", "*[*]"] }, "number": "plural", "pluralWords": ["List", "Set", "Map", "Data"], "subject": "коллекция", "severity": "hint" }
       ]
     },
     // Запреты команды: что запрещено и чем заменить; excludePaths - где проверка не работает

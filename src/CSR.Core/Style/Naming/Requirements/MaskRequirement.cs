@@ -3,16 +3,16 @@ using CSR.Core.Checks;
 
 namespace CSR.Core.Style.Naming.Requirements
 {
-    // Маски имени: allowed - имя подходит хотя бы под одну (пусто - любое имя), forbidden - ни под одну.
+    // Маски имени: allowed - имя подходит хотя бы под одну, forbidden - ни под одну.
     // Сначала проверяется forbidden: запрещенная форма точнее подсказывает, что не так
     public class MaskRequirement : INameRequirement
     {
-        public static readonly NameRequirementKind Kind = new("masks", ["allowed", "forbidden"], Create);
+        public static readonly NameRequirementKind Kind = new("masks", ["allowed", "forbidden"], [], Create);
 
         private readonly IReadOnlyList<string> m_Allowed;
         private readonly IReadOnlyList<string> m_Forbidden;
 
-        public MaskRequirement(IReadOnlyList<string> allowed, IReadOnlyList<string> forbidden)
+        private MaskRequirement(IReadOnlyList<string> allowed, IReadOnlyList<string> forbidden)
         {
             m_Allowed = allowed;
             m_Forbidden = forbidden;
