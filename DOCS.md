@@ -29,7 +29,7 @@
   - Идиомы и типы: [`null-check`](#null-check), [`coalesce-assignment`](#coalesce-assignment), [`out-var`](#out-var), [`bool-local-type`](#bool-local-type), [`local-type`](#local-type), [`tuple-type`](#tuple-type)
   - Модификаторы: [`explicit-private`](#explicit-private), [`forbidden-modifier`](#forbidden-modifier), [`custom-delegate`](#custom-delegate)
   - Раскладка кода столбиком: [`expression-arrow`](#expression-arrow), [`signature-wrap`](#signature-wrap), [`call-wrap`](#call-wrap), [`region-layout`](#region-layout), [`condition-wrap`](#condition-wrap), [`initializer-layout`](#initializer-layout), [`ternary-wrap`](#ternary-wrap)
-  - Именование: [`field-prefix`](#field-prefix), [`bool-name`](#bool-name), [`event-name`](#event-name), [`type-name`](#type-name), [`namespace-name`](#namespace-name), [`enum-plural`](#enum-plural), [`collection-name`](#collection-name)
+  - Именование: [`naming`](#naming), [старые проверки](#старые-проверки-именования-до-v04), [`field-prefix`](#field-prefix), [`bool-name`](#bool-name), [`type-name`](#type-name), [`namespace-name`](#namespace-name), [`enum-plural`](#enum-plural), [`collection-name`](#collection-name)
   - Запрещённые конструкции: [`forbidden-call`](#forbidden-call), [`forbidden-type`](#forbidden-type), [`coroutine`](#coroutine), [`static-state`](#static-state), [`local-function`](#local-function), [`path-concat`](#path-concat), [`bool-field-count`](#bool-field-count), [`type-per-file`](#type-per-file), [`closure-in-method`](#closure-in-method), [`nested-loop`](#nested-loop)
 - [5. Признаки `arch`](#5-признаки-arch)
   - По одному файлу: [`type-branch`](#type-branch), [`behaviour-logic`](#behaviour-logic), [`index-api`](#index-api), [`static-data-methods`](#static-data-methods), [`project-mechanism`](#project-mechanism), [`numeric-constant`](#numeric-constant), [`numeric-literal`](#numeric-literal), [`tuple-type`](#tuple-type-arch), [`partial-file`](#partial-file), [`debug-draw`](#debug-draw), [`obsolete-reason`](#obsolete-reason), [`persisted-class`](#persisted-class)
@@ -73,7 +73,8 @@
 | [`ternary-wrap`](#ternary-wrap) | тернарный оператор столбиком | часть | `max`, `nested` |
 | [`field-prefix`](#field-prefix) | префиксы полей, регистр констант | нет | `instancePrefix`, `staticPrefix`, `staticReadonly`, `constants`, `prefixedAccess`, `pascalAfterPrefix`, `properties` |
 | [`bool-name`](#bool-name) | отрицание в имени `bool` | нет | `members`, `forbiddenWords`, `negationPrefixes`, `ignoreWords` |
-| [`event-name`](#event-name) | имя события по маскам, префикс `delegate` | нет | `allowed`, `forbidden`, `delegatePrefixes` |
+| [`naming`](#naming) | имена по правилам конфига: символы → требование → уровень и метка | нет | `rules` |
+| `event-name` | устарела до v0.4: [`naming`](#старые-проверки-именования-до-v04) | нет | `allowed`, `forbidden`, `delegatePrefixes` |
 | [`type-name`](#type-name) | префиксы интерфейса и параметра-типа, имя наследника | нет | `interfacePrefix`, `typeParameterPrefix`, `derivedNames` |
 | [`namespace-name`](#namespace-name) | корень, слова и глубина пространства имён | нет | `roots`, `forbiddenWords`, `maxDepth` |
 | [`enum-plural`](#enum-plural) | число в имени `enum` по `[Flags]` | нет | `pluralWords`, `singularEndings` |
@@ -4628,6 +4629,100 @@ public class Report
 
 Проверки имён по синтаксису одного файла, без семантики: тип берётся из объявления, `var` не проверяется. Все слова, префиксы и маски задаются параметрами конфига. Замены нет ни у одной проверки: переименование затрагивает другие файлы, поэтому имя меняют через [`csr rename`](#csr-rename) (у полей Unity он сохраняет сериализованные данные). Если правило можно вывести из имени, в сообщении есть предлагаемое имя. Члены `override` и явные реализации интерфейса не проверяются: их имя задаёт база.
 
+#### `naming`
+
+Имена по правилам конфига, как `dotnet_naming_rule` в `.editorconfig`: правило — какие символы, какое требование к имени, уровень и метка. Правил сколько угодно; новый случай — запись конфига, а не новая проверка.
+
+Правило — запись списка `rules`:
+
+| Поле | Значение |
+|---|---|
+| `symbols` | селектор: какие символы задевает правило (ниже); без `symbols` — все |
+| поля требований | одно или несколько требований к имени (таблица видов ниже); правило без требования — ошибка конфига |
+| `severity` | уровень находок правила: `error`, `warning`, `hint`; без поля — уровень проверки `naming` |
+| `rule` | метка правила в находке; без поля — метка проверки `naming` |
+
+Селектор `symbols` — все заданные условия вместе; пустое или незаданное условие — любое значение:
+
+| Поле | Значения |
+|---|---|
+| `kinds` | виды: `namespace`, `class`, `struct`, `record`, `interface`, `enum`, `delegate`, `typeParameter`, `field`, `event`, `property`, `parameter`, `local` |
+| `access` | доступ: `private`, `protected`, `internal`, `public`. Без модификатора — по месту: член интерфейса — `public`, тип вне типа — `internal`, член типа — `private`; `protected internal` и `private protected` — `protected`, `file` — `internal` |
+| `modifiers` | все перечисленные модификаторы есть у объявления: `static`, `readonly`, `const`, `abstract`, `virtual`, `sealed`, `partial`, `async`, `new`, `extern`, `unsafe`, `volatile`, `required` |
+| `types` | маски объявленного типа без пространства имён и `?`: `bool`, `List<*>`, `*[]`; `var` и объявление без типа не совпадают |
+| `attributes` | маски атрибутов объявления без суффикса `Attribute` (`Flags`, `Serial*`); атрибуты с целью (`[field: …]`) — не атрибуты объявления |
+| `bases` | маски прямого базового типа без пространства имён и аргументов типа (`MonoBehaviour`, `*Command`) |
+
+Опечатка в поле или в значении `kinds`, `access`, `modifiers` — ошибка конфига с путём (`naming.rules[2]: symbols: неизвестное поле 'kind'`).
+
+**Каскад.** Правила идут по порядку. Для каждого вида требования действует первое подходящее правило, которое его задаёт; остальные правила этого вида к символу не применяются. Разные виды требований складываются: поле `bool` получает префикс из правила полей и запрет слов из правила `bool`. Исключения выражает порядок: частное правило — раньше общего. Вид требования занимается целиком: правило только с `allowed` закрывает вид `masks`, и `forbidden` следующего правила к этому символу уже не применится.
+
+Виды требований (поля записи правила):
+
+| Вид | Поля | Нарушение |
+|---|---|---|
+| `masks` | `allowed` — маски допустимых имён (пусто — любое имя), `forbidden` — маски запрещённых | `событие 'OnSpawned': запрещенная форма 'On*ed'`, `событие 'Spawned': допустимо OnBefore*, OnAfter*` |
+| `prefix` | `forbiddenPrefixes` — запрещённые префиксы перед заглавной буквой или цифрой (`OnChanged`; `Onboarding` — не префикс) | `delegate 'OnSpawnHandler': без префикса 'On'` |
+
+Не проверяются имена, которые задаёт база: члены `override`, явные реализации интерфейса, параметры таких методов и индексаторов. Вид `local` — объявление локальной (`int x = 0;`) и `out`-переменная с типом; переменные `for`, `foreach`, `using`, `catch` и шаблонов не собираются.
+
+**Замена:** нет — переименование задевает другие файлы, имя меняют через [`csr rename`](#csr-rename).
+
+**Параметры**
+
+| Параметр | Значения | По умолчанию | Описание |
+|---|---|---|---|
+| `rules` | список правил | `[]` | правила: `symbols`, требования, `severity`, `rule` |
+
+**Пример**
+
+Конфиг:
+
+```jsonc
+{ "checks": { "naming": { "severity": "warning", "rules": [
+  { "symbols": { "kinds": ["event"] }, "allowed": ["OnBefore*", "OnAfter*"], "forbidden": ["On*ed", "On*ing"], "rule": "N-Events" },
+  { "symbols": { "kinds": ["delegate"] }, "forbiddenPrefixes": ["On"], "severity": "hint" }
+] } } }
+```
+
+Было (`Demo.cs`):
+
+```csharp
+using System;
+
+public delegate void OnSpawnHandler(int count);
+
+public class Spawner
+{
+    public event Action OnBeforeSpawn;
+    public event Action OnSpawned;
+    public event Action Spawned;
+}
+```
+
+Находки (`--format md`):
+
+````markdown
+| Проверка | Правило | Уровень | Находок |
+|---|---|---|---:|
+| `naming` | N-Events | warning | 2 |
+| `naming` |  | hint | 1 |
+
+- 3: `naming` (hint) - delegate 'OnSpawnHandler': без префикса 'On'
+- 8: `naming` N-Events (warning) - событие 'OnSpawned': запрещенная форма 'On*ed'
+- 9: `naming` N-Events (warning) - событие 'Spawned': допустимо OnBefore*, OnAfter*
+````
+
+В сводке отчёта у `naming` строка на каждую пару метки и уровня.
+
+#### Старые проверки именования (до v0.4)
+
+Прежние проверки именования — псевдонимы `naming`: те же имя и параметры в конфиге, находки — с прежним именем проверки и прежними текстами. Параметры переводятся в правила `naming`; при загрузке конфига `csr style` и `csr fix` пишут в stderr, что проверка устарела. В `v0.4` псевдонимы удаляются: конфиг переводится на `naming` по таблице. Если включены и псевдоним, и `naming` с пересекающимися правилами, одно нарушение даст две находки под разными именами проверок.
+
+| Старая проверка | Правила `naming` |
+|---|---|
+| `event-name` | `{ "symbols": { "kinds": ["event"] }, "allowed": <allowed>, "forbidden": <forbidden> }`, `{ "symbols": { "kinds": ["delegate"] }, "forbiddenPrefixes": <delegatePrefixes> }`; по умолчанию `allowed: ["On*"]`, `forbidden: ["OnWill*", "OnDid*"]`, `delegatePrefixes: ["On"]` |
+
 #### `field-prefix`
 
 Префиксы полей и регистр констант:
@@ -4787,80 +4882,6 @@ public class Door
 - Слово отрицания может относиться не к значению флага, а к объекту: `IncludeDisabledComponents` (включать отключённые компоненты) тоже даёт находку.
 - Приставки (`negationPrefixes`) проверяются только по началу слова, словаря нет: `Un` совпадёт с `Unit`, `Dis` — с `Distance`. Такие слова перечисляются в `ignoreWords`.
 - Локальная `var x = a < b` не проверяется: без семантики тип не известен.
-
-#### `event-name`
-
-Имя события по маскам (`*` — любые символы):
-- находка, если имя подходит под маску из `forbidden`;
-- находка, если имя не подходит ни под одну маску из `allowed`; при пустом `allowed` годится любое имя.
-
-Проверяются `event`-поля и `event` с `add` / `remove`. Поля `Action` / `Func` не считаются событиями и не проверяются: это действие, а не оповещение.
-
-Имя своего `delegate` не должно начинаться с префикса из `delegatePrefixes`, если за префиксом идёт заглавная буква (`OnSpawnHandler` даёт находку, `OnlineHandler` — нет).
-
-**Замена:** нет.
-
-**Параметры**
-
-| Параметр | Значения | По умолчанию | Описание |
-|---|---|---|---|
-| `allowed` | список масок | `["On*"]` | допустимые имена события; пусто — любое имя |
-| `forbidden` | список масок | `["OnWill*", "OnDid*"]` | запрещённые имена события |
-| `delegatePrefixes` | список строк | `["On"]` | запрещённые префиксы имени `delegate` |
-
-**Пример**
-
-Конфиг:
-
-```jsonc
-{ "checks": { "event-name": { "severity": "warning", "allowed": ["OnBefore*", "OnAfter*"], "forbidden": ["On*ed", "On*ing"] } } }
-```
-
-Было (`Demo.cs`):
-
-```csharp
-using System;
-
-public class Spawner
-{
-    public event Action OnBeforeSpawn;
-    public event Action OnAfterSpawn;
-    public event Action OnSpawned;
-    public event Action Spawned;
-    public Action Execute;
-
-    public delegate void OnSpawnHandler();
-    public delegate void AfterSpawnDelegate();
-}
-```
-
-Находки (`--format md`):
-
-````markdown
-- 7: `event-name` (warning) - событие 'OnSpawned': запрещенная форма 'On*ed'
-- 8: `event-name` (warning) - событие 'Spawned': допустимо OnBefore*, OnAfter*
-- 11: `event-name` (warning) - delegate 'OnSpawnHandler': без префикса 'On'
-````
-
-Стало (`OnSpawned` и `Spawned` объединены в `OnAfterSpawn`, `delegate` переименован):
-
-```csharp
-using System;
-
-public class Spawner
-{
-    public event Action OnBeforeSpawn;
-    public event Action OnAfterSpawn;
-    public Action Execute;
-
-    public delegate void SpawnHandler();
-    public delegate void AfterSpawnDelegate();
-}
-```
-
-**Ограничения**
-
-- Запрещённые формы задаются масками, а не грамматикой: `On*ed` совпадёт и с `OnBeforeCreated`. Порядок проверки: сначала `forbidden`, затем `allowed`.
 
 #### `type-name`
 

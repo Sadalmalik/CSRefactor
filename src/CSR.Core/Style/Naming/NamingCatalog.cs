@@ -1,4 +1,5 @@
 using CSR.Core.Checks;
+using CSR.Core.Style.Naming.Legacy;
 using CSR.Core.Style.Naming.Requirements;
 
 namespace CSR.Core.Style.Naming
@@ -13,6 +14,9 @@ namespace CSR.Core.Style.Naming
             MaskRequirement.Kind,
         ];
 
-        public static readonly IReadOnlyList<SyntaxCheck> Aliases = [];
+        public static readonly IReadOnlyList<SyntaxCheck> Aliases =
+        [
+            EventNameLegacy.Check,
+        ];
     }
 }

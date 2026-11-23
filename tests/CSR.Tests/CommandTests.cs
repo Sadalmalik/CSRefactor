@@ -167,6 +167,20 @@ namespace CSR.Tests
             }
             """;
 
+        // Старая проверка именования - псевдоним naming: находки с прежним именем, предупреждение в stderr
+        [Test]
+        public void DeprecatedCheck_WarningAndOldName()
+        {
+            using var folder = new TempFolder();
+            var file = folder.Write("Sample.cs", "public class Sample { public event System.Action Saved; }\n");
+            var config = folder.Write("style.jsonc", """{ "checks": { "event-name": { "rule": "N1" } } }""");
+
+            var result = Cli.Run("style", file, "--config", config, "--format", "md");
+
+            Assert.That(result.Error, Does.Contain("csr: проверка 'event-name' устарела, удаляется в v0.4: naming"));
+            Assert.That(result.Output, Does.Contain("`event-name` N1 (warning) - событие 'Saved': допустимо On*"));
+        }
+
         [Test]
         public void Clean_ExitZero()
         {
