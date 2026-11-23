@@ -5,6 +5,12 @@ namespace CSR.Core.Style.Naming.Legacy
     // Перевод старых проверок именования (до v0.4): записи конфига naming, разбор - тот же, что у конфига
     public static class LegacyRules
     {
+        public const string Replacement = "naming (правила - DOCS.md, раздел naming, таблица перевода старых проверок)";
+
+        // Анализ файла правилами перевода
+        public static Action<CheckContext> Analyze(IReadOnlyList<NamingRule> rules)
+            => context => NamingCheck.Run(context, rules);
+
         public static NamingRule Rule(Dictionary<string, object> fields)
             => NamingRule.Parse(new Record(fields));
 

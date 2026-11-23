@@ -73,6 +73,67 @@ namespace CSR.Core.Tests.Style
 #endregion
 
 
+#region forbidden
+
+        // Записи forbidden: вид, маска, альтернатива, уровень и метка записи, excludePaths записи
+        [Test]
+        public void Forbidden_EntriesWithOwnSeverityRuleAndPaths()
+        {
+            const string source = """
+                public class Sample
+                {
+                    private dynamic m_Value;
+
+                    private void Method()
+                    {
+                        Debug.Log("a");
+                    }
+                }
+                """;
+            var entries = new List<object>
+            {
+                Entry(new() { ["kind"] = "call", ["mask"] = "Debug.Log*", ["use"] = "логгер", ["rule"] = "F1" }),
+                Entry(
+                    new()
+                    {
+                        ["kind"] = "type",
+                        ["mask"] = "dynamic",
+                        ["severity"] = "hint",
+                        ["excludePaths"] = new[] { "*/Tools/*" },
+                    }),
+            };
+
+            var runtime = Run("forbidden", source, settings => settings.Set("entries", entries), "Game/Sample.cs");
+            var tools = Run("forbidden", source, settings => settings.Set("entries", entries), "Tools/Sample.cs");
+
+            var lines = runtime.Select(finding => $"{finding.Line} {finding.Message} {finding.Severity} {finding.Rule}");
+            Assert.That(lines, Is.EqualTo(new[]
+            {
+                "3 запрещенный тип 'dynamic' Hint R1",
+                "7 запрещенный член 'Debug.Log': логгер Error F1",
+            }));
+            Assert.That(tools.Single().Message, Is.EqualTo("запрещенный член 'Debug.Log': логгер"));
+        }
+
+        [TestCase("kind", "method", "kind: допустимо call, type")]
+        [TestCase("mask", null, "kind: нужно call или type")]
+        public void Forbidden_InvalidEntry_FormatError(string field, string? value, string message)
+        {
+            var fields = new Dictionary<string, object>();
+            if (value != null)
+                fields[field] = value;
+
+            var exception = Assert.Throws<FormatException>(() => Entry(fields));
+
+            Assert.That(exception!.Message, Is.EqualTo(message));
+        }
+
+        private static object Entry(Dictionary<string, object> fields)
+            => CSR.Core.Style.Forbidden.ForbiddenEntry.Parse(new CSR.Core.Checks.Record(fields));
+
+#endregion
+
+
 #region forbidden-type
 
         [Test]

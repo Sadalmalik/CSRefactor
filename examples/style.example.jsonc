@@ -55,12 +55,14 @@
       ]
     },
     // Запреты команды: что запрещено и чем заменить; excludePaths - где проверка не работает
-    "forbidden-call": {
+    "forbidden": {
       "severity": "error",
-      "calls": { "Debug.Log*": "логгер проекта", "Gizmos.*": "механизм отладочной отрисовки" },
-      "excludePaths": ["*/Editor/*"]
+      "entries": [
+        { "kind": "call", "mask": "Debug.Log*", "use": "логгер проекта", "excludePaths": ["*/Editor/*"] },
+        { "kind": "call", "mask": "Gizmos.*", "use": "механизм отладочной отрисовки", "excludePaths": ["*/Editor/*"] },
+        { "kind": "type", "mask": "dynamic", "use": "строгая типизация" }
+      ]
     },
-    "forbidden-type": { "severity": "error", "types": { "dynamic": "строгая типизация" } },
     "coroutine": { "severity": "error", "use": "асинхронный метод или Update" },
     "static-state": { "severity": "error", "use": "сервис проекта", "ignoreAttributes": ["ThreadStatic"] },
     "local-function": { "severity": "error", "use": "private-метод", "excludePaths": ["*/Editor/*", "*/Tests/*"] },

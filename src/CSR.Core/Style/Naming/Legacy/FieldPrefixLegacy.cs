@@ -9,9 +9,10 @@ namespace CSR.Core.Style.Naming.Legacy
         private static readonly string[] AllAccess = ["private", "protected", "internal", "public"];
         private static readonly string[] Field = ["field"];
 
-        public static readonly NamingAlias Check = new(
+        public static readonly CheckAlias Check = new(
             "field-prefix",
             "префиксы полей и регистр констант (устарела: naming)",
+            LegacyRules.Replacement,
             [
                 CheckParameter.Text("instancePrefix", "m_", "префикс закрытого поля экземпляра; пусто - без префикса"),
                 CheckParameter.Text("staticPrefix", "s_", "префикс закрытого статического поля; пусто - без префикса"),
@@ -33,7 +34,7 @@ namespace CSR.Core.Style.Naming.Legacy
                 CheckParameter.Bool("pascalAfterPrefix", true, "после префикса - заглавная буква (m_Name, не m_name)"),
                 CheckParameter.Bool("properties", true, "свойства без префиксов полей"),
             ],
-            Translate);
+            settings => LegacyRules.Analyze(Translate(settings)));
 
         private static IReadOnlyList<NamingRule> Translate(CheckSettings settings)
         {

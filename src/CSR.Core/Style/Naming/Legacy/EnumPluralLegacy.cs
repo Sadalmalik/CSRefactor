@@ -6,14 +6,15 @@ namespace CSR.Core.Style.Naming.Legacy
     // единственное)
     public static class EnumPluralLegacy
     {
-        public static readonly NamingAlias Check = new(
+        public static readonly CheckAlias Check = new(
             "enum-plural",
             "число в имени enum по [Flags] (устарела: naming)",
+            LegacyRules.Replacement,
             [
                 CheckParameter.Strings("pluralWords", "слова во множественном числе без 's' на конце", "Mask"),
                 CheckParameter.Strings("singularEndings", "окончания на 's' в единственном числе", "ss", "us", "is"),
             ],
-            Translate);
+            settings => LegacyRules.Analyze(Translate(settings)));
 
         private static IReadOnlyList<NamingRule> Translate(CheckSettings settings)
         {

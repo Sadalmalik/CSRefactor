@@ -7,15 +7,16 @@ namespace CSR.Core.Style.Naming.Legacy
     {
         private static readonly string[] TypeKinds = ["class", "struct", "record", "interface", "enum"];
 
-        public static readonly NamingAlias Check = new(
+        public static readonly CheckAlias Check = new(
             "namespace-name",
             "корень, слова и глубина пространства имен (устарела: naming)",
+            LegacyRules.Replacement,
             [
                 CheckParameter.Strings("roots", "допустимые корни (Company.Product); пусто - не проверять"),
                 CheckParameter.Strings("forbiddenWords", "запрещенные слова в частях пространства (без учета регистра)"),
                 CheckParameter.Int("maxDepth", 0, "предельное число частей; 0 - не проверять"),
             ],
-            Translate);
+            settings => LegacyRules.Analyze(Translate(settings)));
 
         private static IReadOnlyList<NamingRule> Translate(CheckSettings settings)
         {

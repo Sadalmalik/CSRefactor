@@ -7,9 +7,10 @@ namespace CSR.Core.Style.Naming.Legacy
     {
         private static readonly string[] TypeKinds = ["class", "struct", "record", "interface"];
 
-        public static readonly NamingAlias Check = new(
+        public static readonly CheckAlias Check = new(
             "type-name",
             "префиксы интерфейсов и параметров-типов, имена наследников (устарела: naming)",
+            LegacyRules.Replacement,
             [
                 CheckParameter.Text("interfacePrefix", "I", "префикс интерфейса перед заглавной буквой; пусто - не проверять"),
                 CheckParameter.Text(
@@ -21,7 +22,7 @@ namespace CSR.Core.Style.Naming.Legacy
                     new Dictionary<string, string>(),
                     "маска имени базового типа -> маска имени наследника (\"*Command\": \"*Command\")"),
             ],
-            Translate);
+            settings => LegacyRules.Analyze(Translate(settings)));
 
         private static IReadOnlyList<NamingRule> Translate(CheckSettings settings)
         {

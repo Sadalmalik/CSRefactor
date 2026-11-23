@@ -30,7 +30,7 @@
   - Модификаторы: [`explicit-private`](#explicit-private), [`forbidden-modifier`](#forbidden-modifier), [`custom-delegate`](#custom-delegate)
   - Раскладка кода столбиком: [`expression-arrow`](#expression-arrow), [`signature-wrap`](#signature-wrap), [`call-wrap`](#call-wrap), [`region-layout`](#region-layout), [`condition-wrap`](#condition-wrap), [`initializer-layout`](#initializer-layout), [`ternary-wrap`](#ternary-wrap)
   - Именование: [`naming`](#naming), [старые проверки](#старые-проверки-именования-до-v04)
-  - Запрещённые конструкции: [`forbidden-call`](#forbidden-call), [`forbidden-type`](#forbidden-type), [`coroutine`](#coroutine), [`static-state`](#static-state), [`local-function`](#local-function), [`path-concat`](#path-concat), [`bool-field-count`](#bool-field-count), [`type-per-file`](#type-per-file), [`closure-in-method`](#closure-in-method), [`nested-loop`](#nested-loop)
+  - Запрещённые конструкции: [`forbidden`](#forbidden), [`coroutine`](#coroutine), [`static-state`](#static-state), [`local-function`](#local-function), [`path-concat`](#path-concat), [`bool-field-count`](#bool-field-count), [`type-per-file`](#type-per-file), [`closure-in-method`](#closure-in-method), [`nested-loop`](#nested-loop)
 - [5. Признаки `arch`](#5-признаки-arch)
   - По одному файлу: [`type-branch`](#type-branch), [`behaviour-logic`](#behaviour-logic), [`index-api`](#index-api), [`static-data-methods`](#static-data-methods), [`project-mechanism`](#project-mechanism), [`numeric-constant`](#numeric-constant), [`numeric-literal`](#numeric-literal), [`tuple-type`](#tuple-type-arch), [`partial-file`](#partial-file), [`debug-draw`](#debug-draw), [`obsolete-reason`](#obsolete-reason), [`persisted-class`](#persisted-class)
   - По решению: [`variant-flag`](#variant-flag), [`single-implementation`](#single-implementation), [`dead-member`](#dead-member), [`parameter-set`](#parameter-set), [`unraised-event`](#unraised-event), [`class-cohesion`](#class-cohesion)
@@ -79,8 +79,9 @@
 | `namespace-name` | устарела до v0.4: [`naming`](#старые-проверки-именования-до-v04) | нет | `roots`, `forbiddenWords`, `maxDepth` |
 | `enum-plural` | устарела до v0.4: [`naming`](#старые-проверки-именования-до-v04) | нет | `pluralWords`, `singularEndings` |
 | `collection-name` | устарела до v0.4: [`naming`](#старые-проверки-именования-до-v04) | нет | `members`, `collectionTypes`, `arrays`, `pluralWords`, `singularEndings` |
-| [`forbidden-call`](#forbidden-call) | запрещённый вызов или член | нет | `calls`, `excludePaths` |
-| [`forbidden-type`](#forbidden-type) | запрещённый тип | нет | `types`, `excludePaths` |
+| [`forbidden`](#forbidden) | запрещённые вызовы, члены и типы по записям: вид, маска, альтернатива | нет | `entries` |
+| `forbidden-call` | устарела до v0.4: [`forbidden`](#forbidden) | нет | `calls`, `excludePaths` |
+| `forbidden-type` | устарела до v0.4: [`forbidden`](#forbidden) | нет | `types`, `excludePaths` |
 | [`coroutine`](#coroutine) | метод-корутина | нет | `returnTypes`, `requireYield`, `use`, `excludePaths` |
 | [`static-state`](#static-state) | статическое изменяемое состояние или синглтон | нет | `mutableTypes`, `singleton`, `ignoreAttributes`, `ignoreNames`, `use`, `excludePaths` |
 | [`local-function`](#local-function) | локальная функция | нет | `use`, `excludePaths` |
@@ -4742,75 +4743,41 @@ public class Spawner
 
 Запреты команды по синтаксису файла: что запрещено и чем заменить, задаёт конфиг. У каждой проверки есть параметр `excludePaths` — маски путей файлов, где проверка не работает. Решение не загружается: тип выражения, базовые типы предков и вызовы через переменные не видны.
 
-#### `forbidden-call`
+#### `forbidden`
 
-Обращение к запрещённому члену: вызов, свойство или поле. Имя обращения — `Тип.Член`: последний идентификатор слева от точки и член (`UnityEngine.Debug.Log` → `Debug.Log`, `Service<T>.Instance` → `Service.Instance`). Встроенный тип слева — ключевым словом (`string.Format`). Маски — ключи `calls`, значение — чем заменить (текст в сообщении; пустая строка — сообщение без альтернативы). Без `calls` проверка ничего не ищет. Маска сравнивается с `Тип.Член`, а не с полным текстом вызова, как в `logger.methods` проекта и `project-mechanism` (`arch`): `Debug.Log*` здесь находит и `UnityEngine.Debug.Log`.
+Запрещённое API по записям конфига: что запрещено и чем заменить. Запись — вид, маска имени, альтернатива, где не действует, уровень и метка. На каждое обращение — первая подходящая запись его вида.
 
-**Замена:** нет: альтернатива — другой API проекта, замену выбирает агент.
+| Поле записи | Значение |
+|---|---|
+| `kind` | `call` — обращение к члену: имя `Тип.Член`, последний идентификатор слева от точки и член (`UnityEngine.Debug.Log` → `Debug.Log`, `Service<T>.Instance` → `Service.Instance`, встроенный тип — ключевым словом: `string.Format`); `type` — имя в позиции типа: объявление поля, параметра, переменной, результат, аргумент типа, `new`, приведение, `typeof` (правая часть без пространства имён с аргументами типа: `ArrayList`, `List<int>`; встроенный — ключевым словом: `object`, `dynamic`) |
+| `mask` | маска имени (`*` — любые символы) |
+| `use` | чем заменить: текст в сообщении; без поля — сообщение без альтернативы |
+| `excludePaths` | маски путей файлов, где запись не действует (`*/Editor/*`; путь от текущей папки проверяется и с ведущим `/`) |
+| `severity`, `rule` | уровень и метка находок записи; без поля — проверки `forbidden` |
+
+Опечатка в поле, неизвестный `kind`, запись без `kind` или `mask` — ошибка конфига с путём (`forbidden.entries[1]: kind: допустимо call, type`).
+
+**Замена:** нет — альтернатива — другой API проекта, замену выбирает агент.
+
+**Ограничения:** вызов через `using static` (`Log("...")` без типа) и обращение через переменную (`logger.Log`) по имени типа не распознаются; массив целиком (`int[]`) с маской `type` не сравнивается — сравнивается тип элемента; переменная с именем `dynamic` (`var dynamic = 1`) — не тип.
 
 **Параметры**
 
 | Параметр | Значения | По умолчанию | Описание |
 |---|---|---|---|
-| `calls` | словарь «маска → текст» | `{}` | маска `Тип.Член` (`*` — любые символы) и чем заменить |
-| `excludePaths` | список строк | `[]` | маски путей файлов, где проверка не работает (`*` — любые символы, разделитель `/`) |
-
-**Ограничение:** вызов через `using static` (`Log("...")` без типа) и обращение через переменную (`logger.Log`) по имени типа не распознаются.
+| `entries` | список записей | `[]` | записи: `kind`, `mask`, `use`, `excludePaths`, `severity`, `rule` |
 
 **Пример**
 
 Конфиг:
 
 ```jsonc
-{ "checks": { "forbidden-call": { "severity": "error", "calls": { "Debug.Log*": "логгер проекта", "Gizmos.*": "" } } } }
-```
-
-Было (`Demo.cs`):
-
-```csharp
-public class Demo
-{
-    private void Show(int value)
-    {
-        Debug.Log("value " + value);
-        Gizmos.color = Color.red;
-        Gizmos.DrawLine(Vector3.zero, Vector3.up);
-    }
-}
-```
-
-Находки (`--format md`):
-
-````markdown
-- 5: `forbidden-call` (error) - запрещенный член 'Debug.Log': логгер проекта
-- 6: `forbidden-call` (error) - запрещенный член 'Gizmos.color'
-- 7: `forbidden-call` (error) - запрещенный член 'Gizmos.DrawLine'
-````
-
-`csr fix` код не меняет: у находок нет замены.
-
-
-#### `forbidden-type`
-
-Запрещённый тип в позиции типа: объявление поля, параметра, переменной, результат, аргумент типа, `new`, приведение, `typeof`. Имя — правая часть без пространства имён с аргументами типа (`System.Collections.ArrayList` → `ArrayList`, `List<int>` → `List<int>`), встроенный тип — ключевым словом (`object`, `dynamic`). Без `types` проверка ничего не ищет.
-
-**Замена:** нет.
-
-**Параметры**
-
-| Параметр | Значения | По умолчанию | Описание |
-|---|---|---|---|
-| `types` | словарь «маска → текст» | `{}` | маска имени типа (`*` — любые символы) и чем заменить |
-| `excludePaths` | список строк | `[]` | маски путей файлов, где проверка не работает (`*` — любые символы, разделитель `/`) |
-
-**Ограничение:** массив целиком (`int[]`) с маской не сравнивается — сравнивается тип элемента; переменная с именем `dynamic` (`var dynamic = 1`) — не тип.
-
-**Пример**
-
-Конфиг:
-
-```jsonc
-{ "checks": { "forbidden-type": { "severity": "error", "types": { "dynamic": "строгая типизация", "ArrayList": "List<T>" } } } }
+{ "checks": { "forbidden": { "severity": "error", "entries": [
+  { "kind": "call", "mask": "Debug.Log*", "use": "логгер проекта", "rule": "F-Log" },
+  { "kind": "call", "mask": "Gizmos.*", "excludePaths": ["*/Editor/*"] },
+  { "kind": "type", "mask": "dynamic", "use": "строгая типизация" },
+  { "kind": "type", "mask": "ArrayList", "use": "List<T>", "severity": "warning" }
+] } } }
 ```
 
 Было (`Demo.cs`):
@@ -4822,19 +4789,33 @@ public class Demo
 {
     private dynamic m_Payload;
     private ArrayList m_Items = new ArrayList();
+
+    private void Show(int value)
+    {
+        Debug.Log("value " + value);
+        Gizmos.DrawLine(Vector3.zero, Vector3.up);
+    }
 }
 ```
 
 Находки (`--format md`):
 
 ````markdown
-- 5: `forbidden-type` (error) - запрещенный тип 'dynamic': строгая типизация
-- 6: `forbidden-type` (error) - запрещенный тип 'ArrayList': List<T>
-- 6: `forbidden-type` (error) - запрещенный тип 'ArrayList': List<T>
+- 5: `forbidden` (error) - запрещенный тип 'dynamic': строгая типизация
+- 6: `forbidden` (warning) - запрещенный тип 'ArrayList': List<T>
+- 6: `forbidden` (warning) - запрещенный тип 'ArrayList': List<T>
+- 10: `forbidden` F-Log (error) - запрещенный член 'Debug.Log': логгер проекта
+- 11: `forbidden` (error) - запрещенный член 'Gizmos.DrawLine'
 ````
 
 `csr fix` код не меняет: у находок нет замены.
 
+**Старые проверки (до v0.4).** `forbidden-call` и `forbidden-type` — псевдонимы `forbidden`: те же имя и параметры, находки — с прежним именем и прежними текстами; при загрузке конфига `csr style` и `csr fix` пишут в stderr, что проверка устарела.
+
+| Старая проверка | Записи `forbidden` |
+|---|---|
+| `forbidden-call` | на каждую пару `calls` — `{ "kind": "call", "mask": <маска>, "use": <текст>, "excludePaths": <excludePaths> }` |
+| `forbidden-type` | на каждую пару `types` — `{ "kind": "type", "mask": <маска>, "use": <текст>, "excludePaths": <excludePaths> }` |
 
 #### `coroutine`
 

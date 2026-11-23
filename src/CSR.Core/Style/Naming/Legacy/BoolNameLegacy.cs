@@ -5,9 +5,10 @@ namespace CSR.Core.Style.Naming.Legacy
     // bool-name до v0.4: отрицание в имени bool -> правило naming с подлежащим "bool"
     public static class BoolNameLegacy
     {
-        public static readonly NamingAlias Check = new(
+        public static readonly CheckAlias Check = new(
             "bool-name",
             "отрицание в имени bool (устарела: naming)",
+            LegacyRules.Replacement,
             [
                 CheckParameter.Strings(
                     "members",
@@ -28,7 +29,7 @@ namespace CSR.Core.Style.Naming.Legacy
                     "приставки отрицания: слово имени, которое с нее начинается (Dis - Disabled)"),
                 CheckParameter.Strings("ignoreWords", "слова с приставкой из negationPrefixes, которые не отрицание (Display)"),
             ],
-            Translate);
+            settings => LegacyRules.Analyze(Translate(settings)));
 
         private static IReadOnlyList<NamingRule> Translate(CheckSettings settings)
         {

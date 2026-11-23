@@ -1,5 +1,6 @@
 using CSR.Core.Checks;
 using CSR.Core.Style.Checks;
+using CSR.Core.Style.Forbidden;
 using CSR.Core.Style.Naming;
 
 namespace CSR.Core.Style
@@ -36,8 +37,6 @@ namespace CSR.Core.Style
             new ConditionWrapCheck(),
             new InitializerLayoutCheck(),
             new TernaryWrapCheck(),
-            new ForbiddenCallCheck(),
-            new ForbiddenTypeCheck(),
             new CoroutineCheck(),
             new StaticStateCheck(),
             new LocalFunctionCheck(),
@@ -48,6 +47,9 @@ namespace CSR.Core.Style
             new NestedLoopCheck(),
             new NamingCheck(),
             .. NamingCatalog.Aliases,
+            new ForbiddenCheck(),
+            ForbiddenLegacy.Calls,
+            ForbiddenLegacy.Types,
         ];
 
         public static SyntaxCheck? Find(string name)

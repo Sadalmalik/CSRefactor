@@ -5,15 +5,16 @@ namespace CSR.Core.Style.Naming.Legacy
     // event-name до v0.4: маски имени события, запрещенные префиксы delegate -> правила naming
     public static class EventNameLegacy
     {
-        public static readonly NamingAlias Check = new(
+        public static readonly CheckAlias Check = new(
             "event-name",
             "имя события и delegate (устарела: naming)",
+            LegacyRules.Replacement,
             [
                 CheckParameter.Strings("allowed", "маски допустимых имен события; пусто - любое имя", "On*"),
                 CheckParameter.Strings("forbidden", "маски запрещенных имен события", "OnWill*", "OnDid*"),
                 CheckParameter.Strings("delegatePrefixes", "запрещенные префиксы имени delegate (перед заглавной буквой)", "On"),
             ],
-            Translate);
+            settings => LegacyRules.Analyze(Translate(settings)));
 
         private static IReadOnlyList<NamingRule> Translate(CheckSettings settings)
         {

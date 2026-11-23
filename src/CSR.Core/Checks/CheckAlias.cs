@@ -1,23 +1,25 @@
-using CSR.Core.Checks;
-
-namespace CSR.Core.Style.Naming
+namespace CSR.Core.Checks
 {
-    // Старая проверка именования (до v0.4): прежние имя и параметры, правила naming - перевод параметров.
+    // Старая проверка (до удаления): прежние имя и параметры, анализ - перевод параметров в новую проверку.
     // Уровень, метка и слои конфига - как у любой проверки; находки - с прежним именем проверки
-    public class NamingAlias : SyntaxCheck
+    public class CheckAlias : SyntaxCheck
     {
-        private readonly Func<CheckSettings, IReadOnlyList<NamingRule>> m_Translate;
+        private readonly string m_Replacement;
+        private readonly Func<CheckSettings, Action<CheckContext>> m_Translate;
         private Translation? m_Last;
 
-        public NamingAlias(
+        // translate - перевод параметров в анализ одного файла
+        public CheckAlias(
             string name,
             string description,
+            string replacement,
             IReadOnlyList<CheckParameter> parameters,
-            Func<CheckSettings, IReadOnlyList<NamingRule>> translate)
+            Func<CheckSettings, Action<CheckContext>> translate)
         {
             Name = name;
             Description = description;
             Parameters = parameters;
+            m_Replacement = replacement;
             m_Translate = translate;
         }
 
@@ -28,7 +30,7 @@ namespace CSR.Core.Style.Naming
         public override IReadOnlyList<CheckParameter> Parameters { get; }
 
         public override string Deprecated
-            => "naming (правила - DOCS.md, раздел naming, таблица перевода старых проверок)";
+            => m_Replacement;
 
         // Перевод - один раз на набор параметров (параметры не меняются после загрузки конфига): разбор записей на
         // каждом файле заметен на прогоне в тысячи файлов. Без блокировки: гонка потоков только повторит перевод
@@ -41,20 +43,20 @@ namespace CSR.Core.Style.Naming
                 m_Last = last;
             }
 
-            NamingCheck.Run(context, last.Rules);
+            last.Analyze(context);
         }
 
         private class Translation
         {
-            public Translation(CheckSettings settings, IReadOnlyList<NamingRule> rules)
+            public Translation(CheckSettings settings, Action<CheckContext> analyze)
             {
                 Settings = settings;
-                Rules = rules;
+                Analyze = analyze;
             }
 
             public CheckSettings Settings { get; }
 
-            public IReadOnlyList<NamingRule> Rules { get; }
+            public Action<CheckContext> Analyze { get; }
         }
     }
 }

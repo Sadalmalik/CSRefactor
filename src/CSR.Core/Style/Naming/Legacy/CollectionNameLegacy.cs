@@ -5,9 +5,10 @@ namespace CSR.Core.Style.Naming.Legacy
     // collection-name до v0.4: коллекция с именем в единственном числе -> правило naming с подлежащим "коллекция"
     public static class CollectionNameLegacy
     {
-        public static readonly NamingAlias Check = new(
+        public static readonly CheckAlias Check = new(
             "collection-name",
             "коллекция с именем в единственном числе (устарела: naming)",
+            LegacyRules.Replacement,
             [
                 CheckParameter.Strings("members", "виды: field, property, parameter, local", "field", "property"),
                 CheckParameter.Strings(
@@ -58,7 +59,7 @@ namespace CSR.Core.Style.Naming.Legacy
                     "People"),
                 CheckParameter.Strings("singularEndings", "окончания на 's' в единственном числе", "ss", "us", "is"),
             ],
-            Translate);
+            settings => LegacyRules.Analyze(Translate(settings)));
 
         private static IReadOnlyList<NamingRule> Translate(CheckSettings settings)
         {
