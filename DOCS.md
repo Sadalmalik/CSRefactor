@@ -29,7 +29,7 @@
   - Идиомы и типы: [`null-check`](#null-check), [`coalesce-assignment`](#coalesce-assignment), [`out-var`](#out-var), [`bool-local-type`](#bool-local-type), [`local-type`](#local-type), [`tuple-type`](#tuple-type)
   - Модификаторы: [`explicit-private`](#explicit-private), [`forbidden-modifier`](#forbidden-modifier), [`custom-delegate`](#custom-delegate)
   - Раскладка кода столбиком: [`expression-arrow`](#expression-arrow), [`signature-wrap`](#signature-wrap), [`call-wrap`](#call-wrap), [`region-layout`](#region-layout), [`condition-wrap`](#condition-wrap), [`initializer-layout`](#initializer-layout), [`ternary-wrap`](#ternary-wrap)
-  - Именование: [`naming`](#naming), [старые проверки](#старые-проверки-именования-до-v04), [`field-prefix`](#field-prefix), [`namespace-name`](#namespace-name)
+  - Именование: [`naming`](#naming), [старые проверки](#старые-проверки-именования-до-v04), [`field-prefix`](#field-prefix)
   - Запрещённые конструкции: [`forbidden-call`](#forbidden-call), [`forbidden-type`](#forbidden-type), [`coroutine`](#coroutine), [`static-state`](#static-state), [`local-function`](#local-function), [`path-concat`](#path-concat), [`bool-field-count`](#bool-field-count), [`type-per-file`](#type-per-file), [`closure-in-method`](#closure-in-method), [`nested-loop`](#nested-loop)
 - [5. Признаки `arch`](#5-признаки-arch)
   - По одному файлу: [`type-branch`](#type-branch), [`behaviour-logic`](#behaviour-logic), [`index-api`](#index-api), [`static-data-methods`](#static-data-methods), [`project-mechanism`](#project-mechanism), [`numeric-constant`](#numeric-constant), [`numeric-literal`](#numeric-literal), [`tuple-type`](#tuple-type-arch), [`partial-file`](#partial-file), [`debug-draw`](#debug-draw), [`obsolete-reason`](#obsolete-reason), [`persisted-class`](#persisted-class)
@@ -76,7 +76,7 @@
 | [`naming`](#naming) | имена по правилам конфига: символы → требование → уровень и метка | нет | `rules` |
 | `event-name` | устарела до v0.4: [`naming`](#старые-проверки-именования-до-v04) | нет | `allowed`, `forbidden`, `delegatePrefixes` |
 | `type-name` | устарела до v0.4: [`naming`](#старые-проверки-именования-до-v04) | нет | `interfacePrefix`, `typeParameterPrefix`, `derivedNames` |
-| [`namespace-name`](#namespace-name) | корень, слова и глубина пространства имён | нет | `roots`, `forbiddenWords`, `maxDepth` |
+| `namespace-name` | устарела до v0.4: [`naming`](#старые-проверки-именования-до-v04) | нет | `roots`, `forbiddenWords`, `maxDepth` |
 | `enum-plural` | устарела до v0.4: [`naming`](#старые-проверки-именования-до-v04) | нет | `pluralWords`, `singularEndings` |
 | `collection-name` | устарела до v0.4: [`naming`](#старые-проверки-именования-до-v04) | нет | `members`, `collectionTypes`, `arrays`, `pluralWords`, `singularEndings` |
 | [`forbidden-call`](#forbidden-call) | запрещённый вызов или член | нет | `calls`, `excludePaths` |
@@ -4665,6 +4665,8 @@ public class Report
 | `masks` | `allowed` — маски допустимых имён (пусто — любое имя), `forbidden` — маски запрещённых | `событие 'OnSpawned': запрещенная форма 'On*ed'`, `событие 'Spawned': допустимо OnBefore*, OnAfter*` |
 | `words` | `forbiddenWords` — запрещённые слова, `negationPrefixes` — приставки (`Dis` — `Disabled`), `ignoreWords` — слова с приставкой, которые не находка (`Display`); без учёта регистра, имя делится на слова без префикса поля, пространство — по частям; `negation: true` — слова означают отрицание | `пространство 'Game.Editor': слово 'Editor'`, с `negation` — `bool 'IsNotReady': отрицание 'Not' - имя по состоянию` |
 | `number` | `number`: `plural` или `singular` — число по последнему слову имени без префикса поля; множественное — слово из `pluralWords` или на `s`, кроме окончаний `singularEndings` (по умолчанию `ss`, `us`, `is`: `Status`, `Class`, `Axis`) | `enum 'DamageType': имя во множественном числе`, с `label: "коллекция"` — `коллекция 'm_Item': имя во множественном числе` |
+| `namespace` | `roots` — корни: пространство начинается с корня (`Company` или `Company.*`); у типа верхнего уровня — тип вне пространства имён; вложенные типы и типы внутри пространства не проверяются | `пространство 'Tools.Debug' вне корня: Company`, с `label: "тип"` — `тип 'Helper' вне пространства имен` |
+| `depth` | `maxParts` — не больше частей в имени пространства | `пространство 'Company.Game.Ui.Hud.Bars': частей 5, предел 4` |
 | `prefix` | `prefix` с `prefixStyle: "word"` — обязательный префикс перед заглавной буквой или цифрой (`IStorage`, `TValue`), `prefixAlone: true` — имя может быть самим префиксом (`T`); `forbiddenPrefixes` — запрещённые префиксы перед заглавной буквой или цифрой (`OnChanged`; `Onboarding` — не префикс) | `интерфейс 'Storage': префикс 'I'`, `delegate 'OnSpawnHandler': без префикса 'On'` |
 
 Не проверяются имена, которые задаёт база: члены `override`, явные реализации интерфейса, параметры таких методов и индексаторов. Вид `local` — объявление локальной (`int x = 0;`) и `out`-переменная с типом; переменные `for`, `foreach`, `using`, `catch` и шаблонов не собираются.
@@ -4728,6 +4730,7 @@ public class Spawner
 | `bool-name` | `{ "symbols": { "kinds": <members>, "types": ["bool", "Boolean"] }, "forbiddenWords": <forbiddenWords>, "negationPrefixes": <negationPrefixes>, "ignoreWords": <ignoreWords>, "negation": true, "label": "bool" }`; по умолчанию `members: ["field", "property", "parameter", "local"]`, `forbiddenWords: ["Not", "No", "Non", "Dont"]` |
 | `enum-plural` | `{ "symbols": { "kinds": ["enum"], "attributes": ["Flags"] }, "number": "plural", "pluralWords": <pluralWords>, "singularEndings": <singularEndings> }`, `{ "symbols": { "kinds": ["enum"] }, "number": "singular", … }`; по умолчанию `pluralWords: ["Mask"]`. Текст: `enum 'DamageType': имя во множественном числе` (раньше `enum 'DamageType' с [Flags]: …`) |
 | `collection-name` | `{ "symbols": { "kinds": <members>, "types": <collectionTypes> и "*[*]" при arrays }, "number": "plural", "pluralWords": <pluralWords>, "singularEndings": <singularEndings>, "label": "коллекция" }`; по умолчанию `members: ["field", "property"]`, `arrays: true`, типы и слова — как у прежней проверки |
+| `namespace-name` | при `roots`: `{ "symbols": { "kinds": ["namespace"] }, "roots": <roots> }`, `{ "symbols": { "kinds": ["class", "struct", "record", "interface", "enum"] }, "roots": <roots>, "label": "тип" }`; при `forbiddenWords`: `{ "symbols": { "kinds": ["namespace"] }, "forbiddenWords": <forbiddenWords> }`; при `maxDepth` > 0: `{ "symbols": { "kinds": ["namespace"] }, "maxParts": <maxDepth> }` |
 | `type-name` | `{ "symbols": { "kinds": ["interface"] }, "prefix": <interfacePrefix>, "prefixStyle": "word" }`, `{ "symbols": { "kinds": ["typeParameter"] }, "prefix": <typeParameterPrefix>, "prefixStyle": "word", "prefixAlone": true }`; на каждую пару `derivedNames` — `{ "symbols": { "kinds": ["class", "struct", "record", "interface"], "bases": [<база>] }, "allowed": [<маска имени>] }`; по умолчанию `interfacePrefix: "I"`, `typeParameterPrefix: "T"`. Текст находки наследника — как у `masks`: `класс 'Save': допустимо *Command` (раньше `'Save' наследует 'CommandBase': имя по маске '*Command'`) |
 
 #### `field-prefix`
@@ -4809,82 +4812,6 @@ public class Counter
 - Доступ определяется только по модификаторам: поле без модификатора считается закрытым.
 - В UPPER_CASE-имени цифра после `_` склеивается с предыдущим словом: для `Prime64_1` предлагается `Prime641`. Имя в сообщении — подсказка, а не замена.
 - Короткое имя константы из заглавных букв (`ID`, `UI`, до трёх букв) считается аббревиатурой и находки не даёт.
-
-#### `namespace-name`
-
-Пространство имён, в котором объявлены типы:
-- начинается с одного из `roots` (`Company` или `Company.…`);
-- в его частях нет слов из `forbiddenWords`; части делятся на слова, поэтому `EditorTools` даёт слово `Editor`;
-- в нём не больше `maxDepth` частей.
-
-Полное имя собирается с учётом внешних объявлений: `namespace A { namespace B.C }` даёт `A.B.C`. Если заданы `roots`, тип вне пространства имён тоже даёт находку.
-
-**Замена:** нет. Перенос в другое пространство затрагивает `using` во всех файлах, которые используют тип.
-
-**Параметры**
-
-| Параметр | Значения | По умолчанию | Описание |
-|---|---|---|---|
-| `roots` | список строк | `[]` | допустимые корни; пусто — не проверять |
-| `forbiddenWords` | список строк | `[]` | запрещённые слова (регистр не учитывается) |
-| `maxDepth` | число | `0` | предельное число частей; `0` — не проверять |
-
-**Пример**
-
-Конфиг:
-
-```jsonc
-{ "checks": { "namespace-name": { "severity": "warning", "roots": ["Company"], "forbiddenWords": ["Editor"], "maxDepth": 3 } } }
-```
-
-Было (`Demo.cs`):
-
-```csharp
-namespace Company.Tools.Editor.Views
-{
-    public class View { }
-}
-
-namespace Other.Tools
-{
-    public class Tool { }
-}
-
-public class Global { }
-```
-
-Находки (`--format md`):
-
-````markdown
-- 1: `namespace-name` (warning) - пространство 'Company.Tools.Editor.Views': слово 'Editor'
-- 1: `namespace-name` (warning) - пространство 'Company.Tools.Editor.Views': частей 4, предел 3
-- 6: `namespace-name` (warning) - пространство 'Other.Tools' вне корня: Company
-- 11: `namespace-name` (warning) - тип 'Global' вне пространства имен
-````
-
-Стало:
-
-```csharp
-namespace Company.Views
-{
-    public class View { }
-}
-
-namespace Company.Tools
-{
-    public class Tool { }
-}
-
-namespace Company
-{
-    public class Global { }
-}
-```
-
-**Ограничения**
-
-- Проверяется объявление, а не папка файла: расхождение пространства имён и пути проверка не ищет.
-- Объявление, в котором только вложенные пространства имён, отдельно не проверяется.
 
 
 ### Запрещённые конструкции

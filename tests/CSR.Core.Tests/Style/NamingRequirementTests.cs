@@ -151,6 +151,48 @@ namespace CSR.Core.Tests.Style
             }));
         }
 
+        [Test]
+        public void Namespace_RootsTypeOutsideAndDepth()
+        {
+            const string source = """
+                public class Helper
+                {
+                    public class Nested { }
+                }
+
+                namespace Company.Game.Ui.Hud.Bars
+                {
+                    public class Bar { }
+                }
+
+                namespace Tools.Debug
+                {
+                    public class Probe { }
+                }
+                """;
+            var namespaces = Rule(new()
+            {
+                ["symbols"] = Fields(new() { ["kinds"] = new[] { "namespace" } }),
+                ["roots"] = new[] { "Company" },
+                ["maxParts"] = 4,
+            });
+            var types = Rule(new()
+            {
+                ["symbols"] = Fields(new() { ["kinds"] = new[] { "class" } }),
+                ["roots"] = new[] { "Company" },
+                ["label"] = "тип",
+            });
+
+            var messages = RunRules(source, namespaces, types).Select(finding => finding.Message);
+
+            Assert.That(messages, Is.EqualTo(new[]
+            {
+                "тип 'Helper' вне пространства имен",
+                "пространство 'Company.Game.Ui.Hud.Bars': частей 5, предел 4",
+                "пространство 'Tools.Debug' вне корня: Company",
+            }));
+        }
+
         public static List<Finding> RunRules(string source, params NamingRule[] rules)
             => Run("naming", source, settings => settings.Set("rules", rules.Cast<object>().ToList()));
 
