@@ -1,5 +1,6 @@
 using CSR.Core.Checks;
 using CSR.Core.Style.Checks;
+using CSR.Core.Style.Naming;
 
 namespace CSR.Core.Style
 {
@@ -52,6 +53,8 @@ namespace CSR.Core.Style
             new TypePerFileCheck(),
             new ClosureInMethodCheck(),
             new NestedLoopCheck(),
+            new NamingCheck(),
+            .. NamingCatalog.Aliases,
         ];
 
         public static SyntaxCheck? Find(string name)

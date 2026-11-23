@@ -53,7 +53,7 @@ namespace CSR.Commands
             if (format is not ("diff" or "json"))
                 throw new UsageException($"неизвестный формат '{format}'");
 
-            var options = LoadOptions(commandLine);
+            var options = StyleCommand.LoadOptions(commandLine);
             var project = StyleCommand.LoadProject(commandLine);
             var fix = CreateFixOptions(commandLine);
             var diff = commandLine.GetOption("--diff");
@@ -194,20 +194,6 @@ namespace CSR.Commands
                 MinSeverity = commandLine.HasFlag("--hints") ? Severity.Hint : Severity.Warning,
                 Checks = checks?.Split(',', split).ToHashSet(),
             };
-        }
-
-        private static CheckOptions LoadOptions(CommandLine commandLine)
-        {
-            var start = ConfigFiles.GetStart(commandLine.Positional[0], Environment.CurrentDirectory);
-            var paths = ConfigFiles.GetLayers(commandLine.GetOptions("--config"), "style.jsonc", start);
-            if (paths.Count == 0)
-                throw new UsageException(ConfigFiles.GetMissingMessage("style.jsonc"));
-
-            var options = new CheckOptions();
-            foreach (var path in paths)
-                StyleConfig.Apply(StyleCommand.ReadConfig(path), options);
-
-            return options;
         }
 
         private static Encoding DetectEncoding(string path)

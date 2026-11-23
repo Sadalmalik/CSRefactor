@@ -15,6 +15,10 @@ namespace CSR.Core.Checks
         public virtual IReadOnlyList<CheckParameter> Parameters
             => Array.Empty<CheckParameter>();
 
+        // Устаревшая проверка: чем заменить (предупреждение при загрузке конфига); null - не устарела
+        public virtual string? Deprecated
+            => null;
+
         public abstract void Analyze(CheckContext context);
     }
 
@@ -77,15 +81,31 @@ namespace CSR.Core.Checks
         public CheckSettings Settings
             => m_Configuration.Settings;
 
+        // Уровень и метка включенной проверки
+        public Severity Severity
+            => m_Configuration.Severity;
+
+        public string? Rule
+            => m_Configuration.Rule;
+
         public void Report(TextSpan span, string message, IReadOnlyList<string>? replacement = null)
+            => Report(span, message, m_Configuration.Severity, m_Configuration.Rule, replacement);
+
+        // Находка с уровнем и меткой правила конфига (запись правила проверки), а не проверки
+        public void Report(
+            TextSpan span,
+            string message,
+            Severity severity,
+            string? rule,
+            IReadOnlyList<string>? replacement = null)
         {
             var start = Text.Lines.GetLinePosition(span.Start);
             var end = Text.Lines.GetLinePosition(span.IsEmpty ? span.Start : span.End - 1);
             m_Findings.Add(new Finding
             {
                 Check = m_Configuration.Check.Name,
-                Rule = m_Configuration.Rule,
-                Severity = m_Configuration.Severity,
+                Rule = rule,
+                Severity = severity,
                 Message = message,
                 File = Tree.FilePath,
                 Line = start.Line + 1,

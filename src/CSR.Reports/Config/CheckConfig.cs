@@ -82,6 +82,7 @@ namespace CSR.Reports.Config
                 ParameterKind.Bool => JsonConfig.ReadBool(value, path),
                 ParameterKind.String => ReadChoice(parameter, value, path),
                 ParameterKind.Strings => JsonConfig.ReadStrings(value, path),
+                ParameterKind.Records => ReadRecords(parameter, value, path),
                 _ => ReadMap(value, path),
             };
 
@@ -107,15 +108,57 @@ namespace CSR.Reports.Config
             return map;
         }
 
+        // Записи: массив объектов; каждая разбирается проверкой (ParseRecord), ошибка разбора - ошибка конфига с путем
+        private static List<object> ReadRecords(CheckParameter parameter, JsonElement value, string path)
+        {
+            if (value.ValueKind != JsonValueKind.Array)
+                throw new ConfigException($"{path}: ожидается массив записей");
+
+            var records = new List<object>();
+            int index = 0;
+            foreach (var item in value.EnumerateArray())
+            {
+                var itemPath = $"{path}[{index++}]";
+                try
+                {
+                    records.Add(parameter.ParseRecord!(ReadRecord(item, itemPath)));
+                }
+                catch (FormatException exception)
+                {
+                    throw new ConfigException($"{itemPath}: {exception.Message}");
+                }
+            }
+
+            return records;
+        }
+
+        // Объект JSON -> запись: строка, bool, целое, список строк, вложенная запись
+        // relative - путь записи внутри элемента списка (symbols) для текстов ошибок Record
+        private static Record ReadRecord(JsonElement value, string path, string relative = "")
+        {
+            JsonConfig.RequireObject(value, path);
+            var fields = new Dictionary<string, object>();
+            foreach (var property in value.EnumerateObject())
+            {
+                var fieldPath = path + "." + property.Name;
+                fields[property.Name] = property.Value.ValueKind switch
+                {
+                    JsonValueKind.String => property.Value.GetString()!,
+                    JsonValueKind.True or JsonValueKind.False => property.Value.GetBoolean(),
+                    JsonValueKind.Number => JsonConfig.ReadInt(property.Value, fieldPath),
+                    JsonValueKind.Array => JsonConfig.ReadStrings(property.Value, fieldPath),
+                    JsonValueKind.Object => ReadRecord(property.Value, fieldPath, property.Name),
+                    _ => throw new ConfigException($"{fieldPath}: ожидается строка, число, bool, список строк или объект"),
+                };
+            }
+
+            return new Record(fields, relative);
+        }
+
         private static Severity ReadSeverity(JsonElement value, string path)
         {
-            return ReadString(value, path) switch
-            {
-                "error" => Severity.Error,
-                "warning" => Severity.Warning,
-                "hint" => Severity.Hint,
-                _ => throw new ConfigException($"{path}: допустимо error, warning, hint"),
-            };
+            var severity = Finding.ParseSeverity(ReadString(value, path));
+            return severity ?? throw new ConfigException($"{path}: допустимо error, warning, hint");
         }
 
         private static string ReadString(JsonElement value, string path)

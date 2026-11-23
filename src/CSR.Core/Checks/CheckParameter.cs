@@ -7,6 +7,7 @@ namespace CSR.Core.Checks
         String,
         Strings,
         Map,
+        Records,
     }
 
     // Параметр проверки: имя, вид значения, значение по умолчанию и допустимые значения строки (для prefer)
@@ -19,6 +20,9 @@ namespace CSR.Core.Checks
         public required object Default { get; init; }
 
         public IReadOnlyList<string>? AllowedValues { get; init; }
+
+        // Records: разбор одной записи конфига в объект проверки; ошибка записи - FormatException с текстом
+        public Func<Record, object>? ParseRecord { get; init; }
 
         public required string Description { get; init; }
 
@@ -49,6 +53,19 @@ namespace CSR.Core.Checks
 
         public static CheckParameter Map(string name, IReadOnlyDictionary<string, string> value, string description)
             => new() { Name = name, Kind = ParameterKind.Map, Default = value, Description = description };
+
+        // Список записей: по умолчанию пустой; каждая запись разбирается parse при чтении конфига
+        public static CheckParameter Records(string name, string description, Func<Record, object> parse)
+        {
+            return new CheckParameter
+            {
+                Name = name,
+                Kind = ParameterKind.Records,
+                Default = Array.Empty<object>(),
+                ParseRecord = parse,
+                Description = description,
+            };
+        }
     }
 
     // Значения параметров одной проверки; незаданные - значения по умолчанию из CheckParameter
@@ -79,6 +96,9 @@ namespace CSR.Core.Checks
 
         public IReadOnlyDictionary<string, string> GetMap(string name)
             => (IReadOnlyDictionary<string, string>)Get(name);
+
+        public IReadOnlyList<T> GetRecords<T>(string name)
+            => ((IReadOnlyList<object>)Get(name)).Cast<T>().ToList();
 
         public CheckSettings Clone()
         {

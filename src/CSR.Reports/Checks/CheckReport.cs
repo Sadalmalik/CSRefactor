@@ -15,16 +15,16 @@ namespace CSR.Reports.Checks
         public bool HasErrors
             => Findings.Any(finding => finding.Severity == Severity.Error);
 
-        // Сводка по проверкам: сначала уровень выше, затем имя проверки
+        // Сводка по проверкам и их правилам (у naming уровень и метка - у правила): сначала уровень выше, затем имя
         public List<CheckSummary> Summarize()
         {
             return Findings
-                .GroupBy(finding => finding.Check)
+                .GroupBy(finding => (finding.Check, finding.Rule, finding.Severity))
                 .Select(group => new CheckSummary
                 {
-                    Check = group.Key,
-                    Rule = group.First().Rule,
-                    Severity = group.First().Severity,
+                    Check = group.Key.Check,
+                    Rule = group.Key.Rule,
+                    Severity = group.Key.Severity,
                     Count = group.Count(),
                 })
                 .OrderByDescending(summary => summary.Severity)

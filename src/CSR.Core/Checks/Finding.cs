@@ -30,6 +30,18 @@ namespace CSR.Core.Checks
         // Новый текст строк Line..EndLine целиком; пустой список - удалить строки; null - замены нет
         public IReadOnlyList<string>? Replacement { get; init; }
 
+        // Уровень по ключу конфига (error, warning, hint); неизвестный ключ - null
+        public static Severity? ParseSeverity(string key)
+        {
+            return key switch
+            {
+                "error" => Severity.Error,
+                "warning" => Severity.Warning,
+                "hint" => Severity.Hint,
+                _ => null,
+            };
+        }
+
         public static string GetSeverityKey(Severity severity)
         {
             return severity switch

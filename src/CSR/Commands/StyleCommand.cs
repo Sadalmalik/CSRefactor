@@ -101,7 +101,8 @@ namespace CSR.Commands
             return findings.Where(lines.Intersects).ToList();
         }
 
-        private static CheckOptions LoadOptions(CommandLine commandLine)
+        // Слои style.jsonc; устаревшая проверка в конфиге - предупреждение в stderr (style и fix)
+        internal static CheckOptions LoadOptions(CommandLine commandLine)
         {
             var start = ConfigFiles.GetStart(commandLine.Positional[0], Environment.CurrentDirectory);
             var paths = ConfigFiles.GetLayers(commandLine.GetOptions("--config"), "style.jsonc", start);
@@ -111,6 +112,14 @@ namespace CSR.Commands
             var options = new CheckOptions();
             foreach (var path in paths)
                 StyleConfig.Apply(ReadConfig(path), options);
+
+            foreach (var configuration in options.Checks)
+            {
+                var replacement = configuration.Check.Deprecated;
+                if (replacement != null)
+                    Console.Error.WriteLine(
+                        $"csr: проверка '{configuration.Check.Name}' устарела, удаляется в v0.4: {replacement}");
+            }
 
             return options;
         }
