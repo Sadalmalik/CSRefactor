@@ -17,6 +17,7 @@ namespace CSR.Core.Style.Naming
         public static readonly IReadOnlyList<SyntaxCheck> Aliases =
         [
             EventNameLegacy.Check,
+            TypeNameLegacy.Check,
         ];
     }
 }

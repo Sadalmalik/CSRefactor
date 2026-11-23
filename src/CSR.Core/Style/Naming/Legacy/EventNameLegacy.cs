@@ -19,7 +19,7 @@ namespace CSR.Core.Style.Naming.Legacy
         private static IReadOnlyList<NamingRule> Translate(CheckSettings settings)
         {
             var events = new MaskRequirement(settings.GetStrings("allowed"), settings.GetStrings("forbidden"));
-            var delegates = new PrefixRequirement(settings.GetStrings("delegatePrefixes"));
+            var delegates = new PrefixRequirement(null, false, settings.GetStrings("delegatePrefixes"));
             return
             [
                 LegacyRules.Create("event", MaskRequirement.Kind, events),

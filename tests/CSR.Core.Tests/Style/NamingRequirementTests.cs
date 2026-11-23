@@ -54,6 +54,33 @@ namespace CSR.Core.Tests.Style
             Assert.That(finding.Message, Is.EqualTo("delegate 'OnChanged': без префикса 'On'"));
         }
 
+        [Test]
+        public void Prefix_WordRequiredAndAlone()
+        {
+            const string source = """
+                public interface Storage { }
+                public interface IStorage { }
+                public class Box<T, TValue, Item> { }
+                """;
+            var interfaces = Rule(new()
+            {
+                ["symbols"] = Fields(new() { ["kinds"] = new[] { "interface" } }),
+                ["prefix"] = "I",
+                ["prefixStyle"] = "word",
+            });
+            var typeParameters = Rule(new()
+            {
+                ["symbols"] = Fields(new() { ["kinds"] = new[] { "typeParameter" } }),
+                ["prefix"] = "T",
+                ["prefixStyle"] = "word",
+                ["prefixAlone"] = true,
+            });
+
+            var messages = RunRules(source, interfaces, typeParameters).Select(finding => finding.Message);
+
+            Assert.That(messages, Is.EqualTo(new[] { "интерфейс 'Storage': префикс 'I'", "параметр-тип 'Item': префикс 'T'" }));
+        }
+
         public static List<Finding> RunRules(string source, params NamingRule[] rules)
             => Run("naming", source, settings => settings.Set("rules", rules.Cast<object>().ToList()));
 

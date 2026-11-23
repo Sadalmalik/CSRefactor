@@ -29,7 +29,7 @@
   - Идиомы и типы: [`null-check`](#null-check), [`coalesce-assignment`](#coalesce-assignment), [`out-var`](#out-var), [`bool-local-type`](#bool-local-type), [`local-type`](#local-type), [`tuple-type`](#tuple-type)
   - Модификаторы: [`explicit-private`](#explicit-private), [`forbidden-modifier`](#forbidden-modifier), [`custom-delegate`](#custom-delegate)
   - Раскладка кода столбиком: [`expression-arrow`](#expression-arrow), [`signature-wrap`](#signature-wrap), [`call-wrap`](#call-wrap), [`region-layout`](#region-layout), [`condition-wrap`](#condition-wrap), [`initializer-layout`](#initializer-layout), [`ternary-wrap`](#ternary-wrap)
-  - Именование: [`naming`](#naming), [старые проверки](#старые-проверки-именования-до-v04), [`field-prefix`](#field-prefix), [`bool-name`](#bool-name), [`type-name`](#type-name), [`namespace-name`](#namespace-name), [`enum-plural`](#enum-plural), [`collection-name`](#collection-name)
+  - Именование: [`naming`](#naming), [старые проверки](#старые-проверки-именования-до-v04), [`field-prefix`](#field-prefix), [`bool-name`](#bool-name), [`namespace-name`](#namespace-name), [`enum-plural`](#enum-plural), [`collection-name`](#collection-name)
   - Запрещённые конструкции: [`forbidden-call`](#forbidden-call), [`forbidden-type`](#forbidden-type), [`coroutine`](#coroutine), [`static-state`](#static-state), [`local-function`](#local-function), [`path-concat`](#path-concat), [`bool-field-count`](#bool-field-count), [`type-per-file`](#type-per-file), [`closure-in-method`](#closure-in-method), [`nested-loop`](#nested-loop)
 - [5. Признаки `arch`](#5-признаки-arch)
   - По одному файлу: [`type-branch`](#type-branch), [`behaviour-logic`](#behaviour-logic), [`index-api`](#index-api), [`static-data-methods`](#static-data-methods), [`project-mechanism`](#project-mechanism), [`numeric-constant`](#numeric-constant), [`numeric-literal`](#numeric-literal), [`tuple-type`](#tuple-type-arch), [`partial-file`](#partial-file), [`debug-draw`](#debug-draw), [`obsolete-reason`](#obsolete-reason), [`persisted-class`](#persisted-class)
@@ -75,7 +75,7 @@
 | [`bool-name`](#bool-name) | отрицание в имени `bool` | нет | `members`, `forbiddenWords`, `negationPrefixes`, `ignoreWords` |
 | [`naming`](#naming) | имена по правилам конфига: символы → требование → уровень и метка | нет | `rules` |
 | `event-name` | устарела до v0.4: [`naming`](#старые-проверки-именования-до-v04) | нет | `allowed`, `forbidden`, `delegatePrefixes` |
-| [`type-name`](#type-name) | префиксы интерфейса и параметра-типа, имя наследника | нет | `interfacePrefix`, `typeParameterPrefix`, `derivedNames` |
+| `type-name` | устарела до v0.4: [`naming`](#старые-проверки-именования-до-v04) | нет | `interfacePrefix`, `typeParameterPrefix`, `derivedNames` |
 | [`namespace-name`](#namespace-name) | корень, слова и глубина пространства имён | нет | `roots`, `forbiddenWords`, `maxDepth` |
 | [`enum-plural`](#enum-plural) | число в имени `enum` по `[Flags]` | нет | `pluralWords`, `singularEndings` |
 | [`collection-name`](#collection-name) | коллекция с именем в единственном числе | нет | `members`, `collectionTypes`, `arrays`, `pluralWords`, `singularEndings` |
@@ -4662,7 +4662,7 @@ public class Report
 | Вид | Поля | Нарушение |
 |---|---|---|
 | `masks` | `allowed` — маски допустимых имён (пусто — любое имя), `forbidden` — маски запрещённых | `событие 'OnSpawned': запрещенная форма 'On*ed'`, `событие 'Spawned': допустимо OnBefore*, OnAfter*` |
-| `prefix` | `forbiddenPrefixes` — запрещённые префиксы перед заглавной буквой или цифрой (`OnChanged`; `Onboarding` — не префикс) | `delegate 'OnSpawnHandler': без префикса 'On'` |
+| `prefix` | `prefix` с `prefixStyle: "word"` — обязательный префикс перед заглавной буквой или цифрой (`IStorage`, `TValue`), `prefixAlone: true` — имя может быть самим префиксом (`T`); `forbiddenPrefixes` — запрещённые префиксы перед заглавной буквой или цифрой (`OnChanged`; `Onboarding` — не префикс) | `интерфейс 'Storage': префикс 'I'`, `delegate 'OnSpawnHandler': без префикса 'On'` |
 
 Не проверяются имена, которые задаёт база: члены `override`, явные реализации интерфейса, параметры таких методов и индексаторов. Вид `local` — объявление локальной (`int x = 0;`) и `out`-переменная с типом; переменные `for`, `foreach`, `using`, `catch` и шаблонов не собираются.
 
@@ -4722,6 +4722,7 @@ public class Spawner
 | Старая проверка | Правила `naming` |
 |---|---|
 | `event-name` | `{ "symbols": { "kinds": ["event"] }, "allowed": <allowed>, "forbidden": <forbidden> }`, `{ "symbols": { "kinds": ["delegate"] }, "forbiddenPrefixes": <delegatePrefixes> }`; по умолчанию `allowed: ["On*"]`, `forbidden: ["OnWill*", "OnDid*"]`, `delegatePrefixes: ["On"]` |
+| `type-name` | `{ "symbols": { "kinds": ["interface"] }, "prefix": <interfacePrefix>, "prefixStyle": "word" }`, `{ "symbols": { "kinds": ["typeParameter"] }, "prefix": <typeParameterPrefix>, "prefixStyle": "word", "prefixAlone": true }`; на каждую пару `derivedNames` — `{ "symbols": { "kinds": ["class", "struct", "record", "interface"], "bases": [<база>] }, "allowed": [<маска имени>] }`; по умолчанию `interfacePrefix: "I"`, `typeParameterPrefix: "T"`. Текст находки наследника — как у `masks`: `класс 'Save': допустимо *Command` (раньше `'Save' наследует 'CommandBase': имя по маске '*Command'`) |
 
 #### `field-prefix`
 
@@ -4882,72 +4883,6 @@ public class Door
 - Слово отрицания может относиться не к значению флага, а к объекту: `IncludeDisabledComponents` (включать отключённые компоненты) тоже даёт находку.
 - Приставки (`negationPrefixes`) проверяются только по началу слова, словаря нет: `Un` совпадёт с `Unit`, `Dis` — с `Distance`. Такие слова перечисляются в `ignoreWords`.
 - Локальная `var x = a < b` не проверяется: без семантики тип не известен.
-
-#### `type-name`
-
-Имена типов:
-- имя интерфейса начинается с `interfacePrefix`, за которым идёт заглавная буква: `IStorage`, но не `Index`;
-- параметр-тип равен `typeParameterPrefix` или начинается с него перед заглавной буквой: `T`, `TItem`;
-- имя наследника базового типа из `derivedNames` подходит под маску: ключ — маска имени базы, значение — маска имени наследника.
-
-База определяется по имени в списке баз объявления, без пространства имён и аргументов типа: `Core.CommandBase<int>` даёт `CommandBase`.
-
-**Замена:** нет.
-
-**Параметры**
-
-| Параметр | Значения | По умолчанию | Описание |
-|---|---|---|---|
-| `interfacePrefix` | строка | `"I"` | префикс интерфейса; пусто — не проверять |
-| `typeParameterPrefix` | строка | `"T"` | префикс параметра-типа; пусто — не проверять |
-| `derivedNames` | объект «маска базы → маска имени» | `{}` | обязательная форма имени наследника (`{ "CommandBase": "*Command", "AssetBase": "Asset*" }`) |
-
-**Пример**
-
-Конфиг:
-
-```jsonc
-{ "checks": { "type-name": { "severity": "warning", "derivedNames": { "CommandBase": "*Command" } } } }
-```
-
-Было (`Demo.cs`):
-
-```csharp
-public interface IStorage { }
-public interface Storage { }
-
-public class Box<T, TItem, Value> { }
-
-public abstract class CommandBase { }
-public class SaveCommand : CommandBase { }
-public class Load : CommandBase { }
-```
-
-Находки (`--format md`):
-
-````markdown
-- 2: `type-name` (warning) - интерфейс 'Storage': префикс 'I'
-- 4: `type-name` (warning) - параметр-тип 'Value': префикс 'T'
-- 8: `type-name` (warning) - 'Load' наследует 'CommandBase': имя по маске '*Command'
-````
-
-Стало (после `csr rename`):
-
-```csharp
-public interface IStorage { }
-public interface IFileStorage { }
-
-public class Box<T, TItem, TValue> { }
-
-public abstract class CommandBase { }
-public class SaveCommand : CommandBase { }
-public class LoadCommand : CommandBase { }
-```
-
-**Ограничения**
-
-- Проверяется только прямая база из объявления: наследник через промежуточный тип (`class Quick : LoadCommand`) по `derivedNames` не проверяется.
-- Без семантики базовый класс от интерфейса не отличить: маска сравнивается с каждым именем в списке баз.
 
 #### `namespace-name`
 

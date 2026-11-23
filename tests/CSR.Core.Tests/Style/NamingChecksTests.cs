@@ -261,9 +261,9 @@ namespace CSR.Core.Tests.Style
                 new Dictionary<string, string> { ["CommandBase"] = "*Command", ["Asset*"] = "Asset*" }));
             Assert.That(findings.Select(finding => finding.Message), Is.EqualTo(new[]
             {
-                "'Save' наследует 'CommandBase': имя по маске '*Command'",
-                "'Load' наследует 'CommandBase': имя по маске '*Command'",
-                "'Item' наследует 'AssetBase': имя по маске 'Asset*'",
+                "класс 'Save': допустимо *Command",
+                "класс 'Load': допустимо *Command",
+                "класс 'Item': допустимо Asset*",
             }));
         }
 

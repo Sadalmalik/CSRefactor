@@ -38,7 +38,6 @@ namespace CSR.Core.Style
             new TernaryWrapCheck(),
             new FieldPrefixCheck(),
             new BoolNameCheck(),
-            new TypeNameCheck(),
             new NamespaceNameCheck(),
             new EnumPluralCheck(),
             new CollectionNameCheck(),
