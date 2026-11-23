@@ -112,7 +112,7 @@ namespace CSR.Tests
 
             Assert.That(result.ExitCode, Is.EqualTo(0), result.Error);
             using var document = JsonDocument.Parse(result.Output);
-            var system = document.RootElement.GetProperty("systems")[0];
+            var system = document.RootElement.GetProperty("inventory")[0];
             Assert.That(system.GetProperty("host").GetProperty("name").GetString(), Is.EqualTo("RuleSet"));
             Assert.That(system.GetProperty("extensionPoint").GetProperty("name").GetString(), Is.EqualTo("Rule"));
             Assert.That(system.GetProperty("holder").GetString(), Is.EqualTo("collection"));

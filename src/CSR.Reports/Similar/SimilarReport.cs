@@ -145,7 +145,7 @@ namespace CSR.Reports.Similar
             var hostCounts = inventory.GroupBy(entry => entry.ExtensionPoint).ToDictionary(
                 group => group.Key,
                 group => group.Count());
-            writer.WriteStartArray("systems");
+            writer.WriteStartArray("inventory");
             foreach (var entry in inventory)
             {
                 writer.WriteStartObject();
