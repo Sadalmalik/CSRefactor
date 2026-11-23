@@ -38,12 +38,13 @@ namespace CSR.Core.Style.Naming
                     if (!rule.Symbols.IsMatch(symbol))
                         continue;
 
+                    var subject = rule.Label == null ? symbol : symbol with { Label = rule.Label };
                     foreach (var requirement in rule.Requirements)
                     {
                         if (!taken.Add(requirement.Key))
                             continue;
 
-                        var problem = requirement.Value.Check(symbol);
+                        var problem = requirement.Value.Check(subject);
                         if (problem != null)
                             context.Report(symbol.Span, problem, rule.Severity ?? context.Severity, rule.Rule ?? context.Rule);
                     }

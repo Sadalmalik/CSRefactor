@@ -81,6 +81,45 @@ namespace CSR.Core.Tests.Style
             Assert.That(messages, Is.EqualTo(new[] { "интерфейс 'Storage': префикс 'I'", "параметр-тип 'Item': префикс 'T'" }));
         }
 
+        [Test]
+        public void Words_NegationWithLabelAndNamespaceParts()
+        {
+            const string source = """
+                namespace Game.EditorTools
+                {
+                    public class Sample
+                    {
+                        private bool m_IsNotReady;
+                        private bool m_IsDisabled;
+                        private bool m_IsDisplayed;
+                    }
+                }
+                """;
+            var bools = Rule(new()
+            {
+                ["symbols"] = Fields(new() { ["types"] = new[] { "bool" } }),
+                ["forbiddenWords"] = new[] { "Not" },
+                ["negationPrefixes"] = new[] { "Dis" },
+                ["ignoreWords"] = new[] { "Displayed" },
+                ["negation"] = true,
+                ["label"] = "bool",
+            });
+            var namespaces = Rule(new()
+            {
+                ["symbols"] = Fields(new() { ["kinds"] = new[] { "namespace" } }),
+                ["forbiddenWords"] = new[] { "Editor" },
+            });
+
+            var messages = RunRules(source, bools, namespaces).Select(finding => finding.Message);
+
+            Assert.That(messages, Is.EqualTo(new[]
+            {
+                "пространство 'Game.EditorTools': слово 'Editor'",
+                "bool 'm_IsNotReady': отрицание 'Not' - имя по состоянию",
+                "bool 'm_IsDisabled': отрицание 'Disabled' - имя по состоянию",
+            }));
+        }
+
         public static List<Finding> RunRules(string source, params NamingRule[] rules)
             => Run("naming", source, settings => settings.Set("rules", rules.Cast<object>().ToList()));
 

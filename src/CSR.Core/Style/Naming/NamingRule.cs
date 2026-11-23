@@ -2,21 +2,24 @@ using CSR.Core.Checks;
 
 namespace CSR.Core.Style.Naming
 {
-    // Правило именования: какие символы, требования по ключу вида, уровень и метка (null - проверки)
+    // Правило именования: какие символы, требования по ключу вида, уровень и метка (null - проверки),
+    // подлежащее сообщения (null - вид символа: "закрытое поле"; "bool", "коллекция")
     public class NamingRule
     {
-        public static readonly IReadOnlyList<string> OwnFields = ["symbols", "severity", "rule"];
+        public static readonly IReadOnlyList<string> OwnFields = ["symbols", "severity", "rule", "label"];
 
         public NamingRule(
             NameSelector symbols,
             IReadOnlyDictionary<string, INameRequirement> requirements,
             Severity? severity = null,
-            string? rule = null)
+            string? rule = null,
+            string? label = null)
         {
             Symbols = symbols;
             Requirements = requirements;
             Severity = severity;
             Rule = rule;
+            Label = label;
         }
 
         public NameSelector Symbols { get; }
@@ -27,6 +30,8 @@ namespace CSR.Core.Style.Naming
         public Severity? Severity { get; }
 
         public string? Rule { get; }
+
+        public string? Label { get; }
 
         // Запись конфига -> правило; поля требований - из видов реестра
         public static NamingRule Parse(Record record)
@@ -46,7 +51,7 @@ namespace CSR.Core.Style.Naming
             if (requirements.Count == 0)
                 throw new FormatException("в правиле нет требования к имени");
 
-            return new NamingRule(symbols, requirements, severity, record.GetString("rule"));
+            return new NamingRule(symbols, requirements, severity, record.GetString("rule"), record.GetString("label"));
         }
     }
 }

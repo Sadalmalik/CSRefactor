@@ -9,8 +9,15 @@ namespace CSR.Core.Style.Naming.Legacy
         public static NamingRule Create(string kinds, NameRequirementKind kind, INameRequirement requirement)
             => Create(Selector(new() { ["kinds"] = [kinds] }), kind, requirement);
 
-        public static NamingRule Create(NameSelector symbols, NameRequirementKind kind, INameRequirement requirement)
-            => new(symbols, new Dictionary<string, INameRequirement> { [kind.Key] = requirement });
+        public static NamingRule Create(
+            NameSelector symbols,
+            NameRequirementKind kind,
+            INameRequirement requirement,
+            string? label = null)
+        {
+            var requirements = new Dictionary<string, INameRequirement> { [kind.Key] = requirement };
+            return new NamingRule(symbols, requirements, label: label);
+        }
 
         // Селектор из условий: kinds, access, modifiers, types, attributes, bases
         public static NameSelector Selector(Dictionary<string, IReadOnlyList<string>> fields)

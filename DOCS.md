@@ -29,7 +29,7 @@
   - Идиомы и типы: [`null-check`](#null-check), [`coalesce-assignment`](#coalesce-assignment), [`out-var`](#out-var), [`bool-local-type`](#bool-local-type), [`local-type`](#local-type), [`tuple-type`](#tuple-type)
   - Модификаторы: [`explicit-private`](#explicit-private), [`forbidden-modifier`](#forbidden-modifier), [`custom-delegate`](#custom-delegate)
   - Раскладка кода столбиком: [`expression-arrow`](#expression-arrow), [`signature-wrap`](#signature-wrap), [`call-wrap`](#call-wrap), [`region-layout`](#region-layout), [`condition-wrap`](#condition-wrap), [`initializer-layout`](#initializer-layout), [`ternary-wrap`](#ternary-wrap)
-  - Именование: [`naming`](#naming), [старые проверки](#старые-проверки-именования-до-v04), [`field-prefix`](#field-prefix), [`bool-name`](#bool-name), [`namespace-name`](#namespace-name), [`enum-plural`](#enum-plural), [`collection-name`](#collection-name)
+  - Именование: [`naming`](#naming), [старые проверки](#старые-проверки-именования-до-v04), [`field-prefix`](#field-prefix), [`namespace-name`](#namespace-name), [`enum-plural`](#enum-plural), [`collection-name`](#collection-name)
   - Запрещённые конструкции: [`forbidden-call`](#forbidden-call), [`forbidden-type`](#forbidden-type), [`coroutine`](#coroutine), [`static-state`](#static-state), [`local-function`](#local-function), [`path-concat`](#path-concat), [`bool-field-count`](#bool-field-count), [`type-per-file`](#type-per-file), [`closure-in-method`](#closure-in-method), [`nested-loop`](#nested-loop)
 - [5. Признаки `arch`](#5-признаки-arch)
   - По одному файлу: [`type-branch`](#type-branch), [`behaviour-logic`](#behaviour-logic), [`index-api`](#index-api), [`static-data-methods`](#static-data-methods), [`project-mechanism`](#project-mechanism), [`numeric-constant`](#numeric-constant), [`numeric-literal`](#numeric-literal), [`tuple-type`](#tuple-type-arch), [`partial-file`](#partial-file), [`debug-draw`](#debug-draw), [`obsolete-reason`](#obsolete-reason), [`persisted-class`](#persisted-class)
@@ -72,7 +72,7 @@
 | [`initializer-layout`](#initializer-layout) | инициализатор столбиком | да | `max`, `trailingComma` |
 | [`ternary-wrap`](#ternary-wrap) | тернарный оператор столбиком | часть | `max`, `nested` |
 | [`field-prefix`](#field-prefix) | префиксы полей, регистр констант | нет | `instancePrefix`, `staticPrefix`, `staticReadonly`, `constants`, `prefixedAccess`, `pascalAfterPrefix`, `properties` |
-| [`bool-name`](#bool-name) | отрицание в имени `bool` | нет | `members`, `forbiddenWords`, `negationPrefixes`, `ignoreWords` |
+| `bool-name` | устарела до v0.4: [`naming`](#старые-проверки-именования-до-v04) | нет | `members`, `forbiddenWords`, `negationPrefixes`, `ignoreWords` |
 | [`naming`](#naming) | имена по правилам конфига: символы → требование → уровень и метка | нет | `rules` |
 | `event-name` | устарела до v0.4: [`naming`](#старые-проверки-именования-до-v04) | нет | `allowed`, `forbidden`, `delegatePrefixes` |
 | `type-name` | устарела до v0.4: [`naming`](#старые-проверки-именования-до-v04) | нет | `interfacePrefix`, `typeParameterPrefix`, `derivedNames` |
@@ -4641,6 +4641,7 @@ public class Report
 | поля требований | одно или несколько требований к имени (таблица видов ниже); правило без требования — ошибка конфига |
 | `severity` | уровень находок правила: `error`, `warning`, `hint`; без поля — уровень проверки `naming` |
 | `rule` | метка правила в находке; без поля — метка проверки `naming` |
+| `label` | подлежащее сообщения вместо вида символа: `"bool"` — `bool 'IsNotReady': …`; без поля — вид символа (`закрытое поле`, `событие`, `пространство`) |
 
 Селектор `symbols` — все заданные условия вместе; пустое или незаданное условие — любое значение:
 
@@ -4662,6 +4663,7 @@ public class Report
 | Вид | Поля | Нарушение |
 |---|---|---|
 | `masks` | `allowed` — маски допустимых имён (пусто — любое имя), `forbidden` — маски запрещённых | `событие 'OnSpawned': запрещенная форма 'On*ed'`, `событие 'Spawned': допустимо OnBefore*, OnAfter*` |
+| `words` | `forbiddenWords` — запрещённые слова, `negationPrefixes` — приставки (`Dis` — `Disabled`), `ignoreWords` — слова с приставкой, которые не находка (`Display`); без учёта регистра, имя делится на слова без префикса поля, пространство — по частям; `negation: true` — слова означают отрицание | `пространство 'Game.Editor': слово 'Editor'`, с `negation` — `bool 'IsNotReady': отрицание 'Not' - имя по состоянию` |
 | `prefix` | `prefix` с `prefixStyle: "word"` — обязательный префикс перед заглавной буквой или цифрой (`IStorage`, `TValue`), `prefixAlone: true` — имя может быть самим префиксом (`T`); `forbiddenPrefixes` — запрещённые префиксы перед заглавной буквой или цифрой (`OnChanged`; `Onboarding` — не префикс) | `интерфейс 'Storage': префикс 'I'`, `delegate 'OnSpawnHandler': без префикса 'On'` |
 
 Не проверяются имена, которые задаёт база: члены `override`, явные реализации интерфейса, параметры таких методов и индексаторов. Вид `local` — объявление локальной (`int x = 0;`) и `out`-переменная с типом; переменные `for`, `foreach`, `using`, `catch` и шаблонов не собираются.
@@ -4722,6 +4724,7 @@ public class Spawner
 | Старая проверка | Правила `naming` |
 |---|---|
 | `event-name` | `{ "symbols": { "kinds": ["event"] }, "allowed": <allowed>, "forbidden": <forbidden> }`, `{ "symbols": { "kinds": ["delegate"] }, "forbiddenPrefixes": <delegatePrefixes> }`; по умолчанию `allowed: ["On*"]`, `forbidden: ["OnWill*", "OnDid*"]`, `delegatePrefixes: ["On"]` |
+| `bool-name` | `{ "symbols": { "kinds": <members>, "types": ["bool", "Boolean"] }, "forbiddenWords": <forbiddenWords>, "negationPrefixes": <negationPrefixes>, "ignoreWords": <ignoreWords>, "negation": true, "label": "bool" }`; по умолчанию `members: ["field", "property", "parameter", "local"]`, `forbiddenWords: ["Not", "No", "Non", "Dont"]` |
 | `type-name` | `{ "symbols": { "kinds": ["interface"] }, "prefix": <interfacePrefix>, "prefixStyle": "word" }`, `{ "symbols": { "kinds": ["typeParameter"] }, "prefix": <typeParameterPrefix>, "prefixStyle": "word", "prefixAlone": true }`; на каждую пару `derivedNames` — `{ "symbols": { "kinds": ["class", "struct", "record", "interface"], "bases": [<база>] }, "allowed": [<маска имени>] }`; по умолчанию `interfacePrefix: "I"`, `typeParameterPrefix: "T"`. Текст находки наследника — как у `masks`: `класс 'Save': допустимо *Command` (раньше `'Save' наследует 'CommandBase': имя по маске '*Command'`) |
 
 #### `field-prefix`
@@ -4803,86 +4806,6 @@ public class Counter
 - Доступ определяется только по модификаторам: поле без модификатора считается закрытым.
 - В UPPER_CASE-имени цифра после `_` склеивается с предыдущим словом: для `Prime64_1` предлагается `Prime641`. Имя в сообщении — подсказка, а не замена.
 - Короткое имя константы из заглавных букв (`ID`, `UI`, до трёх букв) считается аббревиатурой и находки не даёт.
-
-#### `bool-name`
-
-Имя `bool` с отрицанием (`IsNotActive`, `NoSound`, `IsDisabled`). Имя без префикса поля делится на слова по `_` и по границам регистра. Отрицанием считается:
-- слово из `forbiddenWords`;
-- слово, которое начинается с приставки из `negationPrefixes` и длиннее её, если его нет в `ignoreWords`.
-
-Регистр при сравнении не учитывается.
-
-Тип `bool` определяется по объявлению: `bool`, `bool?`, `Boolean`. Проверяются поля, свойства, параметры и локальные переменные, в том числе `out bool x`.
-
-**Замена:** нет. Имя по состоянию (`IsLocked` вместо `IsNotUnlocked`) выбирает агент.
-
-**Параметры**
-
-| Параметр | Значения | По умолчанию | Описание |
-|---|---|---|---|
-| `members` | список: `field`, `property`, `parameter`, `local` | все четыре | какие объявления проверять |
-| `forbiddenWords` | список строк | `["Not", "No", "Non", "Dont"]` | запрещённые слова имени |
-| `negationPrefixes` | список строк | `[]` | приставки отрицания: слово, которое с неё начинается (`Dis` — `Disabled`) |
-| `ignoreWords` | список строк | `[]` | слова с приставкой, которые не означают отрицания (`Display`, `Under`) |
-
-**Пример**
-
-Конфиг:
-
-```jsonc
-{ "checks": { "bool-name": { "severity": "warning", "negationPrefixes": ["Dis"], "ignoreWords": ["Displayed"] } } }
-```
-
-Было (`Demo.cs`):
-
-```csharp
-public class Door
-{
-    private bool m_IsNotLocked;
-    private bool m_IsDisabled;
-    private bool m_IsDisplayed;
-
-    public bool NoSound { get; set; }
-
-    public void Open(bool dontAnimate)
-    {
-        bool isOpen = true;
-    }
-}
-```
-
-Находки (`--format md`):
-
-````markdown
-- 3: `bool-name` (warning) - bool 'm_IsNotLocked': отрицание 'Not' - имя по состоянию
-- 4: `bool-name` (warning) - bool 'm_IsDisabled': отрицание 'Disabled' - имя по состоянию
-- 7: `bool-name` (warning) - bool 'NoSound': отрицание 'No' - имя по состоянию
-- 9: `bool-name` (warning) - bool 'dontAnimate': отрицание 'dont' - имя по состоянию
-````
-
-Стало (правка агентом и `csr rename`):
-
-```csharp
-public class Door
-{
-    private bool m_CanOpen;
-    private bool m_IsEnabled;
-    private bool m_IsDisplayed;
-
-    public bool IsMuted { get; set; }
-
-    public void Open(bool animate)
-    {
-        bool isOpen = true;
-    }
-}
-```
-
-**Ограничения**
-
-- Слово отрицания может относиться не к значению флага, а к объекту: `IncludeDisabledComponents` (включать отключённые компоненты) тоже даёт находку.
-- Приставки (`negationPrefixes`) проверяются только по началу слова, словаря нет: `Un` совпадёт с `Unit`, `Dis` — с `Distance`. Такие слова перечисляются в `ignoreWords`.
-- Локальная `var x = a < b` не проверяется: без семантики тип не известен.
 
 #### `namespace-name`
 

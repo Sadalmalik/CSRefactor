@@ -12,12 +12,14 @@ namespace CSR.Core.Style.Naming
         [
             PrefixRequirement.Kind,
             MaskRequirement.Kind,
+            WordsRequirement.Kind,
         ];
 
         public static readonly IReadOnlyList<SyntaxCheck> Aliases =
         [
             EventNameLegacy.Check,
             TypeNameLegacy.Check,
+            BoolNameLegacy.Check,
         ];
     }
 }

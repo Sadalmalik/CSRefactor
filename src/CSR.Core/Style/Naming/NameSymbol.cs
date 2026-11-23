@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.Text;
 namespace CSR.Core.Style.Naming
 {
     // Объявленное имя для правил именования: вид, доступ, модификаторы, объявленный тип, атрибуты и базы по синтаксису
-    public class NameSymbol
+    public record NameSymbol
     {
         public required string Kind { get; init; }
 
