@@ -45,6 +45,24 @@ namespace CSR.Workspace.Tests
             Assert.That(Cli.Run("help", "serve").Output, Does.Contain("--detach"));
         }
 
+        // Неверные аргументы - код 2 до поиска и загрузки решения: файла решения нет, а ошибка - про аргументы
+        [TestCase("move: ожидается один символ", "move")]
+        [TestCase("refs: ожидается один символ", "refs", "A.B", "C.D")]
+        [TestCase("rename: ожидаются символ и новое имя", "rename", "A.B")]
+        [TestCase("неизвестный формат 'html'", "move", "A.B", "--format", "html")]
+        [TestCase("символ '1A.B'", "rename", "1A.B", "C")]
+        [TestCase("файл.cs:строка-строка", "extract", "File.cs:12", "Part")]
+        [TestCase("'class' - не идентификатор", "extract", "File.cs:1-2", "class")]
+        [TestCase("файлы не задаются", "arch", "File.cs")]
+        public void InvalidArguments_ExitTwoWithoutLoading(string error, params string[] args)
+        {
+            var result = Cli.Run([.. args, "--solution", "Missing.sln"]);
+
+            Assert.That(result.ExitCode, Is.EqualTo(2));
+            Assert.That(result.Error, Does.Contain(error));
+            Assert.That(result.Error, Does.Not.Contain("загрузка"));
+        }
+
         [Test]
         public void Refs_JsonAndErrors()
         {

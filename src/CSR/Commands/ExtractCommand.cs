@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using CSR.Workspace.Refactor;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace CSR.Commands
 {
@@ -34,7 +35,22 @@ namespace CSR.Commands
         private static readonly Regex RangePattern = new(@"^(?<file>.+):(?<start>\d+)-(?<end>\d+)$");
 
         public static int Run(IEnumerable<string> args)
-            => WorkspaceCommands.Run("extract", args, OptionNames, FlagNames);
+            => WorkspaceCommands.Run("extract", args, OptionNames, FlagNames, Validate);
+
+        private static void Validate(CommandLine commandLine)
+        {
+            if (commandLine.Positional.Count != 2)
+                throw new UsageException("extract: ожидаются строки файла и имя метода");
+
+            RefactorOutput.GetFormat(commandLine);
+            var range = commandLine.Positional[0];
+            if (!RangePattern.IsMatch(range))
+                throw new UsageException($"extract: строки задаются как файл.cs:строка-строка, получено '{range}'");
+
+            var name = commandLine.Positional[1];
+            if (!SyntaxFacts.IsValidIdentifier(name) || SyntaxFacts.GetKeywordKind(name) != SyntaxKind.None)
+                throw new UsageException($"extract: '{name}' - не идентификатор C#");
+        }
 
         public static async Task<int> ExecuteAsync(
             WorkspaceContext context,
@@ -42,14 +58,9 @@ namespace CSR.Commands
             CancellationToken cancellation)
         {
             var commandLine = CommandLine.Parse(args, OptionNames, FlagNames);
-            if (commandLine.Positional.Count != 2)
-                throw new UsageException("extract: ожидаются строки файла и имя метода");
-
+            Validate(commandLine);
             var format = RefactorOutput.GetFormat(commandLine);
             var range = RangePattern.Match(commandLine.Positional[0]);
-            if (!range.Success)
-                throw new UsageException(
-                    $"extract: строки задаются как файл.cs:строка-строка, получено '{commandLine.Positional[0]}'");
 
             var path = Path.GetFullPath(Path.Combine(context.WorkingDirectory, range.Groups["file"].Value));
             var plan = await MethodExtractor.PlanAsync(

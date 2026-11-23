@@ -25,7 +25,19 @@ namespace CSR.Commands
         private static readonly HashSet<string> FlagNames = ["--no-server"];
 
         public static int Run(IEnumerable<string> args)
-            => WorkspaceCommands.Run("refs", args, OptionNames, FlagNames);
+            => WorkspaceCommands.Run("refs", args, OptionNames, FlagNames, Validate);
+
+        private static void Validate(CommandLine commandLine)
+        {
+            if (commandLine.Positional.Count != 1)
+                throw new UsageException("refs: ожидается один символ");
+
+            var format = commandLine.GetOption("--format") ?? "json";
+            if (format is not ("json" or "text"))
+                throw new UsageException($"неизвестный формат '{format}'");
+
+            WorkspaceCommands.ValidateSymbol(commandLine.Positional[0]);
+        }
 
         public static async Task<int> ExecuteAsync(
             WorkspaceContext context,
@@ -33,12 +45,8 @@ namespace CSR.Commands
             CancellationToken cancellation)
         {
             var commandLine = CommandLine.Parse(args, OptionNames, FlagNames);
-            if (commandLine.Positional.Count != 1)
-                throw new UsageException("refs: ожидается один символ");
-
+            Validate(commandLine);
             var format = commandLine.GetOption("--format") ?? "json";
-            if (format is not ("json" or "text"))
-                throw new UsageException($"неизвестный формат '{format}'");
 
             var stopwatch = Stopwatch.StartNew();
             var query = SymbolQuery.Parse(commandLine.Positional[0]);

@@ -42,7 +42,16 @@ namespace CSR.Commands
         private static readonly HashSet<string> FlagNames = ["--no-server", "--apply", "--force", "--no-verify"];
 
         public static int Run(IEnumerable<string> args)
-            => WorkspaceCommands.Run("move", args, OptionNames, FlagNames);
+            => WorkspaceCommands.Run("move", args, OptionNames, FlagNames, Validate);
+
+        private static void Validate(CommandLine commandLine)
+        {
+            if (commandLine.Positional.Count != 1)
+                throw new UsageException("move: ожидается один символ");
+
+            RefactorOutput.GetFormat(commandLine);
+            WorkspaceCommands.ValidateSymbol(commandLine.Positional[0]);
+        }
 
         public static async Task<int> ExecuteAsync(
             WorkspaceContext context,
@@ -50,9 +59,7 @@ namespace CSR.Commands
             CancellationToken cancellation)
         {
             var commandLine = CommandLine.Parse(args, OptionNames, FlagNames);
-            if (commandLine.Positional.Count != 1)
-                throw new UsageException("move: ожидается один символ");
-
+            Validate(commandLine);
             var format = RefactorOutput.GetFormat(commandLine);
             var query = SymbolQuery.Parse(commandLine.Positional[0]);
             var directory = context.WorkingDirectory;

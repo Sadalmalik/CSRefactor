@@ -46,7 +46,7 @@ namespace CSR.Commands
             var arguments = args.ToList();
             var commandLine = CommandLine.Parse(arguments, OptionNames, FlagNames);
             if (commandLine.GetOption("--solution") != null || commandLine.GetOptions("--projects").Count > 0)
-                return WorkspaceCommands.Run("arch", arguments, OptionNames, FlagNames);
+                return WorkspaceCommands.Run("arch", arguments, OptionNames, FlagNames, ValidateSolutionMode);
 
             if (commandLine.Positional.Count == 0)
                 throw new UsageException("не заданы файлы или папки (или --solution)");
@@ -87,12 +87,7 @@ namespace CSR.Commands
             CancellationToken cancellation)
         {
             var commandLine = CommandLine.Parse(args, OptionNames, FlagNames);
-            if (commandLine.Positional.Count > 0)
-                throw new UsageException("arch --solution: файлы не задаются, проекты - через --projects");
-
-            if (commandLine.GetOption("--diff") != null || commandLine.GetOption("--scope") is "changed-lines")
-                throw new UsageException("arch --solution: режим changed-lines не поддерживается");
-
+            ValidateSolutionMode(commandLine);
             var format = GetFormat(commandLine);
             var directory = context.WorkingDirectory;
             var options = LoadOptions(commandLine, directory, context.Solution.Root);
@@ -142,6 +137,18 @@ namespace CSR.Commands
             }
 
             return compilations;
+        }
+
+        // Аргументы режима решения - до загрузки решения
+        private static void ValidateSolutionMode(CommandLine commandLine)
+        {
+            if (commandLine.Positional.Count > 0)
+                throw new UsageException("arch --solution: файлы не задаются, проекты - через --projects");
+
+            if (commandLine.GetOption("--diff") != null || commandLine.GetOption("--scope") is "changed-lines")
+                throw new UsageException("arch --solution: режим changed-lines не поддерживается");
+
+            GetFormat(commandLine);
         }
 
         private static string GetFormat(CommandLine commandLine)

@@ -16,14 +16,17 @@ namespace CSR.Commands
         // Файл в позиции символа (файл.cs:строка[:колонка]) или в строках extract (файл.cs:строка-строка)
         private static readonly Regex SourceFilePattern = new(@"^(?<file>.+\.cs):\d+", RegexOptions.IgnoreCase);
 
+        // validate - проверка числа и формы аргументов до поиска и загрузки решения (код 2 без загрузки)
         public static int Run(
             string command,
             IEnumerable<string> args,
             ISet<string> optionNames,
-            ISet<string> flagNames)
+            ISet<string> flagNames,
+            Action<CommandLine> validate)
         {
             var arguments = args.ToArray();
             var commandLine = CommandLine.Parse(arguments, optionNames, flagNames);
+            validate(commandLine);
             var workingDirectory = Environment.CurrentDirectory;
             var solution = FindSolution(commandLine, workingDirectory);
             var request = new WorkspaceRequest
@@ -146,6 +149,19 @@ namespace CSR.Commands
                 throw new UsageException($"в {folder} несколько решений: задайте --solution");
 
             return solutions.Count == 1 ? solutions[0] : null;
+        }
+
+        // Запрос символа до загрузки решения: неверная форма - ошибка запуска
+        public static void ValidateSymbol(string text)
+        {
+            try
+            {
+                SymbolQuery.Parse(text);
+            }
+            catch (SymbolException exception)
+            {
+                throw new UsageException(exception.Message);
+            }
         }
 
         private static int Print(WorkspaceResponse response)

@@ -36,7 +36,19 @@ namespace CSR.Commands
             ["--no-server", "--apply", "--migrate", "--force", "--no-verify", "--no-strings"];
 
         public static int Run(IEnumerable<string> args)
-            => WorkspaceCommands.Run("rename", args, OptionNames, FlagNames);
+            => WorkspaceCommands.Run("rename", args, OptionNames, FlagNames, Validate);
+
+        private static void Validate(CommandLine commandLine)
+        {
+            if (commandLine.Positional.Count != 2)
+                throw new UsageException("rename: ожидаются символ и новое имя");
+
+            var format = commandLine.GetOption("--format") ?? "diff";
+            if (format is not ("diff" or "json"))
+                throw new UsageException($"неизвестный формат '{format}'");
+
+            WorkspaceCommands.ValidateSymbol(commandLine.Positional[0]);
+        }
 
         public static async Task<int> ExecuteAsync(
             WorkspaceContext context,
@@ -44,12 +56,8 @@ namespace CSR.Commands
             CancellationToken cancellation)
         {
             var commandLine = CommandLine.Parse(args, OptionNames, FlagNames);
-            if (commandLine.Positional.Count != 2)
-                throw new UsageException("rename: ожидаются символ и новое имя");
-
+            Validate(commandLine);
             var format = commandLine.GetOption("--format") ?? "diff";
-            if (format is not ("diff" or "json"))
-                throw new UsageException($"неизвестный формат '{format}'");
 
             var options = LoadOptions(commandLine.GetOption("--config"), context);
             var settings = new RenameSettings
