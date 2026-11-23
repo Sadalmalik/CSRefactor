@@ -28,10 +28,6 @@ namespace CSR.Core.Checks
         public static CheckParameter Bool(string name, bool value, string description)
             => new() { Name = name, Kind = ParameterKind.Bool, Default = value, Description = description };
 
-        // Строка без списка допустимых значений (префикс, слово)
-        public static CheckParameter Text(string name, string value, string description)
-            => new() { Name = name, Kind = ParameterKind.String, Default = value, Description = description };
-
         public static CheckParameter Choice(string name, string description, params string[] values)
         {
             return new CheckParameter
@@ -43,6 +39,10 @@ namespace CSR.Core.Checks
                 Description = description,
             };
         }
+
+        // Произвольная строка (текст сообщения, подсказка)
+        public static CheckParameter Text(string name, string value, string description)
+            => new() { Name = name, Kind = ParameterKind.String, Default = value, Description = description };
 
         public static CheckParameter Strings(string name, string description, params string[] values)
             => new() { Name = name, Kind = ParameterKind.Strings, Default = values, Description = description };
