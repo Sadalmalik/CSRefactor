@@ -14,6 +14,7 @@ namespace CSR
               style    проверка стиля по конфигу: форматирование, комментарии, идиомы, модификаторы
               fix      применить замены находок style; без --apply - только дифф
               arch     архитектурные признаки по конфигу: находки-решения с вопросом
+              similar  похожий код: пары и кластеры похожих членов и фрагментов; --changed - для диффа
               refs     все ссылки на символ по решению
               rename   семантическое переименование с защитой сериализуемых имён; без --apply - только дифф
               move     перенос типа в свой файл (.meta Unity - вместе с файлом) или члена в другой тип; без --apply - дифф
@@ -42,6 +43,7 @@ namespace CSR
                     "style" => StyleCommand.Run(args.Skip(1)),
                     "fix" => FixCommand.Run(args.Skip(1)),
                     "arch" => ArchCommand.Run(args.Skip(1)),
+                    "similar" => SimilarCommand.Run(args.Skip(1)),
                     "refs" => RefsCommand.Run(args.Skip(1)),
                     "rename" => RenameCommand.Run(args.Skip(1)),
                     "move" => MoveCommand.Run(args.Skip(1)),
@@ -80,6 +82,7 @@ namespace CSR
                 "style" => StyleCommand.Usage,
                 "fix" => FixCommand.Usage,
                 "arch" => ArchCommand.Usage,
+                "similar" => SimilarCommand.Usage,
                 "refs" => RefsCommand.Usage,
                 "rename" => RenameCommand.Usage,
                 "move" => MoveCommand.Usage,

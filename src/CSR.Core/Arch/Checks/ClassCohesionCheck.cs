@@ -159,7 +159,7 @@ namespace CSR.Core.Arch.Checks
             private readonly List<ISymbol> m_Members = new();
             private readonly List<bool> m_IsOperation = new();
             private readonly List<HashSet<string>> m_Consumers = new();
-            private int[] m_Parents = Array.Empty<int>();
+            private UnionFind m_Parts = new(0);
 
             public int MethodCount { get; private set; }
 
@@ -173,7 +173,7 @@ namespace CSR.Core.Arch.Checks
                         graph.Add(member, kind == MemberKind.Operation);
                 }
 
-                graph.m_Parents = Enumerable.Range(0, graph.m_Members.Count).ToArray();
+                graph.m_Parts = new UnionFind(graph.m_Members.Count);
                 if (graph.MethodCount == 0)
                     return graph;
 
@@ -194,7 +194,7 @@ namespace CSR.Core.Arch.Checks
             public List<List<ISymbol>> GetParts(int minSize)
             {
                 return Enumerable.Range(0, m_Members.Count)
-                    .GroupBy(Find)
+                    .GroupBy(m_Parts.Find)
                     .Where(group => group.Count(index => m_Members[index] is IMethodSymbol) >= minSize)
                     .Select(group => group.Select(index => m_Members[index]).ToList())
                     .ToList();
@@ -239,18 +239,7 @@ namespace CSR.Core.Arch.Checks
                 }
 
                 if (m_Indices.TryGetValue(SolutionIndex.GetKey(owner), out int source) && source != target)
-                    m_Parents[Find(source)] = Find(target);
-            }
-
-            private int Find(int index)
-            {
-                while (m_Parents[index] != index)
-                {
-                    m_Parents[index] = m_Parents[m_Parents[index]];
-                    index = m_Parents[index];
-                }
-
-                return index;
+                    m_Parts.Union(target, source);
             }
 
             // Член, в теле или инициализаторе которого стоит ссылка; тип - если ссылка вне членов (база, атрибут)
