@@ -1304,7 +1304,7 @@ public class Report
 
 Если `--config` или `--project` заданы, используются только они: `--config` — слои по порядку, как перечислены. Без них `csr` ищет конфиги сам. Два места:
 
-- **По умолчанию** — папка `config` рядом с `csr.exe`: `config/style.jsonc`, `config/arch.jsonc`, `config/project.jsonc`, `config/metrics.jsonc`, `config/refactor.jsonc`. Туда её кладёт установщик ([README.md](README.md#установка)): из релиза — примеры конфигов, если папки ещё нет; параметр `-Configs` — свои конфиги.
+- **По умолчанию** — папка `config` рядом с `csr.exe`: `config/style.jsonc`, `config/arch.jsonc`, `config/project.jsonc`, `config/metrics.jsonc`, `config/refactor.jsonc`. Туда её кладёт установщик ([README.md](README.md#установка)): из релиза — `style.jsonc` и `arch.jsonc` без проверок (`"checks": {}`), если папки ещё нет; параметр `-Configs` — свои конфиги. С конфигами из релиза проверки включает только проектный слой `.csr`.
 - **Проектный** — папка `.csr` с файлами тех же имён: `.csr/style.jsonc` и т. д. Поиск идёт от папки цели вверх: папка первого аргумента (у файла — его папка; у `csr arch --solution` и `csr rename` — папка решения). Берётся ближайшая `.csr`, где есть нужный файл. Поиск останавливается на корне репозитория — папке с `.git` (она проверяется последней), выше не идёт.
 
 Как места сочетаются:

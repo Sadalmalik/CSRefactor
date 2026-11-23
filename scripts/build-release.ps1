@@ -1,11 +1,12 @@
 ﻿<#
 .SYNOPSIS
-    Сборка архива релиза csr-<тег>-win-x64.zip: тот же набор, что ставит install.ps1, и конфиги по умолчанию.
+    Сборка архива релиза csr-<тег>-win-x64.zip: тот же набор, что ставит install.ps1, и нейтральные конфиги.
 
 .DESCRIPTION
     Публикует csr (scripts/publish.ps1) в папку <Output>/csr-<тег>-win-x64, добавляет version.txt и папку config
-    с примерами из examples/ (<вид>.example.jsonc -> config/<вид>.jsonc), проверяет запуск csr.exe и упаковывает
-    содержимое папки в <Output>/csr-<тег>-win-x64.zip. Тот же скрипт запускает workflow релиза на тег v*.
+    из release/config (style.jsonc и arch.jsonc без проверок: проверки команды задает проектный .csr), проверяет
+    запуск csr.exe и упаковывает содержимое папки в <Output>/csr-<тег>-win-x64.zip. Тот же скрипт запускает
+    workflow релиза на тег v*.
 
 .PARAMETER Tag
     Тег релиза: v<версия>, например v1.2.0 или v1.2.0-rc.1. Версия сборки - тег без v.
@@ -51,12 +52,8 @@ if (Test-Path $package)
 
 #region Конфиги и версия
 
-$config = New-Item -ItemType Directory (Join-Path $package 'config')
-foreach ($example in Get-ChildItem (Join-Path $root 'examples') -Filter '*.example.jsonc')
-{
-    $kind = $example.Name -replace '\.example\.jsonc$', ''
-    Copy-Item $example.FullName (Join-Path $config "$kind.jsonc")
-}
+# Нейтральные конфиги: без них style, fix и arch - код 2; project, metrics, refactor - встроенные значения
+Copy-Item (Join-Path $root 'release\config') (Join-Path $package 'config') -Recurse
 
 $commit = git -C $root rev-parse --short HEAD
 $version = "csr $Tag ($commit), $(Get-Date -Format 'yyyy-MM-dd')"
