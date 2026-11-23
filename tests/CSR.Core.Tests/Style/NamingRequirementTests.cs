@@ -120,6 +120,37 @@ namespace CSR.Core.Tests.Style
             }));
         }
 
+        [Test]
+        public void Number_PluralForCollectionsAndArrays()
+        {
+            const string source = """
+                public class Sample
+                {
+                    private List<int> m_Item;
+                    private List<int> m_Items;
+                    private int[,] m_Grid;
+                    private int[] m_Status;
+                    private Dictionary<int, string> m_NameData;
+                }
+                """;
+            var rule = Rule(new()
+            {
+                ["symbols"] = Fields(new() { ["types"] = new[] { "List<*>", "Dictionary<*>", "*[*]" } }),
+                ["number"] = "plural",
+                ["pluralWords"] = new[] { "Data" },
+                ["label"] = "коллекция",
+            });
+
+            var messages = RunRules(source, rule).Select(finding => finding.Message);
+
+            Assert.That(messages, Is.EqualTo(new[]
+            {
+                "коллекция 'm_Item': имя во множественном числе",
+                "коллекция 'm_Grid': имя во множественном числе",
+                "коллекция 'm_Status': имя во множественном числе",
+            }));
+        }
+
         public static List<Finding> RunRules(string source, params NamingRule[] rules)
             => Run("naming", source, settings => settings.Set("rules", rules.Cast<object>().ToList()));
 

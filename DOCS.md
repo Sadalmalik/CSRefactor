@@ -29,7 +29,7 @@
   - Идиомы и типы: [`null-check`](#null-check), [`coalesce-assignment`](#coalesce-assignment), [`out-var`](#out-var), [`bool-local-type`](#bool-local-type), [`local-type`](#local-type), [`tuple-type`](#tuple-type)
   - Модификаторы: [`explicit-private`](#explicit-private), [`forbidden-modifier`](#forbidden-modifier), [`custom-delegate`](#custom-delegate)
   - Раскладка кода столбиком: [`expression-arrow`](#expression-arrow), [`signature-wrap`](#signature-wrap), [`call-wrap`](#call-wrap), [`region-layout`](#region-layout), [`condition-wrap`](#condition-wrap), [`initializer-layout`](#initializer-layout), [`ternary-wrap`](#ternary-wrap)
-  - Именование: [`naming`](#naming), [старые проверки](#старые-проверки-именования-до-v04), [`field-prefix`](#field-prefix), [`namespace-name`](#namespace-name), [`enum-plural`](#enum-plural), [`collection-name`](#collection-name)
+  - Именование: [`naming`](#naming), [старые проверки](#старые-проверки-именования-до-v04), [`field-prefix`](#field-prefix), [`namespace-name`](#namespace-name)
   - Запрещённые конструкции: [`forbidden-call`](#forbidden-call), [`forbidden-type`](#forbidden-type), [`coroutine`](#coroutine), [`static-state`](#static-state), [`local-function`](#local-function), [`path-concat`](#path-concat), [`bool-field-count`](#bool-field-count), [`type-per-file`](#type-per-file), [`closure-in-method`](#closure-in-method), [`nested-loop`](#nested-loop)
 - [5. Признаки `arch`](#5-признаки-arch)
   - По одному файлу: [`type-branch`](#type-branch), [`behaviour-logic`](#behaviour-logic), [`index-api`](#index-api), [`static-data-methods`](#static-data-methods), [`project-mechanism`](#project-mechanism), [`numeric-constant`](#numeric-constant), [`numeric-literal`](#numeric-literal), [`tuple-type`](#tuple-type-arch), [`partial-file`](#partial-file), [`debug-draw`](#debug-draw), [`obsolete-reason`](#obsolete-reason), [`persisted-class`](#persisted-class)
@@ -77,8 +77,8 @@
 | `event-name` | устарела до v0.4: [`naming`](#старые-проверки-именования-до-v04) | нет | `allowed`, `forbidden`, `delegatePrefixes` |
 | `type-name` | устарела до v0.4: [`naming`](#старые-проверки-именования-до-v04) | нет | `interfacePrefix`, `typeParameterPrefix`, `derivedNames` |
 | [`namespace-name`](#namespace-name) | корень, слова и глубина пространства имён | нет | `roots`, `forbiddenWords`, `maxDepth` |
-| [`enum-plural`](#enum-plural) | число в имени `enum` по `[Flags]` | нет | `pluralWords`, `singularEndings` |
-| [`collection-name`](#collection-name) | коллекция с именем в единственном числе | нет | `members`, `collectionTypes`, `arrays`, `pluralWords`, `singularEndings` |
+| `enum-plural` | устарела до v0.4: [`naming`](#старые-проверки-именования-до-v04) | нет | `pluralWords`, `singularEndings` |
+| `collection-name` | устарела до v0.4: [`naming`](#старые-проверки-именования-до-v04) | нет | `members`, `collectionTypes`, `arrays`, `pluralWords`, `singularEndings` |
 | [`forbidden-call`](#forbidden-call) | запрещённый вызов или член | нет | `calls`, `excludePaths` |
 | [`forbidden-type`](#forbidden-type) | запрещённый тип | нет | `types`, `excludePaths` |
 | [`coroutine`](#coroutine) | метод-корутина | нет | `returnTypes`, `requireYield`, `use`, `excludePaths` |
@@ -4650,7 +4650,7 @@ public class Report
 | `kinds` | виды: `namespace`, `class`, `struct`, `record`, `interface`, `enum`, `delegate`, `typeParameter`, `field`, `event`, `property`, `parameter`, `local` |
 | `access` | доступ: `private`, `protected`, `internal`, `public`. Без модификатора — по месту: член интерфейса — `public`, тип вне типа — `internal`, член типа — `private`; `protected internal` и `private protected` — `protected`, `file` — `internal` |
 | `modifiers` | все перечисленные модификаторы есть у объявления: `static`, `readonly`, `const`, `abstract`, `virtual`, `sealed`, `partial`, `async`, `new`, `extern`, `unsafe`, `volatile`, `required` |
-| `types` | маски объявленного типа без пространства имён и `?`: `bool`, `List<*>`, `*[]`; `var` и объявление без типа не совпадают |
+| `types` | маски объявленного типа без пространства имён и `?`: `bool`, `List<*>`, `*[]`, любой массив — `*[*]` (и `int[,]`); `var` и объявление без типа не совпадают |
 | `attributes` | маски атрибутов объявления без суффикса `Attribute` (`Flags`, `Serial*`); атрибуты с целью (`[field: …]`) — не атрибуты объявления |
 | `bases` | маски прямого базового типа без пространства имён и аргументов типа (`MonoBehaviour`, `*Command`) |
 
@@ -4664,6 +4664,7 @@ public class Report
 |---|---|---|
 | `masks` | `allowed` — маски допустимых имён (пусто — любое имя), `forbidden` — маски запрещённых | `событие 'OnSpawned': запрещенная форма 'On*ed'`, `событие 'Spawned': допустимо OnBefore*, OnAfter*` |
 | `words` | `forbiddenWords` — запрещённые слова, `negationPrefixes` — приставки (`Dis` — `Disabled`), `ignoreWords` — слова с приставкой, которые не находка (`Display`); без учёта регистра, имя делится на слова без префикса поля, пространство — по частям; `negation: true` — слова означают отрицание | `пространство 'Game.Editor': слово 'Editor'`, с `negation` — `bool 'IsNotReady': отрицание 'Not' - имя по состоянию` |
+| `number` | `number`: `plural` или `singular` — число по последнему слову имени без префикса поля; множественное — слово из `pluralWords` или на `s`, кроме окончаний `singularEndings` (по умолчанию `ss`, `us`, `is`: `Status`, `Class`, `Axis`) | `enum 'DamageType': имя во множественном числе`, с `label: "коллекция"` — `коллекция 'm_Item': имя во множественном числе` |
 | `prefix` | `prefix` с `prefixStyle: "word"` — обязательный префикс перед заглавной буквой или цифрой (`IStorage`, `TValue`), `prefixAlone: true` — имя может быть самим префиксом (`T`); `forbiddenPrefixes` — запрещённые префиксы перед заглавной буквой или цифрой (`OnChanged`; `Onboarding` — не префикс) | `интерфейс 'Storage': префикс 'I'`, `delegate 'OnSpawnHandler': без префикса 'On'` |
 
 Не проверяются имена, которые задаёт база: члены `override`, явные реализации интерфейса, параметры таких методов и индексаторов. Вид `local` — объявление локальной (`int x = 0;`) и `out`-переменная с типом; переменные `for`, `foreach`, `using`, `catch` и шаблонов не собираются.
@@ -4725,6 +4726,8 @@ public class Spawner
 |---|---|
 | `event-name` | `{ "symbols": { "kinds": ["event"] }, "allowed": <allowed>, "forbidden": <forbidden> }`, `{ "symbols": { "kinds": ["delegate"] }, "forbiddenPrefixes": <delegatePrefixes> }`; по умолчанию `allowed: ["On*"]`, `forbidden: ["OnWill*", "OnDid*"]`, `delegatePrefixes: ["On"]` |
 | `bool-name` | `{ "symbols": { "kinds": <members>, "types": ["bool", "Boolean"] }, "forbiddenWords": <forbiddenWords>, "negationPrefixes": <negationPrefixes>, "ignoreWords": <ignoreWords>, "negation": true, "label": "bool" }`; по умолчанию `members: ["field", "property", "parameter", "local"]`, `forbiddenWords: ["Not", "No", "Non", "Dont"]` |
+| `enum-plural` | `{ "symbols": { "kinds": ["enum"], "attributes": ["Flags"] }, "number": "plural", "pluralWords": <pluralWords>, "singularEndings": <singularEndings> }`, `{ "symbols": { "kinds": ["enum"] }, "number": "singular", … }`; по умолчанию `pluralWords: ["Mask"]`. Текст: `enum 'DamageType': имя во множественном числе` (раньше `enum 'DamageType' с [Flags]: …`) |
+| `collection-name` | `{ "symbols": { "kinds": <members>, "types": <collectionTypes> и "*[*]" при arrays }, "number": "plural", "pluralWords": <pluralWords>, "singularEndings": <singularEndings>, "label": "коллекция" }`; по умолчанию `members: ["field", "property"]`, `arrays: true`, типы и слова — как у прежней проверки |
 | `type-name` | `{ "symbols": { "kinds": ["interface"] }, "prefix": <interfacePrefix>, "prefixStyle": "word" }`, `{ "symbols": { "kinds": ["typeParameter"] }, "prefix": <typeParameterPrefix>, "prefixStyle": "word", "prefixAlone": true }`; на каждую пару `derivedNames` — `{ "symbols": { "kinds": ["class", "struct", "record", "interface"], "bases": [<база>] }, "allowed": [<маска имени>] }`; по умолчанию `interfacePrefix: "I"`, `typeParameterPrefix: "T"`. Текст находки наследника — как у `masks`: `класс 'Save': допустимо *Command` (раньше `'Save' наследует 'CommandBase': имя по маске '*Command'`) |
 
 #### `field-prefix`
@@ -4883,148 +4886,6 @@ namespace Company
 - Проверяется объявление, а не папка файла: расхождение пространства имён и пути проверка не ищет.
 - Объявление, в котором только вложенные пространства имён, отдельно не проверяется.
 
-#### `enum-plural`
-
-Число в имени `enum`: с `[Flags]` имя во множественном числе (`DamageTypes`), без `[Flags]` — в единственном (`DamageType`). Число определяется эвристикой по последнему слову имени:
-- множественное — слово из `pluralWords` или слово на `s`;
-- слово на `s` с окончанием из `singularEndings` (`Status`, `Class`, `Axis`) считается единственным.
-
-**Замена:** нет. Уровень — `hint`: эвристика окончания ошибается на словах вроде `News`, `Physics`.
-
-**Параметры**
-
-| Параметр | Значения | По умолчанию | Описание |
-|---|---|---|---|
-| `pluralWords` | список строк | `["Mask"]` | слова во множественном числе без `s` на конце |
-| `singularEndings` | список строк | `["ss", "us", "is"]` | окончания слов на `s` в единственном числе |
-
-**Пример**
-
-Конфиг:
-
-```jsonc
-{ "checks": { "enum-plural": { "severity": "hint" } } }
-```
-
-Было (`Demo.cs`):
-
-```csharp
-using System;
-
-[Flags]
-public enum DamageType { None = 0, Fire = 1, Ice = 2 }
-
-[Flags]
-public enum Layers { None = 0, Ground = 1 }
-
-public enum Colors { Red, Green }
-
-public enum Status { Ok, Failed }
-```
-
-Находки (`--format md`):
-
-````markdown
-- 4: `enum-plural` (hint) - enum 'DamageType' с [Flags]: имя во множественном числе
-- 9: `enum-plural` (hint) - enum 'Colors' без [Flags]: имя в единственном числе
-````
-
-Стало (после `csr rename`):
-
-```csharp
-using System;
-
-[Flags]
-public enum DamageTypes { None = 0, Fire = 1, Ice = 2 }
-
-[Flags]
-public enum Layers { None = 0, Ground = 1 }
-
-public enum Color { Red, Green }
-
-public enum Status { Ok, Failed }
-```
-
-**Ограничения**
-
-- `[Flags]` определяется по имени атрибута (`Flags`, `FlagsAttribute`, `System.Flags`).
-
-#### `collection-name`
-
-Коллекция с именем в единственном числе. Коллекцией считаются массив и тип из `collectionTypes`; тип берётся из объявления, `var` не проверяется. Множественное число определяется по последнему слову имени без префикса поля:
-- слово на `s`, кроме окончаний из `singularEndings`;
-- или слово из `pluralWords` — постфиксы коллекций (`List`, `Dict`, `Pool`) и слова без `s` (`Data`, `Children`).
-
-**Замена:** нет. Уровень — `hint`: правило «имя во множественном числе» требует суждения.
-
-**Параметры**
-
-| Параметр | Значения | По умолчанию | Описание |
-|---|---|---|---|
-| `members` | список: `field`, `property`, `parameter`, `local` | `["field", "property"]` | какие объявления проверять |
-| `collectionTypes` | список масок | `List<*>`, `IList<*>`, `IReadOnlyList<*>`, `ICollection<*>`, `IReadOnlyCollection<*>`, `IEnumerable<*>`, `HashSet<*>`, `ISet<*>`, `IReadOnlySet<*>`, `SortedSet<*>`, `Queue<*>`, `Stack<*>`, `LinkedList<*>`, `Dictionary<*>`, `IDictionary<*>`, `IReadOnlyDictionary<*>`, `SortedDictionary<*>`, `ConcurrentDictionary<*>` | типы-коллекции (без пространства имён) |
-| `arrays` | `true`, `false` | `true` | проверять массивы |
-| `pluralWords` | список строк | `List`, `Array`, `Dict`, `Dictionary`, `Set`, `Map`, `Queue`, `Stack`, `Collection`, `Lookup`, `Table`, `Index`, `Registry`, `Cache`, `Pool`, `Buffer`, `History`, `All`, `Data`, `Children`, `People` | последние слова, которые считаются множественным числом |
-| `singularEndings` | список строк | `["ss", "us", "is"]` | окончания слов на `s` в единственном числе |
-
-**Пример**
-
-Конфиг:
-
-```jsonc
-{ "checks": { "collection-name": { "severity": "hint" } } }
-```
-
-Было (`Demo.cs`):
-
-```csharp
-using System.Collections.Generic;
-
-public class Inventory
-{
-    private List<int> m_Item = new();
-    private List<int> m_Items = new();
-    private Dictionary<string, int> m_CountById = new();
-    private Dictionary<string, int> m_CountByIdDict = new();
-    private int[] m_Slot;
-    private Stack<int> m_NodePool = new();
-
-    public IReadOnlyList<int> Item => m_Items;
-}
-```
-
-Находки (`--format md`):
-
-````markdown
-- 5: `collection-name` (hint) - коллекция 'm_Item': имя во множественном числе
-- 7: `collection-name` (hint) - коллекция 'm_CountById': имя во множественном числе
-- 9: `collection-name` (hint) - коллекция 'm_Slot': имя во множественном числе
-- 12: `collection-name` (hint) - коллекция 'Item': имя во множественном числе
-````
-
-Стало (после `csr rename`):
-
-```csharp
-using System.Collections.Generic;
-
-public class Inventory
-{
-    private List<int> m_SelectedIds = new();
-    private List<int> m_Items = new();
-    private Dictionary<string, int> m_CountsById = new();
-    private Dictionary<string, int> m_CountByIdDict = new();
-    private int[] m_Slots;
-    private Stack<int> m_NodePool = new();
-
-    public IReadOnlyList<int> Items => m_Items;
-}
-```
-
-**Ограничения**
-
-- Причастия (`m_Pinned`, `m_Found`, `Generated`) дают находку: по правилу у коллекции окончание `s` или постфикс типа (`m_PinnedIds`).
-- Словаря нет: неправильное множественное число (`People`, `Children`) задаётся в `pluralWords`.
-- Тип из `using`-псевдонима или своя коллекция проверяются, только если они перечислены в `collectionTypes`.
 
 ### Запрещённые конструкции
 

@@ -13,6 +13,7 @@ namespace CSR.Core.Style.Naming
             PrefixRequirement.Kind,
             MaskRequirement.Kind,
             WordsRequirement.Kind,
+            NumberRequirement.Kind,
         ];
 
         public static readonly IReadOnlyList<SyntaxCheck> Aliases =
@@ -20,6 +21,8 @@ namespace CSR.Core.Style.Naming
             EventNameLegacy.Check,
             TypeNameLegacy.Check,
             BoolNameLegacy.Check,
+            EnumPluralLegacy.Check,
+            CollectionNameLegacy.Check,
         ];
     }
 }

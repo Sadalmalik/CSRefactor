@@ -349,8 +349,8 @@ namespace CSR.Core.Tests.Style
             var findings = Run("enum-plural", source);
             Assert.That(findings.Select(finding => $"{finding.Line}: {finding.Message}"), Is.EqualTo(new[]
             {
-                "2: enum 'DamageType' с [Flags]: имя во множественном числе",
-                "7: enum 'Colors' без [Flags]: имя в единственном числе",
+                "2: enum 'DamageType': имя во множественном числе",
+                "7: enum 'Colors': имя в единственном числе",
             }));
         }
 
