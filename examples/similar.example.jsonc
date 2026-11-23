@@ -1,8 +1,12 @@
 // Пример конфига csr similar: csr similar <папка> --config similar.jsonc
-// Ключи командной строки (--threshold, --min-lines, --min-nodes, --min-shapes, --fragments) перекрывают значения отсюда.
+// Ключи командной строки (--kinds, --threshold, --min-lines, --min-nodes, --min-shapes, --fragments, --set-threshold,
+// --min-shared, --type-threshold) перекрывают значения отсюда.
 // Описание - DOCS.md, раздел csr similar
 {
-  // Порог коэффициента Жаккара по отпечаткам формы (0..1)
+  // Виды единиц: member, fragment (L1), parameters, fields (L2), type (L3)
+  "kinds": ["member", "fragment", "parameters", "fields", "type"],
+
+  // L1: порог коэффициента Жаккара по отпечаткам формы (0..1)
   "threshold": 0.82,
 
   // Единица меньше любого из минимумов не сравнивается: строки, узлы формы, разные поддеревья формы
@@ -12,6 +16,17 @@
 
   // Операторов в окне фрагмента; 0 - без фрагментов
   "fragmentStatements": 4,
+
+  // L2: порог наборов, наименьшее число общих элементов, синонимы имен (в нижнем регистре)
+  "setThreshold": 0.5,
+  "minShared": 3,
+  "synonyms": { "pos": "position", "dir": "direction" },
+
+  // L3: порог типов, наименьшее число полей и членов типа, общее ядро (членов одной формы; 0 - не искать), веса
+  "typeThreshold": 0.75,
+  "minTypeMembers": 4,
+  "minCoreMembers": 4,
+  "weights": { "bases": 1, "overrides": 1, "fields": 1, "signatures": 1, "bodies": 2 },
 
   // Маски путей файлов (* - любые символы, разделитель /); путь от текущей папки проверяется и с ведущим /
   "paths": [],

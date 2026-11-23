@@ -119,7 +119,9 @@ namespace CSR.Tests
                 {
                   "kinds": ["parameters"],
                   "synonyms": { "Pos": "Position", "dir": "direction" },
-                  "weights": { "bodies": 3 }
+                  "weights": { "bodies": 3 },
+                  "minCoreMembers": 0,
+                  "typeThreshold": 0.9
                 }
                 """);
             var result = Cli.Run("similar", folder.Path, "--config", config, "--format", "md");

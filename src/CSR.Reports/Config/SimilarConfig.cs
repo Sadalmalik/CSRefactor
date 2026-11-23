@@ -6,7 +6,7 @@ namespace CSR.Reports.Config
     // similar.jsonc:
     // { "kinds": ["member", "type"], "threshold": 0.82, "minLines": 4, "minNodes": 20, "minShapes": 20,
     //   "fragmentStatements": 4, "setThreshold": 0.5, "minShared": 3, "synonyms": { "pos": "position" },
-    //   "typeThreshold": 0.75, "minTypeMembers": 4, "weights": { "bases": 1, "bodies": 2 },
+    //   "typeThreshold": 0.75, "minTypeMembers": 4, "minCoreMembers": 4, "weights": { "bases": 1, "bodies": 2 },
     //   "paths": ["Assets/Code/*"], "excludePaths": ["*/Tests/*", "*.g.cs"] }
     public static class SimilarConfig
     {
@@ -42,6 +42,9 @@ namespace CSR.Reports.Config
                         break;
                     case "minTypeMembers":
                         options.MinTypeMembers = JsonConfig.ReadInt(value, property.Name);
+                        break;
+                    case "minCoreMembers":
+                        options.MinCoreMembers = JsonConfig.ReadInt(value, property.Name);
                         break;
                     case "weights":
                         options.Weights = ReadWeights(value, property.Name);
