@@ -32,7 +32,9 @@ namespace CSR.Core.Style.Naming.Requirements
 
         public string? Check(NameSymbol symbol)
         {
-            var words = symbol.Name.Split('.').SelectMany(part => NameWords.Split(NameWords.StripFieldPrefix(part))).ToList();
+            var words = symbol.Name.Split('.')
+                .SelectMany(part => NameWords.Split(NameWords.StripFieldPrefix(part)))
+                .ToList();
             var word = NameWords.FindWord(words, m_Forbidden) ?? FindPrefixed(words);
             if (word == null)
                 return null;
@@ -45,9 +47,15 @@ namespace CSR.Core.Style.Naming.Requirements
         // Слово, которое начинается с приставки и длиннее нее (Disabled, Unlocked), кроме ignoreWords
         private string? FindPrefixed(IReadOnlyList<string> words)
         {
-            return words.FirstOrDefault(word => m_Prefixes.Any(prefix => word.Length > prefix.Length
-                    && word.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-                && !m_Ignored.Any(ignore => string.Equals(ignore, word, StringComparison.OrdinalIgnoreCase)));
+            foreach (var word in words)
+            {
+                bool isPrefixed = m_Prefixes.Any(prefix => word.Length > prefix.Length
+                    && word.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+                if (isPrefixed && !m_Ignored.Contains(word, StringComparer.OrdinalIgnoreCase))
+                    return word;
+            }
+
+            return null;
         }
 
         private static INameRequirement Create(Record record)

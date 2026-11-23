@@ -140,7 +140,7 @@ namespace CSR.Reports.Config
             var fields = new Dictionary<string, object>();
             foreach (var property in value.EnumerateObject())
             {
-                var fieldPath = path + "." + property.Name;
+                var fieldPath = $"{path}.{property.Name}";
                 fields[property.Name] = property.Value.ValueKind switch
                 {
                     JsonValueKind.String => property.Value.GetString()!,

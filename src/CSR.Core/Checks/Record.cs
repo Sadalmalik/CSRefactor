@@ -61,7 +61,7 @@ namespace CSR.Core.Checks
             if (unknown == null)
                 return;
 
-            var place = m_Path.Length > 0 ? m_Path + ": " : "";
+            var place = m_Path.Length > 0 ? $"{m_Path}: " : "";
             throw new FormatException($"{place}неизвестное поле '{unknown}'");
         }
 
@@ -80,6 +80,6 @@ namespace CSR.Core.Checks
         }
 
         private string GetPath(string key)
-            => m_Path.Length > 0 ? m_Path + "." + key : key;
+            => m_Path.Length > 0 ? $"{m_Path}.{key}" : key;
     }
 }

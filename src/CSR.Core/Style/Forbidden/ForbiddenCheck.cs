@@ -28,8 +28,7 @@ namespace CSR.Core.Style.Forbidden
 
         public static void Run(CheckContext context, IReadOnlyList<ForbiddenEntry> entries)
         {
-            var path = context.Tree.FilePath.Replace('\\', '/');
-            var active = entries.Where(entry => !entry.IsExcluded(path)).ToList();
+            var active = entries.Where(entry => !entry.IsExcluded(context.Tree.FilePath)).ToList();
             foreach (var kind in ForbiddenKinds.All)
             {
                 var kindEntries = active.Where(entry => entry.Kind == kind).ToList();

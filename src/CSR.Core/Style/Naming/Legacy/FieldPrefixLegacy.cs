@@ -7,7 +7,7 @@ namespace CSR.Core.Style.Naming.Legacy
     public static class FieldPrefixLegacy
     {
         private static readonly string[] AllAccess = ["private", "protected", "internal", "public"];
-        private static readonly string[] Field = ["field"];
+        private static readonly string[] FieldKinds = ["field"];
 
         public static readonly CheckAlias Check = new(
             "field-prefix",
@@ -43,10 +43,12 @@ namespace CSR.Core.Style.Naming.Legacy
             var constants = settings.GetString("constants");
             var constant = new Dictionary<string, object>
             {
-                ["symbols"] = LegacyRules.Symbols(new() { ["kinds"] = Field, ["modifiers"] = new[] { "const" } }),
+                ["symbols"] = LegacyRules.Symbols(new() { ["kinds"] = FieldKinds, ["modifiers"] = new[] { "const" } }),
             };
             if (constants == "any")
+            {
                 constant["skip"] = new[] { "case", "prefix" };
+            }
             else
             {
                 constant["case"] = constants;
@@ -56,17 +58,18 @@ namespace CSR.Core.Style.Naming.Legacy
             var rules = new List<NamingRule> { LegacyRules.Rule(constant) };
             var openAccess = AllAccess.Where(access => !prefixedAccess.Contains(access)).ToArray();
             if (openAccess.Length > 0)
-                rules.Add(Unprefixed(new() { ["kinds"] = Field, ["access"] = openAccess }, known, "поле"));
+                rules.Add(Unprefixed(new() { ["kinds"] = FieldKinds, ["access"] = openAccess }, known, "поле"));
 
             if (settings.GetString("staticReadonly") == "pascal")
                 rules.Add(
                     Unprefixed(
-                        new() { ["kinds"] = Field, ["modifiers"] = new[] { "static", "readonly" } },
+                        new() { ["kinds"] = FieldKinds, ["modifiers"] = new[] { "static", "readonly" } },
                         known,
                         "static readonly"));
 
-            rules.Add(Prefixed(settings, new() { ["kinds"] = Field, ["modifiers"] = new[] { "static" } }, "staticPrefix", known));
-            rules.Add(Prefixed(settings, new() { ["kinds"] = Field }, "instancePrefix", known));
+            rules.Add(
+                Prefixed(settings, new() { ["kinds"] = FieldKinds, ["modifiers"] = new[] { "static" } }, "staticPrefix", known));
+            rules.Add(Prefixed(settings, new() { ["kinds"] = FieldKinds }, "instancePrefix", known));
             if (settings.GetBool("properties"))
                 rules.Add(Unprefixed(new() { ["kinds"] = new[] { "property" } }, known, null));
 

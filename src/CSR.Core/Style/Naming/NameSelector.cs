@@ -34,6 +34,10 @@ namespace CSR.Core.Style.Naming
         private NameMask m_Attributes = NameMask.Get([]);
         private NameMask m_Bases = NameMask.Get([]);
 
+        // Виды правила; пусто - любой вид
+        public IReadOnlyList<string> Kinds
+            => m_Kinds;
+
         // kinds, access, modifiers - значения; types, attributes, bases - маски (* - любые символы)
         public static NameSelector Parse(Record? record)
         {
@@ -50,10 +54,6 @@ namespace CSR.Core.Style.Naming
             selector.m_Bases = NameMask.Get(record.GetStrings("bases"));
             return selector;
         }
-
-        // Виды правила; пусто - любой вид
-        public IReadOnlyList<string> Kinds
-            => m_Kinds;
 
         public bool IsMatch(NameSymbol symbol)
         {

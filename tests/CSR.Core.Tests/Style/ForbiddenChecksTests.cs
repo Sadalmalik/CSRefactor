@@ -1,3 +1,5 @@
+using CSR.Core.Checks;
+using CSR.Core.Style.Forbidden;
 using static CSR.Core.Tests.Style.StyleTestCode;
 
 namespace CSR.Core.Tests.Style
@@ -115,13 +117,17 @@ namespace CSR.Core.Tests.Style
             Assert.That(tools.Single().Message, Is.EqualTo("запрещенный член 'Debug.Log': логгер"));
         }
 
-        [TestCase("kind", "method", "kind: допустимо call, type")]
-        [TestCase("mask", null, "kind: нужно call или type")]
-        public void Forbidden_InvalidEntry_FormatError(string field, string? value, string message)
+        [TestCase("method", "Debug.*", "kind: допустимо call, type")]
+        [TestCase(null, "Debug.*", "kind: нужно call или type")]
+        [TestCase("call", null, "mask: нужна маска имени")]
+        public void Forbidden_InvalidEntry_FormatError(string? kind, string? mask, string message)
         {
             var fields = new Dictionary<string, object>();
-            if (value != null)
-                fields[field] = value;
+            if (kind != null)
+                fields["kind"] = kind;
+
+            if (mask != null)
+                fields["mask"] = mask;
 
             var exception = Assert.Throws<FormatException>(() => Entry(fields));
 
@@ -129,7 +135,7 @@ namespace CSR.Core.Tests.Style
         }
 
         private static object Entry(Dictionary<string, object> fields)
-            => CSR.Core.Style.Forbidden.ForbiddenEntry.Parse(new CSR.Core.Checks.Record(fields));
+            => ForbiddenEntry.Parse(new Record(fields));
 
 #endregion
 

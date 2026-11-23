@@ -10,21 +10,25 @@ namespace CSR.Core.Style.Naming.Requirements
         public static readonly NameRequirementKind Kind = new("masks", ["allowed", "forbidden"], [], Create);
 
         private readonly IReadOnlyList<string> m_Allowed;
-        private readonly IReadOnlyList<string> m_Forbidden;
+        private readonly NameMask m_AllowedMask;
+        private readonly IReadOnlyList<KeyValuePair<string, NameMask>> m_Forbidden;
 
         private MaskRequirement(IReadOnlyList<string> allowed, IReadOnlyList<string> forbidden)
         {
             m_Allowed = allowed;
-            m_Forbidden = forbidden;
+            m_AllowedMask = NameMask.Get(allowed);
+            m_Forbidden = forbidden.Select(mask => new KeyValuePair<string, NameMask>(mask, NameMask.Get([mask]))).ToList();
         }
 
         public string? Check(NameSymbol symbol)
         {
-            var mask = m_Forbidden.FirstOrDefault(candidate => NameMask.Get([candidate]).IsMatch(symbol.Name));
-            if (mask != null)
-                return $"{symbol.Label} '{symbol.Name}': запрещенная форма '{mask}'";
+            foreach (var forbidden in m_Forbidden)
+            {
+                if (forbidden.Value.IsMatch(symbol.Name))
+                    return $"{symbol.Label} '{symbol.Name}': запрещенная форма '{forbidden.Key}'";
+            }
 
-            if (m_Allowed.Count > 0 && !NameMask.Get(m_Allowed).IsMatch(symbol.Name))
+            if (!m_AllowedMask.IsEmpty && !m_AllowedMask.IsMatch(symbol.Name))
                 return $"{symbol.Label} '{symbol.Name}': допустимо {string.Join(", ", m_Allowed)}";
 
             return null;

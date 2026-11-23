@@ -41,9 +41,8 @@ namespace CSR.Core.Style.Forbidden
         public bool IsMatch(string name)
             => m_Mask.IsMatch(name);
 
-        // Путь от текущей папки проверяется и с ведущим /: */Editor/* ловит и папку верхнего уровня
         public bool IsExcluded(string path)
-            => m_ExcludePaths.IsMatch(path) || m_ExcludePaths.IsMatch("/" + path);
+            => FileScope.IsExcluded(m_ExcludePaths, path);
 
         public static ForbiddenEntry Parse(Record record)
         {

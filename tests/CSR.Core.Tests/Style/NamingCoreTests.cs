@@ -199,14 +199,14 @@ namespace CSR.Core.Tests.Style
 
         // Одно тестовое требование под ключом key
         private static Dictionary<string, INameRequirement?> Requirements(string key, string message)
-            => new() { [key] = new Fail(message) };
+            => new() { [key] = new FailingRequirement(message) };
 
         // Тестовое требование: любое имя - нарушение с заданным текстом
-        private class Fail : INameRequirement
+        private class FailingRequirement : INameRequirement
         {
             private readonly string m_Message;
 
-            public Fail(string message)
+            public FailingRequirement(string message)
             {
                 m_Message = message;
             }

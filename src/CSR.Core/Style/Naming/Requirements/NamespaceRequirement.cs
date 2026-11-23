@@ -17,7 +17,7 @@ namespace CSR.Core.Style.Naming.Requirements
         public string? Check(NameSymbol symbol)
         {
             var name = symbol.Name;
-            if (m_Roots.Any(root => name == root || name.StartsWith(root + ".", StringComparison.Ordinal)))
+            if (m_Roots.Any(root => name == root || name.StartsWith($"{root}.", StringComparison.Ordinal)))
                 return null;
 
             return $"{symbol.Label} '{name}' вне корня: {string.Join(", ", m_Roots)}";

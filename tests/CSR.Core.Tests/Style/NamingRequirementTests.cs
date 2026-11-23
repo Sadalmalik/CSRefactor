@@ -193,7 +193,7 @@ namespace CSR.Core.Tests.Style
             }));
         }
 
-        // Каскад полей: константа занимает вид prefix значением "*", дальше - открытые поля без префикса, затем m_
+        // Каскад полей: константа пропускает вид prefix (skip), дальше - открытые поля без префикса, затем m_
         [Test]
         public void FieldPrefixAndCase_Cascade()
         {

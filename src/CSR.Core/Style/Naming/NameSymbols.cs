@@ -45,7 +45,9 @@ namespace CSR.Core.Style.Naming
                 foreach (var ancestor in node.Ancestors())
                 {
                     if (ancestor is BaseTypeDeclarationSyntax)
+                    {
                         isNested = true;
+                    }
                     else if (ancestor is BaseNamespaceDeclarationSyntax found)
                     {
                         declaration = found;
@@ -135,8 +137,16 @@ namespace CSR.Core.Style.Naming
             if (declaration.Members.Count > 0 && declaration.Members.All(member => member is BaseNamespaceDeclarationSyntax))
                 return [];
 
-            var name = GetNamespace(declaration);
-            return [new NameSymbol { Kind = "namespace", Name = name, Span = declaration.Name.Span, Label = "пространство" }];
+            return
+            [
+                new NameSymbol
+                {
+                    Kind = "namespace",
+                    Name = GetNamespace(declaration),
+                    Span = declaration.Name.Span,
+                    Label = "пространство",
+                },
+            ];
         }
 
         private static NameSymbol FromType(
@@ -173,8 +183,8 @@ namespace CSR.Core.Style.Naming
             var modifiers = field.Modifiers;
             bool isConst = modifiers.Any(SyntaxKind.ConstKeyword);
             var access = GetAccess(field, modifiers);
-            var kind = modifiers.Any(SyntaxKind.StaticKeyword) ? " статическое поле" : " поле";
-            var label = isConst ? "константа" : GetAccessWord(access) + kind;
+            var fieldWord = modifiers.Any(SyntaxKind.StaticKeyword) ? "статическое поле" : "поле";
+            var label = isConst ? "константа" : $"{GetAccessWord(access)} {fieldWord}";
             foreach (var variable in field.Declaration.Variables)
             {
                 yield return new NameSymbol
@@ -302,8 +312,8 @@ namespace CSR.Core.Style.Naming
         {
             return parameter.Parent?.Parent switch
             {
-                MethodDeclarationSyntax method => IsOverride(method.Modifiers) || method.ExplicitInterfaceSpecifier != null,
-                IndexerDeclarationSyntax indexer => IsOverride(indexer.Modifiers) || indexer.ExplicitInterfaceSpecifier != null,
+                MethodDeclarationSyntax method => IsInherited(method.Modifiers, method.ExplicitInterfaceSpecifier),
+                IndexerDeclarationSyntax indexer => IsInherited(indexer.Modifiers, indexer.ExplicitInterfaceSpecifier),
                 _ => false,
             };
         }
