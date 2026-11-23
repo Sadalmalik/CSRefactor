@@ -46,6 +46,15 @@ namespace CSR.Reports.Config
                     case "minCoreMembers":
                         options.MinCoreMembers = JsonConfig.ReadInt(value, property.Name);
                         break;
+                    case "systemThreshold":
+                        options.SystemThreshold = ReadThreshold(value, property.Name);
+                        break;
+                    case "systemDepth":
+                        options.SystemDepth = JsonConfig.ReadInt(value, property.Name);
+                        break;
+                    case "minSystemTypes":
+                        options.MinSystemTypes = JsonConfig.ReadInt(value, property.Name);
+                        break;
                     case "weights":
                         options.Weights = ReadWeights(value, property.Name);
                         break;

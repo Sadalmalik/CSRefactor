@@ -10,6 +10,7 @@ namespace CSR.Core.Similar
             [UnitKind.ParameterSet] = "parameters",
             [UnitKind.FieldSet] = "fields",
             [UnitKind.Type] = "type",
+            [UnitKind.System] = "system",
         };
 
         public static IEnumerable<string> AllKeys

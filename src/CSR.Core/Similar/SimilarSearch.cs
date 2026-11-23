@@ -19,7 +19,7 @@ namespace CSR.Core.Similar
         public IReadOnlyDictionary<SimilarUnit, IReadOnlyList<string>> Differences { get; init; } =
             new Dictionary<SimilarUnit, IReadOnlyList<string>>();
 
-        // L3: тела членов места - сколько той же формы, что у пары, и какие со своей логикой
+        // L3: тела членов места - сколько той же формы, что у пары, и какие со своей логикой; L4: роли и типы в них
         public IReadOnlyDictionary<SimilarUnit, IReadOnlyList<string>> Bodies { get; init; } =
             new Dictionary<SimilarUnit, IReadOnlyList<string>>();
     }
@@ -47,7 +47,8 @@ namespace CSR.Core.Similar
                 .Where(pair => pair.Left.Kind == UnitKind.Fragment && !IsInPairedMembers(pair, pairedMembers))
                 .ToList();
 
-            var sets = found.Where(pair => pair.Left.Kind is UnitKind.ParameterSet or UnitKind.FieldSet);
+            var sets = found.Where(pair => pair.Left.Kind is UnitKind.ParameterSet or UnitKind.FieldSet
+                or UnitKind.System);
             var types = AddCores(units, found.Where(pair => pair.Left.Kind == UnitKind.Type), options, isProbe);
             var pairs = members.Concat(MergeWindows(fragments, options.FragmentStatements))
                 .Concat(sets)

@@ -14,6 +14,7 @@ namespace CSR.Core.Similar
             {
                 UnitKind.ParameterSet or UnitKind.FieldSet => new SetComparer(options.SetThreshold, options.MinShared),
                 UnitKind.Type => new TypeComparer(options.TypeThreshold, options.Weights),
+                UnitKind.System => new SystemComparer(options.SystemThreshold),
                 _ => new ShapeComparer(options.Threshold),
             };
         }
@@ -68,6 +69,41 @@ namespace CSR.Core.Similar
 
         public override double? Score(SimilarUnit left, SimilarUnit right)
         {
+            double score = GetJaccard(left.Fingerprints, right.Fingerprints);
+            return score >= m_Threshold ? score : null;
+        }
+    }
+
+    // L4: система - Жаккар меток окрестностей не ниже порога. Одна система, а не пара: корень одной внутри окрестности
+    // другой или общие типы - больше половины меньшей окрестности (варианты одной точки расширения: у них общие база,
+    // хранилище и потребители)
+    public class SystemComparer : UnitComparer
+    {
+        // Доля общих типов меньшей окрестности, с которой две окрестности - одна система
+        private const double SameSystemShare = 0.5;
+
+        private readonly double m_Threshold;
+
+        public SystemComparer(double threshold)
+        {
+            m_Threshold = threshold;
+        }
+
+        public override double CandidateThreshold
+            => m_Threshold;
+
+        public override double? Score(SimilarUnit left, SimilarUnit right)
+        {
+            if (left is not SystemUnit leftSystem || right is not SystemUnit rightSystem)
+                return null;
+
+            if (leftSystem.NodeKeys.Contains(rightSystem.RootKey) || rightSystem.NodeKeys.Contains(leftSystem.RootKey))
+                return null;
+
+            int shared = leftSystem.NodeKeys.Count(rightSystem.NodeKeys.Contains);
+            if (shared > SameSystemShare * Math.Min(leftSystem.NodeKeys.Count, rightSystem.NodeKeys.Count))
+                return null;
+
             double score = GetJaccard(left.Fingerprints, right.Fingerprints);
             return score >= m_Threshold ? score : null;
         }

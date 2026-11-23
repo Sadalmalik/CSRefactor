@@ -45,6 +45,9 @@ namespace CSR.Core.Similar
             IReadOnlyList<SimilarPair> pairs)
         {
             var bodies = new Dictionary<SimilarUnit, IReadOnlyList<string>>();
+            foreach (var system in units.OfType<SystemUnit>())
+                bodies[system] = system.RoleLines;
+
             var types = units.OfType<TypeUnit>().Where(type => type.Members.Count > 0).ToList();
             if (types.Count == 0)
                 return bodies;

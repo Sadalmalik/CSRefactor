@@ -3,7 +3,7 @@ namespace CSR.Core.Similar
     // Параметры поиска похожего кода (similar.jsonc и ключи командной строки)
     public class SimilarOptions
     {
-        // Виды единиц, которые ищутся
+        // Виды единиц, которые ищутся; системы (L4) - только по запросу: нужна компиляция всех файлов цели
         public HashSet<UnitKind> Kinds { get; set; } =
         [
             UnitKind.Member,
@@ -58,6 +58,20 @@ namespace CSR.Core.Similar
 
         // Веса частей оценки типа; часть, пустая у обоих типов, не учитывается
         public TypeWeights Weights { get; set; } = new();
+
+#endregion
+
+
+#region L4
+
+        // Порог коэффициента Жаккара меток окрестностей
+        public double SystemThreshold { get; set; } = 0.5;
+
+        // Глубина окрестности корня по ребрам графа
+        public int SystemDepth { get; set; } = 3;
+
+        // Наименьшее число типов в окрестности
+        public int MinSystemTypes { get; set; } = 5;
 
 #endregion
 

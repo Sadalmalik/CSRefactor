@@ -48,9 +48,11 @@ namespace CSR.Reports.Similar
                 writer.WriteNumber("parameterSets", report.GetCount(UnitKind.ParameterSet));
                 writer.WriteNumber("fieldSets", report.GetCount(UnitKind.FieldSet));
                 writer.WriteNumber("types", report.GetCount(UnitKind.Type));
+                writer.WriteNumber("systems", report.GetCount(UnitKind.System));
                 writer.WriteNumber("threshold", report.Options.Threshold);
                 writer.WriteNumber("setThreshold", report.Options.SetThreshold);
                 writer.WriteNumber("typeThreshold", report.Options.TypeThreshold);
+                writer.WriteNumber("systemThreshold", report.Options.SystemThreshold);
                 writer.WriteBoolean("changed", report.IsChanged);
 
                 writer.WriteStartArray("clusters");
@@ -152,10 +154,12 @@ namespace CSR.Reports.Similar
             text.AppendLine($"Файлов {report.FileCount}, членов {report.GetCount(UnitKind.Member)}, "
                 + $"фрагментов {report.GetCount(UnitKind.Fragment)}, "
                 + $"наборов параметров {report.GetCount(UnitKind.ParameterSet)}, "
-                + $"наборов полей {report.GetCount(UnitKind.FieldSet)}, типов {report.GetCount(UnitKind.Type)}; "
+                + $"наборов полей {report.GetCount(UnitKind.FieldSet)}, типов {report.GetCount(UnitKind.Type)}, "
+                + $"систем {report.GetCount(UnitKind.System)}; "
                 + $"пороги {SimilarReport.FormatScore(options.Threshold)} (L1), "
                 + $"{SimilarReport.FormatScore(options.SetThreshold)} (L2), "
-                + $"{SimilarReport.FormatScore(options.TypeThreshold)} (L3); "
+                + $"{SimilarReport.FormatScore(options.TypeThreshold)} (L3), "
+                + $"{SimilarReport.FormatScore(options.SystemThreshold)} (L4); "
                 + $"пар {result.Pairs.Count}, кластеров {result.Clusters.Count}.");
             if (report.IsChanged)
                 WriteChanged(text, result.Pairs, top);
@@ -226,7 +230,8 @@ namespace CSR.Reports.Similar
                 UnitKind.Fragment => "фрагменты",
                 UnitKind.ParameterSet => "наборы параметров",
                 UnitKind.FieldSet => "наборы полей",
-                _ => "типы",
+                UnitKind.Type => "типы",
+                _ => "системы",
             };
         }
 
@@ -244,6 +249,7 @@ namespace CSR.Reports.Similar
             {
                 UnitKind.ParameterSet or UnitKind.FieldSet => $"элементов {unit.NodeCount}",
                 UnitKind.Type => $"полей и членов {unit.NodeCount}",
+                UnitKind.System => $"типов {unit.NodeCount}",
                 _ => $"узлов {unit.NodeCount}",
             };
             return $"`{unit.File}:{unit.StartLine}-{unit.EndLine}`{member}, {size}";

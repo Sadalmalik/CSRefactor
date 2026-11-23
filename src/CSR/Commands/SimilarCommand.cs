@@ -4,9 +4,11 @@ using System.Globalization;
 using CSR.Core.Arch;
 using CSR.Core.Checks;
 using CSR.Core.Config;
+using CSR.Core.Graph;
 using CSR.Core.Similar;
 using CSR.Reports.Config;
 using CSR.Reports.Similar;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
 namespace CSR.Commands
@@ -25,11 +27,13 @@ namespace CSR.Commands
               --changed                      только пары с измененным кодом (git diff от HEAD и новые файлы)
                                              против всего кода цели
               --diff <ревизия | файл.diff>   измененные строки для --changed: git diff -U0 от ревизии или готовый дифф
-              --kinds <виды>                 через запятую: member, fragment, parameters, fields, type (по умолчанию все)
+              --kinds <виды>                 через запятую: member, fragment, parameters, fields, type, system
+                                             (по умолчанию все, кроме system: системам нужна компиляция файлов)
               --threshold <0..1>             порог оценки членов и фрагментов, L1 (по умолчанию 0.82)
               --set-threshold <0..1>         порог наборов параметров и полей, L2 (по умолчанию 0.5)
               --min-shared <N>               наименьшее число общих элементов пары наборов (по умолчанию 3)
               --type-threshold <0..1>        порог типов, L3 (по умолчанию 0.75)
+              --system-threshold <0..1>      порог систем, L4 (по умолчанию 0.5)
               --min-lines <N>                наименьшее число строк единицы (по умолчанию 4)
               --min-nodes <N>                наименьшее число узлов формы (по умолчанию 20)
               --min-shapes <N>               наименьшее число разных поддеревьев формы (по умолчанию 20)
@@ -51,6 +55,7 @@ namespace CSR.Commands
             "--set-threshold",
             "--min-shared",
             "--type-threshold",
+            "--system-threshold",
             "--min-lines",
             "--min-nodes",
             "--min-shapes",
@@ -103,17 +108,28 @@ namespace CSR.Commands
             return 0;
         }
 
+        // Единицы L1-L3 по деревьям файлов; системы L4 - по графу типов компиляции этих деревьев
         internal static List<SimilarUnit> Collect(List<string> files, SimilarOptions options, ProjectOptions project)
         {
+            var trees = new ConcurrentBag<SyntaxTree>();
             var results = new ConcurrentBag<List<SimilarUnit>>();
             Parallel.ForEach(files, file =>
             {
                 var source = File.ReadAllText(file);
                 var tree = CSharpSyntaxTree.ParseText(source, project.ParseOptions, SourceFiles.GetDisplayPath(file));
+                trees.Add(tree);
                 results.Add(SimilarUnits.Collect(tree, options));
             });
 
-            return results.SelectMany(units => units).ToList();
+            var units = results.SelectMany(list => list).ToList();
+            if (!options.Kinds.Contains(UnitKind.System))
+                return units;
+
+            var sorted = trees.OrderBy(tree => tree.FilePath, StringComparer.Ordinal).ToList();
+            var compilation = SourceCompilation.Create(sorted);
+            var graph = TypeGraphBuilder.Build([compilation], sorted, path => path, CancellationToken.None);
+            units.AddRange(SystemUnits.Collect(graph, options));
+            return units;
         }
 
         // Путь от текущей папки проверяется и с ведущим /: маска */Tests/* ловит и папку верхнего уровня
@@ -158,6 +174,7 @@ namespace CSR.Commands
             options.Threshold = ReadThreshold(commandLine, "--threshold") ?? options.Threshold;
             options.SetThreshold = ReadThreshold(commandLine, "--set-threshold") ?? options.SetThreshold;
             options.TypeThreshold = ReadThreshold(commandLine, "--type-threshold") ?? options.TypeThreshold;
+            options.SystemThreshold = ReadThreshold(commandLine, "--system-threshold") ?? options.SystemThreshold;
             options.MinShared = ReadInt(commandLine, "--min-shared") ?? options.MinShared;
 
             options.MinLines = ReadInt(commandLine, "--min-lines") ?? options.MinLines;
