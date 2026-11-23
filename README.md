@@ -138,7 +138,7 @@ dotnet test CSR.slnx
 | `src/CSR.Workspace` | загрузка решения (`MSBuildWorkspace`), символы, ссылки, переименование, сервер `csr serve`; отдельно от ядра |
 | `tests/` | тесты (NUnit): ядро, конфиги и отчёты, CLI, `refs` / `rename` / `serve` на маленьком решении |
 | `examples/` | примеры конфигов |
-| `release/config/` | нейтральные конфиги архива релиза |
+| `packaging/config/` | нейтральные конфиги архива релиза |
 | `scripts/` | установка (`install.ps1` из исходников, `install-release.ps1` из релиза), публикация и архив релиза |
 | `.github/workflows/` | релиз на тег `v*` |
 | `spikes/` | прототипы замеров, не часть инструмента |

@@ -4,7 +4,7 @@
 
 .DESCRIPTION
     Публикует csr (scripts/publish.ps1) в папку <Output>/csr-<тег>-win-x64, добавляет version.txt и папку config
-    из release/config (style.jsonc и arch.jsonc без проверок: проверки команды задает проектный .csr), проверяет
+    из packaging/config (style.jsonc и arch.jsonc без проверок: проверки команды задает проектный .csr), проверяет
     запуск csr.exe и упаковывает содержимое папки в <Output>/csr-<тег>-win-x64.zip. Тот же скрипт запускает
     workflow релиза на тег v*.
 
@@ -53,7 +53,7 @@ if (Test-Path $package)
 #region Конфиги и версия
 
 # Нейтральные конфиги: без них style, fix и arch - код 2; project, metrics, refactor - встроенные значения
-Copy-Item (Join-Path $root 'release\config') (Join-Path $package 'config') -Recurse
+Copy-Item (Join-Path $root 'packaging\config') (Join-Path $package 'config') -Recurse
 
 $commit = git -C $root rev-parse --short HEAD
 $version = "csr $Tag ($commit), $(Get-Date -Format 'yyyy-MM-dd')"
