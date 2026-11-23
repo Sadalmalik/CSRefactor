@@ -3,7 +3,7 @@
 // --min-shared, --type-threshold) перекрывают значения отсюда.
 // Описание - DOCS.md, раздел csr similar
 {
-  // Виды единиц: member, fragment (L1), parameters, fields (L2), type (L3)
+  // Виды единиц: member, fragment (L1), parameters, fields (L2), type (L3), system (L4; нужна компиляция файлов)
   "kinds": ["member", "fragment", "parameters", "fields", "type"],
 
   // L1: порог коэффициента Жаккара по отпечаткам формы (0..1)
@@ -27,6 +27,10 @@
   "minTypeMembers": 4,
   "minCoreMembers": 4,
   "weights": { "bases": 1, "overrides": 1, "fields": 1, "signatures": 1, "bodies": 2 },
+
+  // L4: порог систем, наименьшее число типов системы
+  "systemThreshold": 0.4,
+  "minSystemTypes": 4,
 
   // Маски путей файлов (* - любые символы, разделитель /); путь от текущей папки проверяется и с ведущим /
   "paths": [],
