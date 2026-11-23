@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using CSR.Core.Graph;
 using CSR.Core.Similar;
 
 namespace CSR.Reports.Similar
@@ -19,6 +20,13 @@ namespace CSR.Reports.Similar
         public required bool IsChanged { get; init; }
 
         public required SimilarResult Result { get; init; }
+
+        // Инвентарь систем вариантов (L4); null - системы не искались
+        public IReadOnlyList<ExtensionHost>? Inventory { get; init; }
+
+        // Хостов у каждой точки расширения инвентаря
+        public int GetHostCount(ExtensionHost entry)
+            => Inventory?.Count(other => other.ExtensionPoint == entry.ExtensionPoint) ?? 0;
 
         public int GetCount(UnitKind kind)
             => UnitCounts.TryGetValue(kind, out int count) ? count : 0;
@@ -64,6 +72,9 @@ namespace CSR.Reports.Similar
                 foreach (var pair in report.Result.Pairs)
                     WritePair(writer, pair);
                 writer.WriteEndArray();
+
+                if (report.Inventory != null)
+                    WriteInventory(writer, report.Inventory);
 
                 writer.WriteEndObject();
             }
@@ -128,6 +139,40 @@ namespace CSR.Reports.Similar
             writer.WriteEndObject();
         }
 
+        // Инвентарь: хост, база вариантов, поле или коллекция, варианты, результат, хостов у базы
+        private static void WriteInventory(Utf8JsonWriter writer, IReadOnlyList<ExtensionHost> inventory)
+        {
+            var hostCounts = inventory.GroupBy(entry => entry.ExtensionPoint).ToDictionary(
+                group => group.Key,
+                group => group.Count());
+            writer.WriteStartArray("systems");
+            foreach (var entry in inventory)
+            {
+                writer.WriteStartObject();
+                writer.WritePropertyName("host");
+                WriteNode(writer, entry.Host);
+                writer.WritePropertyName("extensionPoint");
+                WriteNode(writer, entry.ExtensionPoint);
+                writer.WriteString("holder", entry.IsCollection ? "collection" : "field");
+                writer.WriteNumber("variantCount", entry.Variants.Count);
+                WriteStrings(writer, "variants", entry.Variants.Select(node => node.Name).ToList());
+                WriteStrings(writer, "results", entry.Results.Select(node => node.Name).ToList());
+                writer.WriteNumber("hostsOfExtensionPoint", hostCounts[entry.ExtensionPoint]);
+                writer.WriteEndObject();
+            }
+
+            writer.WriteEndArray();
+        }
+
+        private static void WriteNode(Utf8JsonWriter writer, TypeNode node)
+        {
+            writer.WriteStartObject();
+            writer.WriteString("name", node.Name);
+            writer.WriteString("file", node.File);
+            writer.WriteNumber("startLine", node.StartLine);
+            writer.WriteEndObject();
+        }
+
         private static void WriteStrings(Utf8JsonWriter writer, string name, IReadOnlyList<string> values)
         {
             writer.WriteStartArray(name);
@@ -166,6 +211,9 @@ namespace CSR.Reports.Similar
             else
                 WriteClusters(text, result.Clusters, top);
 
+            if (report.Inventory != null)
+                WriteInventory(text, report.Inventory, top);
+
             return text.ToString();
         }
 
@@ -198,6 +246,33 @@ namespace CSR.Reports.Similar
 
             if (shown.Count < clusters.Count)
                 text.AppendLine().AppendLine($"Показано кластеров {shown.Count} из {clusters.Count} (--top).");
+        }
+
+        // Инвентарь систем вариантов по базам: сначала базы с большим числом вариантов
+        private static void WriteInventory(StringBuilder text, IReadOnlyList<ExtensionHost> inventory, int top)
+        {
+            var points = inventory.GroupBy(entry => entry.ExtensionPoint)
+                .OrderByDescending(group => group.Key.In.Count)
+                .ThenBy(group => group.Key.Name, StringComparer.Ordinal)
+                .ToList();
+            text.AppendLine();
+            text.AppendLine($"## Системы вариантов: баз {points.Count}, хостов {inventory.Count}");
+            var shown = top > 0 ? points.Take(top).ToList() : points;
+            foreach (var point in shown)
+            {
+                var first = point.First();
+                var node = point.Key;
+                text.AppendLine();
+                text.AppendLine($"- база `{node.Name}` (`{node.File}:{node.StartLine}`), вариантов {first.Variants.Count}, "
+                    + $"хостов {point.Count()}");
+                text.AppendLine("  - хосты: " + JoinShort(point.Select(entry => entry.Host.Name).Distinct().ToList()));
+                text.AppendLine("  - варианты: " + JoinShort(first.Variants.Select(variant => variant.Name).ToList()));
+                if (first.Results.Count > 0)
+                    text.AppendLine("  - результат: " + JoinShort(first.Results.Select(result => result.Name).ToList()));
+            }
+
+            if (shown.Count < points.Count)
+                text.AppendLine().AppendLine($"Показано баз {shown.Count} из {points.Count} (--top).");
         }
 
         private static void WriteChanged(StringBuilder text, IReadOnlyList<SimilarPair> pairs, int top)

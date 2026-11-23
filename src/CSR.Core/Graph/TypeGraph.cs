@@ -69,6 +69,13 @@ namespace CSR.Core.Graph
 
         public required int FieldCount { get; init; }
 
+        // Формы абстрактных, виртуальных и интерфейсных членов: "метод структура(класс, Vector3, float)". Типы
+        // библиотек - по имени, типы исходного кода - по виду (как вызовы библиотек и свои имена в форме L1)
+        public required IReadOnlyList<string> ExtensionSignatures { get; init; }
+
+        // Типы полей и автосвойств экземпляра в том же виде: "Vector3", "float", "структура"
+        public required IReadOnlyList<string> FieldTypes { get; init; }
+
         // Вложенный тип: владелец (будущая метрика глубины вложенности)
         public TypeNode? Container { get; internal set; }
 

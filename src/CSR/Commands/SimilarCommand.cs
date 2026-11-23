@@ -33,7 +33,7 @@ namespace CSR.Commands
               --set-threshold <0..1>         порог наборов параметров и полей, L2 (по умолчанию 0.5)
               --min-shared <N>               наименьшее число общих элементов пары наборов (по умолчанию 3)
               --type-threshold <0..1>        порог типов, L3 (по умолчанию 0.75)
-              --system-threshold <0..1>      порог систем, L4 (по умолчанию 0.5)
+              --system-threshold <0..1>      порог систем, L4 (по умолчанию 0.4)
               --min-lines <N>                наименьшее число строк единицы (по умолчанию 4)
               --min-nodes <N>                наименьшее число узлов формы (по умолчанию 20)
               --min-shapes <N>               наименьшее число разных поддеревьев формы (по умолчанию 20)
@@ -89,7 +89,8 @@ namespace CSR.Commands
             if (isChanged)
                 isProbe = GetChangedFilter(GitDiff.Collect(diff ?? "HEAD", commandLine.Positional[0]));
 
-            var units = Collect(files, options, project);
+            var collected = Collect(files, options, project);
+            var units = collected.Units;
             var result = SimilarSearch.Run(units, options, isProbe);
             var report = new SimilarReport
             {
@@ -98,6 +99,7 @@ namespace CSR.Commands
                 Options = options,
                 IsChanged = isChanged,
                 Result = result,
+                Inventory = collected.Graph == null ? null : ExtensionHosts.Find(collected.Graph, SystemUnits.MinVariants),
             };
             var text = format == "md" ? SimilarMarkdownWriter.Write(report, top) : SimilarJsonWriter.Write(report);
             Output.Write(text, commandLine.GetOption("--out"));
@@ -109,7 +111,7 @@ namespace CSR.Commands
         }
 
         // Единицы L1-L3 по деревьям файлов; системы L4 - по графу типов компиляции этих деревьев
-        internal static List<SimilarUnit> Collect(List<string> files, SimilarOptions options, ProjectOptions project)
+        internal static CollectedUnits Collect(List<string> files, SimilarOptions options, ProjectOptions project)
         {
             var trees = new ConcurrentBag<SyntaxTree>();
             var results = new ConcurrentBag<List<SimilarUnit>>();
@@ -123,13 +125,13 @@ namespace CSR.Commands
 
             var units = results.SelectMany(list => list).ToList();
             if (!options.Kinds.Contains(UnitKind.System))
-                return units;
+                return new CollectedUnits(units, null);
 
             var sorted = trees.OrderBy(tree => tree.FilePath, StringComparer.Ordinal).ToList();
             var compilation = SourceCompilation.Create(sorted);
             var graph = TypeGraphBuilder.Build([compilation], sorted, path => path, CancellationToken.None);
             units.AddRange(SystemUnits.Collect(graph, options));
-            return units;
+            return new CollectedUnits(units, graph);
         }
 
         // Путь от текущей папки проверяется и с ведущим /: маска */Tests/* ловит и папку верхнего уровня
@@ -228,5 +230,19 @@ namespace CSR.Commands
 
             return value;
         }
+    }
+
+    // Единицы и граф типов (null - системы не искались)
+    internal class CollectedUnits
+    {
+        public CollectedUnits(List<SimilarUnit> units, TypeGraph? graph)
+        {
+            Units = units;
+            Graph = graph;
+        }
+
+        public List<SimilarUnit> Units { get; }
+
+        public TypeGraph? Graph { get; }
     }
 }

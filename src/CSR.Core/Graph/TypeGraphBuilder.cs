@@ -106,6 +106,8 @@ namespace CSR.Core.Graph
                     IsSealed = symbol.IsSealed && symbol.TypeKind == TypeKind.Class,
                     IsGeneric = symbol.IsGenericType,
                     FieldCount = symbol.GetMembers().Count(IsDataMember),
+                    ExtensionSignatures = symbol.GetMembers().Where(IsExtensionMember).Select(DescribeMember).ToList(),
+                    FieldTypes = symbol.GetMembers().Where(IsDataMember).Select(GetDataType).Select(Describe).ToList(),
                 };
             }
         }
@@ -149,7 +151,12 @@ namespace CSR.Core.Graph
         }
 
         // Тип поля: сам тип - Field, элементы коллекции - Collection, другие аргументы типа - Field
-        private static void AddTypeEdges(TypeGraph graph, EdgeSet edges, TypeNode from, ITypeSymbol type, EdgeKind kind)
+        private static void AddTypeEdges(
+            TypeGraph graph,
+            EdgeSet edges,
+            TypeNode from,
+            ITypeSymbol type,
+            EdgeKind kind)
         {
             if (graph.Find(type) is { } direct)
             {
@@ -173,7 +180,12 @@ namespace CSR.Core.Graph
         }
 
         // Все типы графа в записи типа: сам тип, элементы массивов, аргументы типа
-        private static void AddMentioned(TypeGraph graph, EdgeSet edges, TypeNode from, ITypeSymbol type, EdgeKind kind)
+        private static void AddMentioned(
+            TypeGraph graph,
+            EdgeSet edges,
+            TypeNode from,
+            ITypeSymbol type,
+            EdgeKind kind)
         {
             switch (type)
             {
@@ -239,6 +251,60 @@ namespace CSR.Core.Graph
             }
 
             return result;
+        }
+
+        // Член, который варианты реализуют или переопределяют
+        private static bool IsExtensionMember(ISymbol member)
+        {
+            if (member.IsImplicitlyDeclared || member is IMethodSymbol { MethodKind: not MethodKind.Ordinary })
+                return false;
+
+            return member.IsAbstract || member.IsVirtual || member.ContainingType.TypeKind == TypeKind.Interface;
+        }
+
+        private static string DescribeMember(ISymbol member)
+        {
+            return member switch
+            {
+                IMethodSymbol method => $"метод {Describe(method.ReturnType)}"
+                    + $"({string.Join(", ", method.Parameters.Select(parameter => Describe(parameter.Type)))})",
+                IPropertySymbol property => "свойство " + Describe(property.Type),
+                IEventSymbol eventSymbol => "событие " + Describe(eventSymbol.Type),
+                _ => member.Kind.ToString(),
+            };
+        }
+
+        private static ITypeSymbol GetDataType(ISymbol member)
+            => member is IFieldSymbol field ? field.Type : ((IPropertySymbol)member).Type;
+
+        // Тип для метки: библиотека - имя (Vector3, float, List<класс>), исходный код - вид (класс, структура)
+        public static string Describe(ITypeSymbol type)
+        {
+            switch (type)
+            {
+                case IArrayTypeSymbol array:
+                    return Describe(array.ElementType) + "[]";
+                case ITypeParameterSymbol:
+                    return "T";
+                case INamedTypeSymbol named when named.Locations.Any(location => location.IsInSource):
+                    return GetKindWord(named);
+                case INamedTypeSymbol { IsGenericType: true } generic:
+                    return generic.Name + "<" + string.Join(", ", generic.TypeArguments.Select(Describe)) + ">";
+                default:
+                    return type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+            }
+        }
+
+        private static string GetKindWord(INamedTypeSymbol symbol)
+        {
+            return symbol.TypeKind switch
+            {
+                TypeKind.Struct => "структура",
+                TypeKind.Interface => "интерфейс",
+                TypeKind.Enum => "перечисление",
+                TypeKind.Delegate => "делегат",
+                _ => "класс",
+            };
         }
 
         private static bool IsVirtualCall(IMethodSymbol method)

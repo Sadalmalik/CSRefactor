@@ -49,9 +49,6 @@ namespace CSR.Reports.Config
                     case "systemThreshold":
                         options.SystemThreshold = ReadThreshold(value, property.Name);
                         break;
-                    case "systemDepth":
-                        options.SystemDepth = JsonConfig.ReadInt(value, property.Name);
-                        break;
                     case "minSystemTypes":
                         options.MinSystemTypes = JsonConfig.ReadInt(value, property.Name);
                         break;

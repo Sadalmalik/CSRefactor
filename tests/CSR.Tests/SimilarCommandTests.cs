@@ -98,6 +98,29 @@ namespace CSR.Tests
             => Assert.That(Cli.Run("help", "similar").Output, Does.StartWith("csr similar"));
 
         [Test]
+        public void Systems_InventoryInJson()
+        {
+            using var folder = new TempFolder();
+            folder.Write("Rules.cs", """
+                using System.Collections.Generic;
+                public abstract class Rule { public abstract int Apply(float value); }
+                public class FirstRule : Rule { public override int Apply(float value) => 1; }
+                public class SecondRule : Rule { public override int Apply(float value) => 2; }
+                public class RuleSet { private List<Rule> m_Rules; }
+                """);
+            var result = Cli.Run("similar", folder.Path, "--kinds", "system");
+
+            Assert.That(result.ExitCode, Is.EqualTo(0), result.Error);
+            using var document = JsonDocument.Parse(result.Output);
+            var system = document.RootElement.GetProperty("systems")[0];
+            Assert.That(system.GetProperty("host").GetProperty("name").GetString(), Is.EqualTo("RuleSet"));
+            Assert.That(system.GetProperty("extensionPoint").GetProperty("name").GetString(), Is.EqualTo("Rule"));
+            Assert.That(system.GetProperty("holder").GetString(), Is.EqualTo("collection"));
+            Assert.That(system.GetProperty("variantCount").GetInt32(), Is.EqualTo(2));
+            Assert.That(system.GetProperty("hostsOfExtensionPoint").GetInt32(), Is.EqualTo(1));
+        }
+
+        [Test]
         public void Kinds_UnknownKind_ExitTwo()
         {
             using var folder = new TempFolder();

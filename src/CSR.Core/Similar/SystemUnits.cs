@@ -2,175 +2,174 @@ using CSR.Core.Graph;
 
 namespace CSR.Core.Similar
 {
-    // Система (L4): тип-корень и его окрестность в графе типов; роли узлов - путь видов ребер от корня
+    // Система (L4): хост точек расширения с их вариантами и результатами
     public class SystemUnit : SimilarUnit
     {
         public required string RootKey { get; init; }
 
+        // Типы системы: хост, базы вариантов, варианты, результаты
         public required HashSet<string> NodeKeys { get; init; }
 
-        // Роль и типы в ней: "коллекция -> вариант: MoveForward, MoveBack"
+        // Роль и типы в ней: "варианты (4): MotorArrow, MotorOrbit"
         public required IReadOnlyList<string> RoleLines { get; init; }
     }
 
-    // Единицы L4 по графу типов. Корень - хост: поле или коллекция точки расширения (абстрактный класс, интерфейс), у
-    // которой не меньше MinVariants вариантов (система вариантов). Окрестность корня:
-    // - от корня - поле, коллекция, возврат, new, виртуальный вызов, база, интерфейс;
-    // - дальше, до глубины systemDepth, - только устройство системы: коллекция, возврат, new, виртуальный вызов
-    //   (поля вариантов и их базы - частности варианта, они размывают окрестность);
-    // - у точки расширения (абстрактный класс, интерфейс), которую система использует, - ее варианты (наследники и
-    //   реализации); база и интерфейс самого типа - лист: через них не идем, иначе в окрестность попадают все
-    //   соседи по базе;
-    // - у самого корня - потребители (кто держит его полем, коллекцией, параметром, создает, вызывает).
-    // Концентратор (больше HubDegree входящих ребер, например общая сущность) - лист: через него не идем.
-    // Признак узла окрестности - его роль (путь видов ребер от корня) и обезличенная метка (вид, abstract, sealed,
-    // обобщенность): "коллекция -> вариант -> возврат: структура". Отпечатки - хеши признаков без повторов, чтобы
-    // число вариантов не решало. Хеши Вейсфейлера - Лемана по окрестности целиком оказались слишком точными: любая
-    // разница в соседях давала новую метку, и системы одного устройства не находились
+    // Единицы L4 по графу типов: хост - тип, который держит полем или коллекцией точку расширения (абстрактный класс,
+    // интерфейс) с не меньше MinVariants вариантами (ExtensionHosts). Признаки системы - устройство образца
+    // "хост -> база вариантов -> варианты -> результат":
+    // - хост и база - обезличенная метка (вид, abstract, sealed, обобщенность), поле или коллекция, число вариантов
+    //   (ступени: 2-3, 4-9, 10 и больше);
+    // - база - формы ее абстрактных, виртуальных и интерфейсных членов целиком и по частям ("возврат структура",
+    //   "параметр float");
+    // - результат - метка и типы полей ("поле Vector3").
+    // Типы библиотек - по имени, типы исходного кода - по виду (R77). Без форм и типов полей устройство "хост -> список
+    // вариантов -> результат" есть в проекте сотни раз, и системы одного назначения не отличаются от остальных.
+    // Хеши Вейсфейлера - Лемана по окрестности оказались слишком точными: любая разница в соседях давала новую метку.
+    // Точка расширения с больше чем MaxHosts хостами - инфраструктура (вычислители, действия, условия, которые держат
+    // полем сотни типов): в инвентаре она есть, в сравнение не идет - иначе ее хосты совпадают друг с другом целиком
     public static class SystemUnits
     {
-        public const int HubDegree = 40;
-
-        // Наименьшее число вариантов точки расширения у хоста
         public const int MinVariants = 2;
 
-        private static readonly EdgeKind[] FromRoot =
-        [
-            EdgeKind.Field,
-            EdgeKind.Collection,
-            EdgeKind.Returns,
-            EdgeKind.Creates,
-            EdgeKind.CallsVirtual,
-            EdgeKind.Inherits,
-            EdgeKind.Implements,
-        ];
+        public const int MaxHosts = 5;
 
-        private static readonly EdgeKind[] Structural =
-        [
-            EdgeKind.Collection,
-            EdgeKind.Returns,
-            EdgeKind.Creates,
-            EdgeKind.CallsVirtual,
-        ];
+        // Наименьшее число признаков системы: у меньших (одна база с двумя вариантами без результата) признаки
+        // общие для всех и пары совпадают целиком
+        public const int MinFeatures = 8;
 
-        private static readonly EdgeKind[] Consumers =
-        [
-            EdgeKind.Field,
-            EdgeKind.Collection,
-            EdgeKind.Parameter,
-            EdgeKind.Creates,
-            EdgeKind.CallsVirtual,
-        ];
+        private const int ShownNames = 8;
 
         public static List<SimilarUnit> Collect(TypeGraph graph, SimilarOptions options)
         {
             var units = new List<SimilarUnit>();
-            foreach (var root in graph.Nodes.Where(IsHost))
+            var hosts = ExtensionHosts.Find(graph, MinVariants);
+            var hostCounts = hosts.GroupBy(entry => entry.ExtensionPoint).ToDictionary(
+                group => group.Key,
+                group => group.Count());
+            var systems = hosts.Where(entry => hostCounts[entry.ExtensionPoint] <= MaxHosts);
+            foreach (var group in systems.GroupBy(entry => entry.Host))
             {
-                var unit = Create(root, options.SystemDepth);
-                if (unit.NodeCount >= options.MinSystemTypes)
+                var unit = Create(group.Key, group.ToList());
+                if (unit.NodeCount >= options.MinSystemTypes && unit.Fingerprints.Length >= MinFeatures)
                     units.Add(unit);
             }
 
             return units;
         }
 
-        // Хост: класс, структура или запись с полем или коллекцией точки расширения, у которой есть варианты
-        private static bool IsHost(TypeNode node)
+        private static SystemUnit Create(TypeNode host, List<ExtensionHost> entries)
         {
-            if (node.Kind is not (TypeNodeKind.Class or TypeNodeKind.Struct or TypeNodeKind.Record))
-                return false;
+            var features = new List<string> { "хост: " + GetLabel(host) };
+            var nodes = new HashSet<TypeNode> { host };
+            var roleLines = new List<string>();
+            foreach (var entry in entries)
+            {
+                features.AddRange(GetFeatures(entry));
+                nodes.Add(entry.ExtensionPoint);
+                nodes.UnionWith(entry.Variants);
+                nodes.UnionWith(entry.Results);
+                var holder = entry.IsCollection ? "коллекция" : "поле";
+                roleLines.Add($"база вариантов ({holder}): {entry.ExtensionPoint.Name}");
+                roleLines.Add($"варианты ({entry.Variants.Count}): {JoinNames(entry.Variants)}");
+                if (entry.Results.Count > 0)
+                    roleLines.Add("результат: " + JoinNames(entry.Results));
+            }
 
-            return node.GetOut(EdgeKind.Field, EdgeKind.Collection)
-                .Any(edge => edge.To.IsExtensionPoint
-                    && edge.To.GetIn(EdgeKind.Inherits, EdgeKind.Implements).Count() >= MinVariants);
-        }
-
-        private static SystemUnit Create(TypeNode root, int depth)
-        {
-            var roles = GetRoles(root, depth);
-            var nodes = new HashSet<TypeNode>(roles.Keys);
-            var features = roles.Where(pair => pair.Key != root)
-                .Select(pair => pair.Value + ": " + GetLabel(pair.Key))
-                .Distinct()
-                .ToList();
-            var fingerprints = features.Select(ShapeHasher.HashText).Distinct().ToArray();
+            var distinct = features.Distinct().ToList();
+            var fingerprints = distinct.Select(ShapeHasher.HashText).Distinct().ToArray();
             Array.Sort(fingerprints);
-            var roleLines = roles
-                .Where(pair => pair.Key != root)
-                .GroupBy(pair => pair.Value)
-                .Select(group => $"{group.Key}: {string.Join(", ", group.Select(pair => pair.Key.Name).Distinct())}")
-                .ToList();
             return new SystemUnit
             {
                 Kind = UnitKind.System,
-                File = root.File,
-                Member = root.Name,
-                StartLine = root.StartLine,
-                EndLine = root.EndLine,
+                File = host.File,
+                Member = host.Name,
+                StartLine = host.StartLine,
+                EndLine = host.EndLine,
                 NodeCount = nodes.Count,
                 Fingerprints = fingerprints,
-                SpanStart = root.StartLine,
-                SpanEnd = root.EndLine + 1,
-                Elements = features,
-                RootKey = root.Key,
+                SpanStart = host.StartLine,
+                SpanEnd = host.EndLine + 1,
+                Elements = distinct,
+                RootKey = host.Key,
                 NodeKeys = new HashSet<string>(nodes.Select(node => node.Key)),
                 RoleLines = roleLines,
             };
         }
 
-        // Узлы окрестности и их роли (путь от корня в порядке обхода в ширину)
-        private static Dictionary<TypeNode, string> GetRoles(TypeNode root, int depth)
+        private static IEnumerable<string> GetFeatures(ExtensionHost entry)
         {
-            var roles = new Dictionary<TypeNode, string> { [root] = "" };
-            var distances = new Dictionary<TypeNode, int> { [root] = 0 };
-            var leaves = new HashSet<TypeNode>();
-            var queue = new Queue<TypeNode>();
-            queue.Enqueue(root);
-            foreach (var edge in root.GetIn(Consumers).Where(edge => !roles.ContainsKey(edge.From)))
+            var point = entry.ExtensionPoint;
+            yield return "база: " + GetLabel(point);
+            yield return "база: " + (entry.IsCollection ? "в коллекции" : "в поле");
+            yield return "база: вариантов " + GetVariantStep(entry.Variants.Count);
+            foreach (var signature in point.ExtensionSignatures)
             {
-                roles[edge.From] = "потребитель";
-                distances[edge.From] = depth;
+                yield return "база: " + signature;
+                foreach (var part in SplitSignature(signature))
+                    yield return "база: " + part;
             }
 
-            while (queue.Count > 0)
+            foreach (var result in entry.Results)
             {
-                var node = queue.Dequeue();
-                int distance = distances[node];
-                if (distance == depth || leaves.Contains(node) || node != root && node.In.Count > HubDegree)
-                    continue;
-
-                foreach (var step in GetSteps(node, node == root))
-                {
-                    if (roles.ContainsKey(step.Node))
-                        continue;
-
-                    var prefix = roles[node];
-                    roles[step.Node] = prefix.Length == 0 ? step.Role : prefix + " -> " + step.Role;
-                    distances[step.Node] = distance + 1;
-                    if (step.IsLeaf)
-                        leaves.Add(step.Node);
-
-                    queue.Enqueue(step.Node);
-                }
+                yield return "результат: " + GetLabel(result);
+                foreach (var fieldType in result.FieldTypes)
+                    yield return "результат: поле " + fieldType;
             }
-
-            return roles;
         }
 
-        private static IEnumerable<Step> GetSteps(TypeNode node, bool isRoot)
+        // Имена через запятую, не больше ShownNames
+        private static string JoinNames(IReadOnlyList<TypeNode> nodes)
         {
-            foreach (var edge in node.GetOut(isRoot ? FromRoot : Structural))
-                yield return new Step(edge.To, GetRole(edge.Kind), edge.Kind is EdgeKind.Inherits or EdgeKind.Implements);
+            var names = string.Join(", ", nodes.Take(ShownNames).Select(node => node.Name));
+            return nodes.Count > ShownNames ? $"{names} и еще {nodes.Count - ShownNames}" : names;
+        }
 
-            if (!node.IsExtensionPoint)
+        // Число вариантов по ступеням: 2-3, 4-9, 10 и больше
+        private static string GetVariantStep(int count)
+        {
+            return count switch
+            {
+                <= 3 => "2-3",
+                <= 9 => "4-9",
+                _ => "10+",
+            };
+        }
+
+        // Части формы члена "метод RET(A, B)": "возврат RET", "параметр A", "параметр B"
+        private static IEnumerable<string> SplitSignature(string signature)
+        {
+            int open = signature.IndexOf('(');
+            int space = signature.IndexOf(' ');
+            if (open < 0 || space < 0 || space > open)
                 yield break;
 
-            foreach (var edge in node.GetIn(EdgeKind.Inherits, EdgeKind.Implements))
-                yield return new Step(edge.From, "вариант", false);
+            yield return "возврат " + signature.Substring(space + 1, open - space - 1);
+            var arguments = signature.Substring(open + 1, signature.Length - open - 2);
+            int depth = 0;
+            int start = 0;
+            for (int i = 0; i <= arguments.Length; i++)
+            {
+                if (i < arguments.Length)
+                {
+                    char symbol = arguments[i];
+                    depth += symbol == '<'
+                        ? 1
+                        : symbol == '>'
+                            ? -1
+                            : 0;
+                    if (symbol != ',' || depth > 0)
+                        continue;
+                }
+
+                var argument = arguments.Substring(start, i - start).Trim();
+                if (argument.Length > 0)
+                    yield return "параметр " + argument;
+
+                start = i + 1;
+            }
         }
 
-        // Метка узла без имени: "абстрактный класс", "обобщенная структура"
+        // Метка узла без имени: "абстрактный класс", "обобщенный класс"
         private static string GetLabel(TypeNode node)
         {
             var kind = node.Kind switch
@@ -194,38 +193,6 @@ namespace CSR.Core.Similar
 
             parts.Add(kind);
             return string.Join(" ", parts);
-        }
-
-        private static string GetRole(EdgeKind kind)
-        {
-            return kind switch
-            {
-                EdgeKind.Field => "поле",
-                EdgeKind.Collection => "коллекция",
-                EdgeKind.Returns => "возврат",
-                EdgeKind.Creates => "создает",
-                EdgeKind.CallsVirtual => "вызов",
-                EdgeKind.Inherits => "база",
-                EdgeKind.Implements => "интерфейс",
-                _ => "параметр",
-            };
-        }
-
-        private class Step
-        {
-            public Step(TypeNode node, string role, bool isLeaf)
-            {
-                Node = node;
-                Role = role;
-                IsLeaf = isLeaf;
-            }
-
-            public TypeNode Node { get; }
-
-            public string Role { get; }
-
-            // База или интерфейс: в окрестность входит, но не раскрывается
-            public bool IsLeaf { get; }
         }
     }
 }

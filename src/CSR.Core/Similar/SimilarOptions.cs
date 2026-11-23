@@ -64,14 +64,11 @@ namespace CSR.Core.Similar
 
 #region L4
 
-        // Порог коэффициента Жаккара меток окрестностей
-        public double SystemThreshold { get; set; } = 0.5;
+        // Порог коэффициента Жаккара признаков систем
+        public double SystemThreshold { get; set; } = 0.4;
 
-        // Глубина окрестности корня по ребрам графа
-        public int SystemDepth { get; set; } = 3;
-
-        // Наименьшее число типов в окрестности
-        public int MinSystemTypes { get; set; } = 5;
+        // Наименьшее число типов системы (хост, базы вариантов, варианты, результаты)
+        public int MinSystemTypes { get; set; } = 4;
 
 #endregion
 
