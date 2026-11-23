@@ -42,6 +42,16 @@ namespace CSR.Core.Style
             new NamespaceNameCheck(),
             new EnumPluralCheck(),
             new CollectionNameCheck(),
+            new ForbiddenCallCheck(),
+            new ForbiddenTypeCheck(),
+            new CoroutineCheck(),
+            new StaticStateCheck(),
+            new LocalFunctionCheck(),
+            new PathConcatCheck(),
+            new BoolFieldCountCheck(),
+            new TypePerFileCheck(),
+            new ClosureInMethodCheck(),
+            new NestedLoopCheck(),
         ];
 
         public static SyntaxCheck? Find(string name)

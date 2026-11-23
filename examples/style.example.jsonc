@@ -37,6 +37,21 @@
     "type-name": { "severity": "warning", "interfacePrefix": "I", "typeParameterPrefix": "T", "derivedNames": { "CommandBase": "*Command" } },
     "namespace-name": { "severity": "warning", "roots": ["Company"], "forbiddenWords": ["Editor"], "maxDepth": 4 },
     "enum-plural": { "severity": "hint" },
-    "collection-name": { "severity": "hint", "members": ["field", "property"] }
+    "collection-name": { "severity": "hint", "members": ["field", "property"] },
+    // Запреты команды: что запрещено и чем заменить; excludePaths - где проверка не работает
+    "forbidden-call": {
+      "severity": "error",
+      "calls": { "Debug.Log*": "логгер проекта", "Gizmos.*": "механизм отладочной отрисовки" },
+      "excludePaths": ["*/Editor/*"]
+    },
+    "forbidden-type": { "severity": "error", "types": { "dynamic": "строгая типизация" } },
+    "coroutine": { "severity": "error", "use": "асинхронный метод или Update" },
+    "static-state": { "severity": "error", "use": "сервис проекта", "ignoreAttributes": ["ThreadStatic"] },
+    "local-function": { "severity": "error", "use": "private-метод", "excludePaths": ["*/Editor/*", "*/Tests/*"] },
+    "path-concat": { "severity": "warning" },
+    "bool-field-count": { "severity": "warning", "baseTypes": ["MonoBehaviour"], "minFields": 3 },
+    "type-per-file": { "severity": "warning", "baseTypes": ["MonoBehaviour", "ScriptableObject"] },
+    "closure-in-method": { "severity": "hint", "methods": ["Update", "LateUpdate", "FixedUpdate"] },
+    "nested-loop": { "severity": "hint" }
   }
 }

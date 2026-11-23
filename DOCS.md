@@ -29,6 +29,7 @@
   - Модификаторы: [`explicit-private`](#explicit-private), [`forbidden-modifier`](#forbidden-modifier), [`custom-delegate`](#custom-delegate)
   - Раскладка кода столбиком: [`expression-arrow`](#expression-arrow), [`signature-wrap`](#signature-wrap), [`call-wrap`](#call-wrap), [`region-layout`](#region-layout), [`condition-wrap`](#condition-wrap), [`initializer-layout`](#initializer-layout), [`ternary-wrap`](#ternary-wrap)
   - Именование: [`field-prefix`](#field-prefix), [`bool-name`](#bool-name), [`event-name`](#event-name), [`type-name`](#type-name), [`namespace-name`](#namespace-name), [`enum-plural`](#enum-plural), [`collection-name`](#collection-name)
+  - Запрещённые конструкции: [`forbidden-call`](#forbidden-call), [`forbidden-type`](#forbidden-type), [`coroutine`](#coroutine), [`static-state`](#static-state), [`local-function`](#local-function), [`path-concat`](#path-concat), [`bool-field-count`](#bool-field-count), [`type-per-file`](#type-per-file), [`closure-in-method`](#closure-in-method), [`nested-loop`](#nested-loop)
 - [5. Признаки `arch`](#5-признаки-arch)
   - По одному файлу: [`type-branch`](#type-branch), [`behaviour-logic`](#behaviour-logic), [`index-api`](#index-api), [`static-data-methods`](#static-data-methods), [`project-mechanism`](#project-mechanism), [`numeric-constant`](#numeric-constant), [`numeric-literal`](#numeric-literal), [`tuple-type`](#tuple-type-arch), [`partial-file`](#partial-file), [`debug-draw`](#debug-draw), [`obsolete-reason`](#obsolete-reason), [`persisted-class`](#persisted-class)
   - По решению: [`variant-flag`](#variant-flag), [`single-implementation`](#single-implementation), [`dead-member`](#dead-member), [`parameter-set`](#parameter-set), [`unraised-event`](#unraised-event), [`class-cohesion`](#class-cohesion)
@@ -76,6 +77,16 @@
 | [`namespace-name`](#namespace-name) | корень, слова и глубина пространства имён | нет | `roots`, `forbiddenWords`, `maxDepth` |
 | [`enum-plural`](#enum-plural) | число в имени `enum` по `[Flags]` | нет | `pluralWords`, `singularEndings` |
 | [`collection-name`](#collection-name) | коллекция с именем в единственном числе | нет | `members`, `collectionTypes`, `arrays`, `pluralWords`, `singularEndings` |
+| [`forbidden-call`](#forbidden-call) | запрещённый вызов или член | нет | `calls`, `excludePaths` |
+| [`forbidden-type`](#forbidden-type) | запрещённый тип | нет | `types`, `excludePaths` |
+| [`coroutine`](#coroutine) | метод-корутина | нет | `returnTypes`, `requireYield`, `use`, `excludePaths` |
+| [`static-state`](#static-state) | статическое изменяемое состояние или синглтон | нет | `mutableTypes`, `singleton`, `ignoreAttributes`, `ignoreNames`, `use`, `excludePaths` |
+| [`local-function`](#local-function) | локальная функция | нет | `use`, `excludePaths` |
+| [`path-concat`](#path-concat) | склейка пути сложением строк | часть | `separators`, `replace`, `excludePaths` |
+| [`bool-field-count`](#bool-field-count) | много полей `bool` в классе | нет | `baseTypes`, `minFields`, `excludePaths` |
+| [`type-per-file`](#type-per-file) | несколько типов в файле | нет | `baseTypes`, `excludePaths` |
+| [`closure-in-method`](#closure-in-method) | лямбда с захватом в часто вызываемом методе | нет | `methods`, `captureThis`, `excludePaths` |
+| [`nested-loop`](#nested-loop) | вложенный цикл по независимой коллекции | нет | `sizeMembers`, `ignoreCollections`, `excludePaths` |
 
 ### Признаки `arch` (сводная таблица)
 
@@ -4640,6 +4651,520 @@ public class Inventory
 - Причастия (`m_Pinned`, `m_Found`, `Generated`) дают находку: по правилу у коллекции окончание `s` или постфикс типа (`m_PinnedIds`).
 - Словаря нет: неправильное множественное число (`People`, `Children`) задаётся в `pluralWords`.
 - Тип из `using`-псевдонима или своя коллекция проверяются, только если они перечислены в `collectionTypes`.
+
+### Запрещённые конструкции
+
+Запреты команды по синтаксису файла: что запрещено и чем заменить, задаёт конфиг. У каждой проверки есть параметр `excludePaths` — маски путей файлов, где проверка не работает. Решение не загружается: тип выражения, базовые типы предков и вызовы через переменные не видны.
+
+#### `forbidden-call`
+
+Обращение к запрещённому члену: вызов, свойство или поле. Имя обращения — `Тип.Член`: последний идентификатор слева от точки и член (`UnityEngine.Debug.Log` → `Debug.Log`, `Service<T>.Instance` → `Service.Instance`). Встроенный тип слева — ключевым словом (`string.Format`). Маски — ключи `calls`, значение — чем заменить (текст в сообщении; пустая строка — сообщение без альтернативы). Без `calls` проверка ничего не ищет. Маска сравнивается с `Тип.Член`, а не с полным текстом вызова, как в `logger.methods` проекта и `project-mechanism` (`arch`): `Debug.Log*` здесь находит и `UnityEngine.Debug.Log`.
+
+**Замена:** нет: альтернатива — другой API проекта, замену выбирает агент.
+
+**Параметры**
+
+| Параметр | Значения | По умолчанию | Описание |
+|---|---|---|---|
+| `calls` | словарь «маска → текст» | `{}` | маска `Тип.Член` (`*` — любые символы) и чем заменить |
+| `excludePaths` | список строк | `[]` | маски путей файлов, где проверка не работает (`*` — любые символы, разделитель `/`) |
+
+**Ограничение:** вызов через `using static` (`Log("...")` без типа) и обращение через переменную (`logger.Log`) по имени типа не распознаются.
+
+**Пример**
+
+Конфиг:
+
+```jsonc
+{ "checks": { "forbidden-call": { "severity": "error", "calls": { "Debug.Log*": "логгер проекта", "Gizmos.*": "" } } } }
+```
+
+Было (`Demo.cs`):
+
+```csharp
+public class Demo
+{
+    private void Show(int value)
+    {
+        Debug.Log("value " + value);
+        Gizmos.color = Color.red;
+        Gizmos.DrawLine(Vector3.zero, Vector3.up);
+    }
+}
+```
+
+Находки (`--format md`):
+
+````markdown
+- 5: `forbidden-call` (error) - запрещенный член 'Debug.Log': логгер проекта
+- 6: `forbidden-call` (error) - запрещенный член 'Gizmos.color'
+- 7: `forbidden-call` (error) - запрещенный член 'Gizmos.DrawLine'
+````
+
+`csr fix` код не меняет: у находок нет замены.
+
+
+#### `forbidden-type`
+
+Запрещённый тип в позиции типа: объявление поля, параметра, переменной, результат, аргумент типа, `new`, приведение, `typeof`. Имя — правая часть без пространства имён с аргументами типа (`System.Collections.ArrayList` → `ArrayList`, `List<int>` → `List<int>`), встроенный тип — ключевым словом (`object`, `dynamic`). Без `types` проверка ничего не ищет.
+
+**Замена:** нет.
+
+**Параметры**
+
+| Параметр | Значения | По умолчанию | Описание |
+|---|---|---|---|
+| `types` | словарь «маска → текст» | `{}` | маска имени типа (`*` — любые символы) и чем заменить |
+| `excludePaths` | список строк | `[]` | маски путей файлов, где проверка не работает (`*` — любые символы, разделитель `/`) |
+
+**Ограничение:** массив целиком (`int[]`) с маской не сравнивается — сравнивается тип элемента; переменная с именем `dynamic` (`var dynamic = 1`) — не тип.
+
+**Пример**
+
+Конфиг:
+
+```jsonc
+{ "checks": { "forbidden-type": { "severity": "error", "types": { "dynamic": "строгая типизация", "ArrayList": "List<T>" } } } }
+```
+
+Было (`Demo.cs`):
+
+```csharp
+using System.Collections;
+
+public class Demo
+{
+    private dynamic m_Payload;
+    private ArrayList m_Items = new ArrayList();
+}
+```
+
+Находки (`--format md`):
+
+````markdown
+- 5: `forbidden-type` (error) - запрещенный тип 'dynamic': строгая типизация
+- 6: `forbidden-type` (error) - запрещенный тип 'ArrayList': List<T>
+- 6: `forbidden-type` (error) - запрещенный тип 'ArrayList': List<T>
+````
+
+`csr fix` код не меняет: у находок нет замены.
+
+
+#### `coroutine`
+
+Метод-корутина: тип результата из `returnTypes` (по умолчанию `IEnumerator`) и, при `requireYield`, `yield` в теле самого метода (не во вложенной локальной функции или лямбде). Проверяются методы и локальные функции; `GetEnumerator` коллекции — не корутина. Итераторы `IEnumerable<T>` по умолчанию не находка — их добавляют в `returnTypes`, если команда запрещает и их.
+
+**Замена:** нет: перевод на асинхронный метод меняет вызывающий код.
+
+**Параметры**
+
+| Параметр | Значения | По умолчанию | Описание |
+|---|---|---|---|
+| `returnTypes` | список строк | `["IEnumerator"]` | маски типа результата без пространства имён (`IEnumerator`, `IEnumerable<*>`) |
+| `requireYield` | `true` / `false` | `true` | только с `yield` в теле; `false` — любой метод с таким результатом (в том числе возвращающий чужой итератор) |
+| `use` | строка | `""` | чем заменить: текст в сообщении |
+| `excludePaths` | список строк | `[]` | маски путей файлов, где проверка не работает (`*` — любые символы, разделитель `/`) |
+
+**Пример**
+
+Конфиг:
+
+```jsonc
+{ "checks": { "coroutine": { "severity": "error", "use": "асинхронный метод или Update" } } }
+```
+
+Было (`Demo.cs`):
+
+```csharp
+using System.Collections;
+using System.Collections.Generic;
+
+public class Demo
+{
+    private IEnumerator Fade()
+    {
+        yield return null;
+    }
+
+    private IEnumerable<int> Numbers()
+    {
+        yield return 1;
+    }
+}
+```
+
+Находки (`--format md`):
+
+````markdown
+- 6: `coroutine` (error) - корутина 'Fade' (IEnumerator): асинхронный метод или Update
+````
+
+`csr fix` код не меняет: у находок нет замены.
+
+
+#### `static-state`
+
+Статическое изменяемое состояние:
+
+- `static`-поле без `readonly` и `const`;
+- `static readonly`-поле изменяемого типа из `mutableTypes` (коллекции, массивы): ссылка неизменна, содержимое меняется;
+- `static`-автосвойство с `set` (любой доступности) и только с `get` изменяемого типа из `mutableTypes`;
+- `static event`;
+- синглтон — `static`-поле или свойство своего типа (в том числе `readonly` и только с `get`), при `singleton`.
+
+`static readonly` других типов и `const` — не находка. Исключения: атрибут члена или его типа из `ignoreAttributes` (например `ThreadStatic`), имя члена из `ignoreNames`, путь из `excludePaths`.
+
+**Замена:** нет: перенос состояния в сервис меняет архитектуру.
+
+**Параметры**
+
+| Параметр | Значения | По умолчанию | Описание |
+|---|---|---|---|
+| `mutableTypes` | список строк | `["List<*>", "Dictionary<*>", "HashSet<*>", "Queue<*>", "Stack<*>", "*[]"]` | маски типов `static readonly`-полей и `get`-свойств, содержимое которых меняется (без пространства имён) |
+| `singleton` | `true` / `false` | `true` | `static`-поле или свойство своего типа — находка |
+| `ignoreAttributes` | список строк | `[]` | атрибуты члена или его типа, при которых член не проверяется (без суффикса `Attribute`) |
+| `ignoreNames` | список строк | `[]` | маски имён членов, которые не проверяются |
+| `use` | строка | `""` | чем заменить: текст в сообщении |
+| `excludePaths` | список строк | `[]` | маски путей файлов, где проверка не работает (`*` — любые символы, разделитель `/`) |
+
+**Ограничение:** тип поля известен только по синтаксису: `static readonly`-поле класса с изменяемыми полями (не из `mutableTypes`) — не находка; обобщённый синглтон (`static T Instance` в `Singleton<T>`) не распознаётся.
+
+**Пример**
+
+Конфиг:
+
+```jsonc
+{ "checks": { "static-state": { "severity": "error", "use": "сервис проекта" } } }
+```
+
+Было (`Demo.cs`):
+
+```csharp
+using System.Collections.Generic;
+
+public class Registry
+{
+    public static Registry Instance { get; private set; }
+    private static int s_Count;
+    private static readonly List<int> Ids = new();
+    private static readonly string Name = "registry";
+    private const int Max = 3;
+    public static bool IsReady { get; set; }
+}
+```
+
+Находки (`--format md`):
+
+````markdown
+- 5: `static-state` (error) - синглтон 'Instance' типа Registry: сервис проекта
+- 6: `static-state` (error) - статическое изменяемое поле 's_Count': сервис проекта
+- 7: `static-state` (error) - статическое поле 'Ids' изменяемого типа List<int>: сервис проекта
+- 10: `static-state` (error) - статическое свойство 'IsReady' с set: сервис проекта
+````
+
+`csr fix` код не меняет: у находок нет замены.
+
+
+#### `local-function`
+
+Локальная функция. Редакторный и тестовый код исключается масками путей `excludePaths` (например `*/Editor/*`): сборка определяется по папке, `.asmdef` проверка не читает.
+
+**Замена:** нет: перенос в `private`-метод требует передать захваченные переменные параметрами.
+
+**Параметры**
+
+| Параметр | Значения | По умолчанию | Описание |
+|---|---|---|---|
+| `use` | строка | `""` | чем заменить: текст в сообщении |
+| `excludePaths` | список строк | `[]` | маски путей файлов, где проверка не работает (`*` — любые символы, разделитель `/`) |
+
+**Пример**
+
+Конфиг:
+
+```jsonc
+{ "checks": { "local-function": { "severity": "error", "use": "private-метод", "excludePaths": ["*/Editor/*"] } } }
+```
+
+Было (`Demo.cs`):
+
+```csharp
+public class Demo
+{
+    private int Sum(int[] values)
+    {
+        var total = 0;
+        foreach (var value in values)
+            total += Clamp(value);
+
+        return total;
+
+        int Clamp(int value) => value < 0 ? 0 : value;
+    }
+}
+```
+
+Находки (`--format md`):
+
+````markdown
+- 11: `local-function` (error) - локальная функция 'Clamp': private-метод
+````
+
+`csr fix` код не меняет: у находок нет замены.
+
+
+#### `path-concat`
+
+Склейка пути сложением строк с литералом-разделителем из `separators`: `a + "/" + b` → `Path.Combine(a, b)`. Ищется в каждой цепочке `+`, где одна из частей — литерал-разделитель.
+
+**Замена:** только при `replace: true` и только для цепочки вида `a + "/" + b [+ "/" + c …]`, где каждая часть — строка по синтаксису файла: строковый литерал без разделителя на краях, интерполяция, вызов `ToString()` или имя, у которого все объявления в члене (параметры, локальные, `foreach`, `out var`, шаблоны, `catch`, переменные запроса — в любых блоках и лямбдах) явно `string`; если в члене объявлений нет — поле или свойство типа с типом `string`. `var`, параметр лямбды без типа и не найденное имя — не строка, замены нет. В константе (`const`, аргумент атрибута, значение параметра по умолчанию, `case`) замены нет: вызов там недопустим. Имя — `Path`, если в файле есть `using System.IO` и каждое имя `Path` в файле — обращение к статическому члену `System.IO.Path` (`Path.Combine`, `Path.GetFileName` …); иначе `global::System.IO.Path` (член `Path` типа или базового типа скрыл бы класс). По умолчанию замена выключена: результат `Path.Combine` отличается от сложения — в Windows части соединяются через `\` (для путей, где важен `/`, например ассеты Unity `Assets/…`), абсолютная правая часть отбрасывает левую, `null` — исключение вместо пустой строки, пустая левая часть теряет ведущий `/`.
+
+**Параметры**
+
+| Параметр | Значения | По умолчанию | Описание |
+|---|---|---|---|
+| `separators` | список строк | `["/"]` | литералы-разделители пути |
+| `replace` | `true` / `false` | `false` | предлагать замену на `Path.Combine` |
+| `excludePaths` | список строк | `[]` | маски путей файлов, где проверка не работает (`*` — любые символы, разделитель `/`) |
+
+**Пример**
+
+Конфиг:
+
+```jsonc
+{ "checks": { "path-concat": { "severity": "warning", "replace": true } } }
+```
+
+Было (`Demo.cs`):
+
+```csharp
+using System.IO;
+
+public class Demo
+{
+    private const string Root = "Build";
+    private const string Cache = Root + "/" + "cache.json";
+
+    private string GetPath(string folder, string file, int index)
+    {
+        var name = folder + "/" + file;
+        var numbered = folder + "/" + index;
+        return Path.GetFullPath(name + numbered);
+    }
+}
+```
+
+Находки (`--format md`):
+
+````markdown
+- 6: `path-concat` (warning) - склейка пути через "/": Path.Combine
+- 10: `path-concat` (warning) - склейка пути через "/": Path.Combine
+  ```csharp
+          var name = Path.Combine(folder, file);
+  ```
+- 11: `path-concat` (warning) - склейка пути через "/": Path.Combine
+````
+
+`csr fix --apply` меняет только строку 10: в `Cache` — константа, в `numbered` — часть типа `int`.
+
+
+#### `bool-field-count`
+
+Класс — наследник типа из `baseTypes` (прямой базовый тип в списке наследования) с `minFields` и больше полями `bool` экземпляра: набор флагов — кандидат в `enum` или `[Flags]`. `static`- и `const`-поля не считаются.
+
+**Замена:** нет.
+
+**Параметры**
+
+| Параметр | Значения | По умолчанию | Описание |
+|---|---|---|---|
+| `baseTypes` | список строк | `["MonoBehaviour"]` | маски имени базового типа без пространства имён и аргументов типа (`Singleton` — и `Singleton<Panel>`), как `baseTypes` в `arch`; пусто — любой класс |
+| `minFields` | число | `3` | сколько полей `bool` — находка |
+| `excludePaths` | список строк | `[]` | маски путей файлов, где проверка не работает (`*` — любые символы, разделитель `/`) |
+
+**Ограничение:** базовый тип — только из списка наследования самого класса: наследник наследника по синтаксису не виден.
+
+**Пример**
+
+Конфиг:
+
+```jsonc
+{ "checks": { "bool-field-count": { "severity": "warning", "baseTypes": ["MonoBehaviour"], "minFields": 3 } } }
+```
+
+Было (`Demo.cs`):
+
+```csharp
+public class Door : MonoBehaviour
+{
+    [SerializeField]
+    private bool m_IsOpen;
+    private bool m_IsLocked;
+    private bool m_IsBroken;
+    private int m_Health;
+}
+```
+
+Находки (`--format md`):
+
+````markdown
+- 1: `bool-field-count` (warning) - полей bool в 'Door': 3 (m_IsOpen, m_IsLocked, m_IsBroken)
+````
+
+`csr fix` код не меняет: у находок нет замены.
+
+
+#### `type-per-file`
+
+Несколько типов верхнего уровня в файле (классы, структуры, интерфейсы, перечисления, делегаты), если среди них есть наследник типа из `baseTypes`. Находка — на каждом типе, имя которого не совпадает с именем файла, с командой переноса: `csr move` переносит тип в свой файл (раздел [`csr move`](#csr-move)). Вложенные типы не считаются.
+
+**Замена:** нет: перенос — команда `csr move` по решению.
+
+**Параметры**
+
+| Параметр | Значения | По умолчанию | Описание |
+|---|---|---|---|
+| `baseTypes` | список строк | `["MonoBehaviour", "ScriptableObject"]` | маски имени базового типа без пространства имён и аргументов типа; пусто — любой файл с несколькими типами |
+| `excludePaths` | список строк | `[]` | маски путей файлов, где проверка не работает (`*` — любые символы, разделитель `/`) |
+
+**Пример**
+
+Конфиг:
+
+```jsonc
+{ "checks": { "type-per-file": { "severity": "warning" } } }
+```
+
+Было (`Door.cs`):
+
+```csharp
+namespace Demo.Units
+{
+    public class Door : MonoBehaviour
+    {
+        private DoorState m_State;
+    }
+
+    public enum DoorState
+    {
+        Open,
+        Closed,
+    }
+}
+```
+
+Находки (`--format md`):
+
+````markdown
+- 8: `type-per-file` (warning) - тип 'DoorState' не один в файле Door.cs: csr move Demo.Units.DoorState
+````
+
+`csr fix` код не меняет: у находок нет замены.
+
+
+#### `closure-in-method`
+
+Лямбда или анонимный метод внутри метода из `methods` (по умолчанию `Update`, `LateUpdate`, `FixedUpdate`), захватывающие параметры или локальные переменные метода: объект замыкания создаётся на каждом вызове. Захват по синтаксису: имя, объявленное в методе вне лямбды и использованное в ней; `const`-локальная и имя в `nameof` — не захват. Вложенные лямбды входят в находку внешней. С `captureThis` захват — и явный `this` / `base`. `static`-лямбды не проверяются.
+
+**Замена:** нет.
+
+**Параметры**
+
+| Параметр | Значения | По умолчанию | Описание |
+|---|---|---|---|
+| `methods` | список строк | `["Update", "LateUpdate", "FixedUpdate"]` | маски имён методов, где замыкания — находка |
+| `captureThis` | `true` / `false` | `false` | явный `this` или `base` в лямбде — тоже захват |
+| `excludePaths` | список строк | `[]` | маски путей файлов, где проверка не работает (`*` — любые символы, разделитель `/`) |
+
+**Ограничение:** обращение к полю без `this.` (тоже захват экземпляра) по синтаксису не отличить от статического члена — не находка.
+
+**Пример**
+
+Конфиг:
+
+```jsonc
+{ "checks": { "closure-in-method": { "severity": "hint" } } }
+```
+
+Было (`Demo.cs`):
+
+```csharp
+using System.Collections.Generic;
+
+public class Demo : MonoBehaviour
+{
+    private readonly List<Unit> m_Units = new();
+
+    private void Update()
+    {
+        var range = 10f;
+        m_Units.RemoveAll(unit => unit.Distance > range);
+        m_Units.Sort(static (a, b) => a.Order - b.Order);
+    }
+}
+```
+
+Находки (`--format md`):
+
+````markdown
+- 10: `closure-in-method` (hint) - лямбда в 'Update' захватывает range
+````
+
+`csr fix` код не меняет: у находок нет замены.
+
+
+#### `nested-loop`
+
+Вложенный цикл по коллекции, не зависящей от внешнего цикла: перебор пар, O(N²). Внутренний цикл — `foreach` или `for` с условием по члену размера из `sizeMembers` (`i < list.Count`). Не находка, если коллекция внутреннего цикла использует имя, объявленное во внешнем цикле (обход иерархии: строка → её ячейки), и если она из `ignoreCollections` (короткие постоянные наборы: направления, смещения). Внешний цикл — `foreach` или `for`: `while` и `do` — обход очереди, не перебор пар. Граница поиска внешнего цикла — лямбда и локальная функция.
+
+**Замена:** нет: замена — индекс (словарь, множество) или сортировка, решает агент.
+
+**Параметры**
+
+| Параметр | Значения | По умолчанию | Описание |
+|---|---|---|---|
+| `sizeMembers` | список строк | `["Count", "Length"]` | члены размера коллекции в условии `for` |
+| `ignoreCollections` | список строк | `[]` | маски коллекций внутреннего цикла (текст выражения без пробелов), которые не находка |
+| `excludePaths` | список строк | `[]` | маски путей файлов, где проверка не работает (`*` — любые символы, разделитель `/`) |
+
+**Ограничение:** размер коллекций по синтаксису неизвестен: обход сетки `for` в `for` (строки × столбцы) и перебор двух коротких списков — тоже находка, поэтому уровень в примере `hint`.
+
+**Пример**
+
+Конфиг:
+
+```jsonc
+{ "checks": { "nested-loop": { "severity": "hint" } } }
+```
+
+Было (`Demo.cs`):
+
+```csharp
+using System.Collections.Generic;
+
+public class Demo
+{
+    private void Link(List<Unit> units)
+    {
+        foreach (var unit in units)
+        {
+            foreach (var other in units)
+                unit.Touch(other);
+
+            foreach (var part in unit.Parts)
+                part.Reset();
+        }
+    }
+}
+```
+
+Находки (`--format md`):
+
+````markdown
+- 9: `nested-loop` (hint) - вложенный цикл по 'units' внутри цикла по 'units': O(N²)
+````
+
+`csr fix` код не меняет: у находок нет замены.
 
 ## 5. Признаки `arch`
 

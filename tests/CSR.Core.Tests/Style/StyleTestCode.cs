@@ -12,13 +12,17 @@ namespace CSR.Core.Tests.Style
             LoggerMethods = ["Debug.Log", "Debug.LogError", "*.Logger.Error"],
         };
 
-        public static List<Finding> Run(string check, string source, Action<CheckSettings>? configure = null)
+        public static List<Finding> Run(
+            string check,
+            string source,
+            Action<CheckSettings>? configure = null,
+            string path = "Sample.cs")
         {
             var configuration = CheckConfiguration.Create(StyleCatalog.Find(check)!, Severity.Error, "R1");
             configure?.Invoke(configuration.Settings);
             var options = new CheckOptions();
             options.Checks.Add(configuration);
-            var tree = CSharpSyntaxTree.ParseText(source, DefaultProject.ParseOptions, "Sample.cs");
+            var tree = CSharpSyntaxTree.ParseText(source, DefaultProject.ParseOptions, path);
             return SyntaxAnalyzer.Analyze(tree, options, DefaultProject);
         }
 
