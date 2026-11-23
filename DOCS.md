@@ -124,7 +124,14 @@
 
   `VSCMD_VER` — версия этого экземпляра; при установленной Visual Studio с большей версией берётся Visual Studio.
 - Проекты Unity ссылаются на сборки редактора по полным путям (`<HintPath>` в папке установки Unity): нужна версия редактора, из которой сгенерированы `.csproj`, иначе ссылки на `UnityEngine` не разрешаются и семантика неполная.
-- Нет нужного MSBuild или `dotnet` — загрузка решения завершается необработанным исключением BuildHost (`No compatible MSBuild instance`, `Could not load Microsoft.Build`, `error trying to start process 'dotnet.exe'`): требование выше не выполнено.
+- Нет нужного MSBuild или `dotnet` — код 2 и текст: причина от BuildHost и что поставить для видов проектов решения:
+
+  ```
+  csr: загрузка решения: MSBuild недоступен (An error occurred trying to start process 'dotnet.exe' ...)
+    проекты SDK-стиля: нужен .NET SDK, которым собирается проект, и dotnet в PATH
+  ```
+
+  Для старого формата — строки про Visual Studio / Build Tools и про обход для Rider. `csr serve` при перезагрузке решения отвечает тем же текстом.
 
 ## 2. Команды
 

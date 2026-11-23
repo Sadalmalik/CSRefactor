@@ -1,5 +1,6 @@
 using CSR.Commands;
 using CSR.Reports.Config;
+using CSR.Workspace.Loading;
 
 namespace CSR
 {
@@ -57,6 +58,11 @@ namespace CSR
             catch (ConfigException exception)
             {
                 Console.Error.WriteLine($"csr: конфиг: {exception.Message}");
+                return 2;
+            }
+            catch (SolutionLoadException exception)
+            {
+                Console.Error.WriteLine($"csr: {exception.Message}");
                 return 2;
             }
             catch (System.Text.Json.JsonException exception)

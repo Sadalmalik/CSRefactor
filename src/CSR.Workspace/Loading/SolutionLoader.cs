@@ -52,11 +52,48 @@ namespace CSR.Workspace.Loading
                     Isolated = isolated,
                 };
             }
+            catch (Exception exception) when (IsBuildHostFailure(exception))
+            {
+                workspace.Dispose();
+                throw new SolutionLoadException(GetBuildHostMessage(exception, projects), exception);
+            }
             catch
             {
                 workspace.Dispose();
                 throw;
             }
+        }
+
+        // BuildHost не запустился (нет dotnet) или не нашел MSBuild: исключение процесса BuildHost
+        // (RemoteInvocationException - внутренний тип Roslyn) или запуска процесса из BuildHostProcessManager
+        private static bool IsBuildHostFailure(Exception exception)
+        {
+            if (exception.GetType().FullName == "Microsoft.CodeAnalysis.MSBuild.RemoteInvocationException")
+                return true;
+
+            return exception is System.ComponentModel.Win32Exception
+                && exception.StackTrace?.Contains("BuildHostProcessManager", StringComparison.Ordinal) == true;
+        }
+
+        // Что нужно на машине - по видам проектов решения
+        private static string GetBuildHostMessage(Exception exception, List<string> projects)
+        {
+            var reason = exception.Message.Split('\n')[0].Trim();
+            var lines = new List<string> { $"загрузка решения: MSBuild недоступен ({reason})" };
+            if (projects.Any(project => !SolutionFile.IsLegacyProject(project)))
+                lines.Add("  проекты SDK-стиля: нужен .NET SDK, которым собирается проект, и dotnet в PATH");
+
+            if (projects.Any(SolutionFile.IsLegacyProject))
+            {
+                lines.Add(
+                    "  проекты старого формата (Unity): нужен MSBuild из Visual Studio 2017+ или Build Tools for "
+                    + "Visual Studio (компонент MSBuild)");
+                lines.Add(
+                    "  только Rider: VSINSTALLDIR=<папка Rider>\\tools\\ и VSCMD_VER=<версия> - "
+                    + "DOCS.md, «Требования к машине»");
+            }
+
+            return string.Join(Environment.NewLine, lines);
         }
 
         // obj и папка вывода - в кэше: PrepareForBuild создает папку вывода, у Unity это Temp\Bin\Debug\<проект>

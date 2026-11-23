@@ -63,6 +63,60 @@ namespace CSR.Workspace.Tests
             Assert.That(result.Error, Does.Not.Contain("загрузка"));
         }
 
+        // Старый .csproj: экземпляр Developer Command Prompt с наибольшей версией и пустым MSBuild.exe - BuildHost
+        // выбирает его и не загружает Microsoft.Build
+        [Test]
+        public void LegacyProject_NoMSBuild_ExitTwoWithRequirements()
+        {
+            using var folder = new TempFolder();
+            folder.Write("Tools/MSBuild/Current/Bin/MSBuild.exe", "");
+            folder.Write("App/A.cs", "namespace App { public static class A { } }\n");
+            var project = folder.Write(
+                "App/App.csproj",
+                "<Project ToolsVersion=\"4.0\"><ItemGroup><Compile Include=\"A.cs\" /></ItemGroup></Project>\n");
+            var environment = new Dictionary<string, string?>
+            {
+                ["VSINSTALLDIR"] = Path.Combine(folder.Path, "Tools") + Path.DirectorySeparatorChar,
+                ["VSCMD_VER"] = "99.0",
+            };
+
+            var result = RunWithEnvironment(environment, "refs", "App.A", "--solution", project, "--no-server");
+
+            Assert.That(result.ExitCode, Is.EqualTo(2));
+            Assert.That(result.Error, Does.Contain("csr: загрузка решения: MSBuild недоступен"));
+            Assert.That(result.Error, Does.Contain("Build Tools for Visual Studio"));
+            Assert.That(result.Error, Does.Contain("VSINSTALLDIR=<папка Rider>"));
+            Assert.That(result.Error, Does.Not.Contain("проекты SDK-стиля"));
+        }
+
+        // Проект SDK-стиля: BuildHost запускается через dotnet из PATH
+        [Test]
+        public void SdkProject_NoDotnet_ExitTwoWithRequirements()
+        {
+            using var sample = SampleSolution.Create();
+            var path = Environment.GetEnvironmentVariable("PATH") ?? "";
+            var withoutDotnet = path
+                .Split(Path.PathSeparator)
+                .Where(folder => !File.Exists(Path.Combine(folder, "dotnet.exe")));
+            var environment = new Dictionary<string, string?>
+            {
+                ["PATH"] = string.Join(Path.PathSeparator, withoutDotnet),
+            };
+
+            var result = RunWithEnvironment(
+                environment,
+                "refs",
+                "Sample.Items.Inventory",
+                "--solution",
+                sample.SolutionPath,
+                "--no-server");
+
+            Assert.That(result.ExitCode, Is.EqualTo(2));
+            Assert.That(result.Error, Does.Contain("csr: загрузка решения: MSBuild недоступен"));
+            Assert.That(result.Error, Does.Contain("нужен .NET SDK"));
+            Assert.That(result.Error, Does.Not.Contain("проекты старого формата"));
+        }
+
         [Test]
         public void Refs_JsonAndErrors()
         {
@@ -228,6 +282,24 @@ namespace CSR.Workspace.Tests
             Assert.That(result.Output, Does.Contain("+        private void Store(Item item, int count)"));
             Assert.That(invalid.ExitCode, Is.EqualTo(2));
             Assert.That(invalid.Error, Does.Contain("файл.cs:строка-строка"));
+        }
+
+        // Переменные окружения процесса на время запуска: BuildHost наследует их
+        private static CliResult RunWithEnvironment(Dictionary<string, string?> environment, params string[] args)
+        {
+            var original = environment.Keys.ToDictionary(name => name, Environment.GetEnvironmentVariable);
+            try
+            {
+                foreach (var (name, value) in environment)
+                    Environment.SetEnvironmentVariable(name, value);
+
+                return Cli.Run(args);
+            }
+            finally
+            {
+                foreach (var (name, value) in original)
+                    Environment.SetEnvironmentVariable(name, value);
+            }
         }
     }
 }
