@@ -12,6 +12,16 @@ namespace CSR.Core.Similar
         public required double MaxScore { get; init; }
 
         public required double MinScore { get; init; }
+
+        // L2, L3: элементы, общие для всех мест кластера, и свои элементы каждого места
+        public IReadOnlyList<string> Common { get; init; } = Array.Empty<string>();
+
+        public IReadOnlyDictionary<SimilarUnit, IReadOnlyList<string>> Differences { get; init; } =
+            new Dictionary<SimilarUnit, IReadOnlyList<string>>();
+
+        // L3: тела членов места - сколько той же формы, что у пары, и какие со своей логикой
+        public IReadOnlyDictionary<SimilarUnit, IReadOnlyList<string>> Bodies { get; init; } =
+            new Dictionary<SimilarUnit, IReadOnlyList<string>>();
     }
 
     public class SimilarResult
@@ -21,8 +31,8 @@ namespace CSR.Core.Similar
         public required IReadOnlyList<SimilarCluster> Clusters { get; init; }
     }
 
-    // Поиск целиком: пары членов, пары фрагментов (окна подряд склеиваются в один фрагмент; фрагменты членов,
-    // которые уже похожи целиком, не повторяются), кластеры
+    // Поиск целиком: пары по видам (окна фрагментов подряд склеиваются в один фрагмент; фрагменты членов,
+    // которые уже похожи целиком, не повторяются), кластеры с общей частью и отличиями (L2, L3)
     public static class SimilarSearch
     {
         public static SimilarResult Run(
@@ -30,14 +40,18 @@ namespace CSR.Core.Similar
             SimilarOptions options,
             Func<SimilarUnit, bool>? isProbe = null)
         {
-            var found = SimilarFinder.Find(units, options.Threshold, isProbe);
+            var found = SimilarFinder.Find(units, kind => UnitComparer.Create(kind, options), isProbe);
             var members = found.Where(pair => pair.Left.Kind == UnitKind.Member).ToList();
             var pairedMembers = members.ToLookup(pair => pair.Left, pair => pair.Right);
             var fragments = found
                 .Where(pair => pair.Left.Kind == UnitKind.Fragment && !IsInPairedMembers(pair, pairedMembers))
                 .ToList();
 
+            var sets = found.Where(pair => pair.Left.Kind is UnitKind.ParameterSet or UnitKind.FieldSet);
+            var types = AddCores(units, found.Where(pair => pair.Left.Kind == UnitKind.Type), options, isProbe);
             var pairs = members.Concat(MergeWindows(fragments, options.FragmentStatements))
+                .Concat(sets)
+                .Concat(types)
                 .Select(pair => Orient(pair, isProbe))
                 .OrderByDescending(pair => pair.Score)
                 .ThenBy(pair => pair.Left.File, StringComparer.Ordinal)
@@ -46,13 +60,70 @@ namespace CSR.Core.Similar
             return new SimilarResult { Pairs = pairs, Clusters = BuildClusters(pairs) };
         }
 
+        // Пары типов: по оценке и по общему ядру (TypeCores); у каждой пары - число членов одной формы
+        private static List<SimilarPair> AddCores(
+            IReadOnlyList<SimilarUnit> units,
+            IEnumerable<SimilarPair> scored,
+            SimilarOptions options,
+            Func<SimilarUnit, bool>? isProbe)
+        {
+            var comparer = new TypeComparer(options.TypeThreshold, options.Weights);
+            var pairs = new List<SimilarPair>();
+            var byLeft = new Dictionary<SimilarUnit, HashSet<SimilarUnit>>();
+            foreach (var pair in scored)
+            {
+                pairs.Add(WithCore(pair, (TypeUnit)pair.Left, (TypeUnit)pair.Right));
+                if (!byLeft.TryGetValue(pair.Left, out HashSet<SimilarUnit>? rights))
+                {
+                    rights = new HashSet<SimilarUnit>();
+                    byLeft[pair.Left] = rights;
+                }
+
+                rights.Add(pair.Right);
+            }
+
+            var types = units.OfType<TypeUnit>().ToList();
+            foreach (var core in TypeCores.Find(types, options.MinCoreMembers, isProbe))
+            {
+                if (byLeft.TryGetValue(core.Left, out HashSet<SimilarUnit>? rights) && rights.Contains(core.Right))
+                    continue;
+
+                pairs.Add(new SimilarPair
+                {
+                    Left = core.Left,
+                    Right = core.Right,
+                    Score = comparer.GetScore(core.Left, core.Right),
+                    SharedMembers = CountCore(core.Left, core.Right),
+                });
+            }
+
+            return pairs;
+        }
+
+        private static SimilarPair WithCore(SimilarPair pair, TypeUnit left, TypeUnit right)
+            => new() { Left = left, Right = right, Score = pair.Score, SharedMembers = CountCore(left, right) };
+
+        // Члены ядра: сопоставлены с оценкой 1 и не короче TypeCores.CoreNodes
+        private static int CountCore(TypeUnit left, TypeUnit right)
+        {
+            return TypeComparer.Match(left, right)
+                .Count(match => match.Score >= 1 && match.Left.NodeCount >= TypeCores.CoreNodes);
+        }
+
         // С отбором слева - проверяемая единица (измененный код), справа - похожая на нее
         private static SimilarPair Orient(SimilarPair pair, Func<SimilarUnit, bool>? isProbe)
         {
             if (isProbe == null || isProbe(pair.Left) || !isProbe(pair.Right))
                 return pair;
 
-            return new SimilarPair { Left = pair.Right, Right = pair.Left, Score = pair.Score, Windows = pair.Windows };
+            return new SimilarPair
+            {
+                Left = pair.Right,
+                Right = pair.Left,
+                Score = pair.Score,
+                Windows = pair.Windows,
+                SharedMembers = pair.SharedMembers,
+            };
         }
 
         private static bool IsInPairedMembers(SimilarPair pair, ILookup<SimilarUnit, SimilarUnit> pairedMembers)
@@ -128,13 +199,14 @@ namespace CSR.Core.Similar
             };
         }
 
-        // Кластеры по виду: члены - по самой единице, фрагменты - по месту (перекрытые фрагменты файла - одно место)
+        // Кластеры по виду: единицы - сами по себе, фрагменты - по месту (перекрытые фрагменты файла - одно место)
         private static List<SimilarCluster> BuildClusters(List<SimilarPair> pairs)
         {
             var clusters = new List<SimilarCluster>();
             foreach (var group in pairs.GroupBy(pair => pair.Left.Kind))
             {
-                var places = new PlaceSet(group.SelectMany(pair => new[] { pair.Left, pair.Right }));
+                var units = group.SelectMany(pair => new[] { pair.Left, pair.Right });
+                var places = new PlaceSet(units, group.Key == UnitKind.Fragment);
                 foreach (var pair in group)
                     places.Union(pair.Left, pair.Right);
 
@@ -142,13 +214,17 @@ namespace CSR.Core.Similar
                 foreach (var component in group.GroupBy(pair => places.Find(pair.Left)))
                 {
                     var componentPairs = component.ToList();
+                    var componentUnits = components[component.Key];
                     clusters.Add(new SimilarCluster
                     {
                         Kind = group.Key,
-                        Units = components[component.Key],
+                        Units = componentUnits,
                         PairCount = componentPairs.Count,
                         MaxScore = componentPairs.Max(pair => pair.Score),
                         MinScore = componentPairs.Min(pair => pair.Score),
+                        Common = ClusterSummary.GetCommon(componentUnits),
+                        Differences = ClusterSummary.GetDifferences(componentUnits),
+                        Bodies = ClusterSummary.GetBodies(componentUnits, componentPairs),
                     });
                 }
             }
@@ -160,15 +236,17 @@ namespace CSR.Core.Similar
                 .ToList();
         }
 
-        // Места кода и объединение их в компоненты (union-find). Перекрытые места одного файла - одно место
+        // Места кода и объединение их в компоненты (union-find). Для фрагментов перекрытые места файла - одно место
         private class PlaceSet
         {
             private readonly List<SimilarUnit> m_Places;
             private readonly Dictionary<SimilarUnit, int> m_Indexes = new();
             private readonly UnionFind m_Components;
+            private readonly bool m_IsMergingOverlaps;
 
-            public PlaceSet(IEnumerable<SimilarUnit> units)
+            public PlaceSet(IEnumerable<SimilarUnit> units, bool isMergingOverlaps)
             {
+                m_IsMergingOverlaps = isMergingOverlaps;
                 m_Places = units.Distinct()
                     .OrderBy(unit => unit.File, StringComparer.Ordinal)
                     .ThenBy(unit => unit.SpanStart)
@@ -176,6 +254,9 @@ namespace CSR.Core.Similar
                 m_Components = new UnionFind(m_Places.Count);
                 for (int i = 0; i < m_Places.Count; i++)
                     m_Indexes[m_Places[i]] = i;
+
+                if (!isMergingOverlaps)
+                    return;
 
                 // группа перекрытых мест: открыта, пока следующее место начинается до наибольшего конца группы
                 int open = 0;
@@ -216,7 +297,7 @@ namespace CSR.Core.Similar
 
                     var unit = m_Places[i];
                     var last = places.Count > 0 ? places[places.Count - 1] : null;
-                    if (last != null && last.File == unit.File && unit.SpanStart < last.SpanEnd)
+                    if (m_IsMergingOverlaps && last != null && last.File == unit.File && unit.SpanStart < last.SpanEnd)
                         places[places.Count - 1] = Join(last, unit);
                     else
                         places.Add(unit);

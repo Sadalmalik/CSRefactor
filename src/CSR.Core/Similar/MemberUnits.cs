@@ -21,11 +21,11 @@ namespace CSR.Core.Similar
 
                 var unit = CreateMember(tree, node);
                 owners[node] = unit;
-                if (IsLargeEnough(unit, options))
+                if (options.Kinds.Contains(UnitKind.Member) && IsLargeEnough(unit, options))
                     units.Add(unit);
             }
 
-            if (options.FragmentStatements < 2)
+            if (options.FragmentStatements < 2 || !options.Kinds.Contains(UnitKind.Fragment))
                 return units;
 
             foreach (var block in root.DescendantNodes().OfType<BlockSyntax>())
@@ -80,7 +80,7 @@ namespace CSR.Core.Similar
             }
         }
 
-        private static SimilarUnit CreateMember(SyntaxTree tree, SyntaxNode node)
+        internal static SimilarUnit CreateMember(SyntaxTree tree, SyntaxNode node)
         {
             var hasher = new ShapeHasher();
             hasher.Add(node);
@@ -105,7 +105,7 @@ namespace CSR.Core.Similar
             return new Shape(hash, hasher.Fingerprints, hasher.NodeCount);
         }
 
-        private static bool IsUnitNode(SyntaxNode node)
+        internal static bool IsUnitNode(SyntaxNode node)
         {
             return node switch
             {
@@ -140,9 +140,15 @@ namespace CSR.Core.Similar
             return null;
         }
 
-        // Type.Member; вложенные локальная функция и лямбда - через имя внешнего члена
-        private static string GetMemberName(SyntaxNode node)
+        // Type.Member; вложенные локальная функция и лямбда - через имя внешнего члена; тип - Outer.Type
+        internal static string GetMemberName(SyntaxNode node)
         {
+            if (node is BaseTypeDeclarationSyntax type)
+            {
+                var path = GetTypeName(type);
+                return path.Length > 0 ? path + "." + type.Identifier.Text : type.Identifier.Text;
+            }
+
             var own = GetOwnName(node);
             var outer = node.Ancestors().FirstOrDefault(ancestor => ancestor is MemberDeclarationSyntax
                 and not BaseTypeDeclarationSyntax and not BaseNamespaceDeclarationSyntax);
@@ -165,6 +171,8 @@ namespace CSR.Core.Similar
                 IndexerDeclarationSyntax => ".this[]",
                 EventDeclarationSyntax eventDeclaration => "." + eventDeclaration.Identifier.Text,
                 LocalFunctionStatementSyntax function => "." + function.Identifier.Text,
+                BaseFieldDeclarationSyntax field => "." + string.Join(",", field.Declaration.Variables.Select(
+                    variable => variable.Identifier.Text)),
                 _ => "",
             };
         }
@@ -175,7 +183,7 @@ namespace CSR.Core.Similar
             return string.Join(".", types);
         }
 
-        private static int GetLine(SyntaxTree tree, int position)
+        internal static int GetLine(SyntaxTree tree, int position)
             => tree.GetLineSpan(new Microsoft.CodeAnalysis.Text.TextSpan(position, 0)).StartLinePosition.Line + 1;
 
         // Форма одного оператора: хеш, отпечатки, число узлов

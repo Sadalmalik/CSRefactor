@@ -11,7 +11,8 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace CSR.Commands
 {
-    // csr similar: похожий код по синтаксису файлов - пары и кластеры членов и фрагментов. Ничего не пишет рядом с кодом
+    // csr similar: похожий код по синтаксису файлов - пары и кластеры членов, фрагментов, наборов параметров и полей,
+    // типов. Ничего не пишет рядом с кодом
     public static class SimilarCommand
     {
         public const string Usage = """
@@ -24,7 +25,11 @@ namespace CSR.Commands
               --changed                      только пары с измененным кодом (git diff от HEAD и новые файлы)
                                              против всего кода цели
               --diff <ревизия | файл.diff>   измененные строки для --changed: git diff -U0 от ревизии или готовый дифф
-              --threshold <0..1>             порог оценки (по умолчанию 0.82)
+              --kinds <виды>                 через запятую: member, fragment, parameters, fields, type (по умолчанию все)
+              --threshold <0..1>             порог оценки членов и фрагментов, L1 (по умолчанию 0.82)
+              --set-threshold <0..1>         порог наборов параметров и полей, L2 (по умолчанию 0.5)
+              --min-shared <N>               наименьшее число общих элементов пары наборов (по умолчанию 3)
+              --type-threshold <0..1>        порог типов, L3 (по умолчанию 0.75)
               --min-lines <N>                наименьшее число строк единицы (по умолчанию 4)
               --min-nodes <N>                наименьшее число узлов формы (по умолчанию 20)
               --min-shapes <N>               наименьшее число разных поддеревьев формы (по умолчанию 20)
@@ -41,7 +46,11 @@ namespace CSR.Commands
             "--config",
             "--project",
             "--diff",
+            "--kinds",
             "--threshold",
+            "--set-threshold",
+            "--min-shared",
+            "--type-threshold",
             "--min-lines",
             "--min-nodes",
             "--min-shapes",
@@ -80,9 +89,8 @@ namespace CSR.Commands
             var report = new SimilarReport
             {
                 FileCount = files.Count,
-                MemberCount = units.Count(unit => unit.Kind == UnitKind.Member),
-                FragmentCount = units.Count(unit => unit.Kind == UnitKind.Fragment),
-                Threshold = options.Threshold,
+                UnitCounts = units.GroupBy(unit => unit.Kind).ToDictionary(group => group.Key, group => group.Count()),
+                Options = options,
                 IsChanged = isChanged,
                 Result = result,
             };
@@ -102,7 +110,7 @@ namespace CSR.Commands
             {
                 var source = File.ReadAllText(file);
                 var tree = CSharpSyntaxTree.ParseText(source, project.ParseOptions, SourceFiles.GetDisplayPath(file));
-                results.Add(MemberUnits.Collect(tree, options));
+                results.Add(SimilarUnits.Collect(tree, options));
             });
 
             return results.SelectMany(units => units).ToList();
@@ -143,9 +151,14 @@ namespace CSR.Commands
             var path = ConfigFiles.Find(commandLine.GetOption("--config"), "similar.jsonc", start);
             var options = path == null ? new SimilarOptions() : SimilarConfig.Parse(StyleCommand.ReadConfig(path));
 
-            var threshold = commandLine.GetOption("--threshold");
-            if (threshold != null)
-                options.Threshold = ParseThreshold(threshold);
+            var kinds = commandLine.GetOption("--kinds");
+            if (kinds != null)
+                options.Kinds = ParseKinds(kinds);
+
+            options.Threshold = ReadThreshold(commandLine, "--threshold") ?? options.Threshold;
+            options.SetThreshold = ReadThreshold(commandLine, "--set-threshold") ?? options.SetThreshold;
+            options.TypeThreshold = ReadThreshold(commandLine, "--type-threshold") ?? options.TypeThreshold;
+            options.MinShared = ReadInt(commandLine, "--min-shared") ?? options.MinShared;
 
             options.MinLines = ReadInt(commandLine, "--min-lines") ?? options.MinLines;
             options.MinNodes = ReadInt(commandLine, "--min-nodes") ?? options.MinNodes;
@@ -154,15 +167,35 @@ namespace CSR.Commands
             return options;
         }
 
-        private static double ParseThreshold(string text)
+        private static HashSet<UnitKind> ParseKinds(string text)
         {
+            var kinds = new HashSet<UnitKind>();
+            foreach (var key in text.Split(',').Select(part => part.Trim()).Where(part => part.Length > 0))
+            {
+                var kind = UnitKinds.Find(key);
+                if (kind == null)
+                    throw new UsageException(
+                        $"--kinds: неизвестный вид '{key}'; допустимо {string.Join(", ", UnitKinds.AllKeys)}");
+
+                kinds.Add(kind.Value);
+            }
+
+            return kinds;
+        }
+
+        private static double? ReadThreshold(CommandLine commandLine, string name)
+        {
+            var text = commandLine.GetOption(name);
+            if (text == null)
+                return null;
+
             bool isNumber = double.TryParse(
                 text.Replace(',', '.'),
                 NumberStyles.Float,
                 CultureInfo.InvariantCulture,
                 out double value);
             if (!isNumber || value is < 0 or > 1)
-                throw new UsageException($"--threshold: ожидается число от 0 до 1, задано '{text}'");
+                throw new UsageException($"{name}: ожидается число от 0 до 1, задано '{text}'");
 
             return value;
         }

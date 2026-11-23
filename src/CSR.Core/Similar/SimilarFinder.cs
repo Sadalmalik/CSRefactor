@@ -12,59 +12,39 @@ namespace CSR.Core.Similar
         public required double Score { get; init; }
 
         public int Windows { get; init; } = 1;
+
+        // L3: членов одной формы (общее ядро) - пара найдена по ядру, если оценка ниже порога
+        public int SharedMembers { get; init; }
     }
 
-    // Пары единиц одного вида с коэффициентом Жаккара не ниже порога. Кандидаты - через префиксный фильтр
-    // (AllPairs): отпечатки единицы упорядочены от редких к частым, две единицы с J >= t обязательно делят отпечаток
-    // в префиксах длины n - ceil(t * n) + 1. Отбор точный, без пропусков: частые отпечатки (символ, литерал) в
-    // префикс почти не попадают, поэтому списки кандидатов короткие
+    // Пары единиц одного вида. Кандидаты - через префиксный фильтр (AllPairs) с порогом сравнения вида: отпечатки
+    // единицы упорядочены от редких к частым, две единицы с J >= t обязательно делят отпечаток в префиксах длины
+    // n - ceil(t * n) + 1. Отбор точный, без пропусков: частые отпечатки (символ, литерал, база MonoBehaviour) в
+    // префикс почти не попадают, поэтому списки кандидатов короткие. Оценку пары дает сравнение вида
     public static class SimilarFinder
     {
         // isProbe - единицы, для которых ищутся пары (--changed); null - все пары всех единиц
         public static List<SimilarPair> Find(
             IReadOnlyList<SimilarUnit> units,
-            double threshold,
+            Func<UnitKind, UnitComparer> getComparer,
             Func<SimilarUnit, bool>? isProbe = null)
         {
             var pairs = new List<SimilarPair>();
             foreach (var group in units.GroupBy(unit => unit.Kind))
-                pairs.AddRange(FindInKind(group.ToList(), threshold, isProbe));
+                pairs.AddRange(FindInKind(group.ToList(), getComparer(group.Key), isProbe));
 
             return pairs;
         }
 
         public static double GetJaccard(ulong[] left, ulong[] right)
-        {
-            int shared = 0;
-            int i = 0;
-            int j = 0;
-            while (i < left.Length && j < right.Length)
-            {
-                if (left[i] == right[j])
-                {
-                    shared++;
-                    i++;
-                    j++;
-                }
-                else if (left[i] < right[j])
-                {
-                    i++;
-                }
-                else
-                {
-                    j++;
-                }
-            }
-
-            int union = left.Length + right.Length - shared;
-            return union == 0 ? 0 : (double)shared / union;
-        }
+            => UnitComparer.GetJaccard(left, right);
 
         private static List<SimilarPair> FindInKind(
             List<SimilarUnit> units,
-            double threshold,
+            UnitComparer comparer,
             Func<SimilarUnit, bool>? isProbe)
         {
+            double threshold = comparer.CandidateThreshold;
             var prefixes = GetPrefixes(units, threshold);
             var index = new Dictionary<ulong, List<int>>();
             for (int i = 0; i < units.Count; i++)
@@ -104,7 +84,7 @@ namespace CSR.Core.Similar
 
                 foreach (int j in candidates)
                 {
-                    var pair = Compare(units[i], units[j], threshold);
+                    var pair = Compare(units[i], units[j], comparer);
                     if (pair != null)
                         found.Add(pair);
                 }
@@ -113,22 +93,22 @@ namespace CSR.Core.Similar
             return found.ToList();
         }
 
-        private static SimilarPair? Compare(SimilarUnit left, SimilarUnit right, double threshold)
+        private static SimilarPair? Compare(SimilarUnit left, SimilarUnit right, UnitComparer comparer)
         {
             int small = Math.Min(left.Fingerprints.Length, right.Fingerprints.Length);
             int large = Math.Max(left.Fingerprints.Length, right.Fingerprints.Length);
-            if (small < threshold * large || IsOverlapping(left, right))
+            if (small < comparer.CandidateThreshold * large || IsOverlapping(left, right))
                 return null;
 
-            double score = GetJaccard(left.Fingerprints, right.Fingerprints);
-            if (score < threshold)
+            double? score = comparer.Score(left, right);
+            if (score == null)
                 return null;
 
             bool isOrdered = string.CompareOrdinal(left.File, right.File) < 0
                 || left.File == right.File && left.SpanStart < right.SpanStart;
             return isOrdered
-                ? new SimilarPair { Left = left, Right = right, Score = score }
-                : new SimilarPair { Left = right, Right = left, Score = score };
+                ? new SimilarPair { Left = left, Right = right, Score = score.Value }
+                : new SimilarPair { Left = right, Right = left, Score = score.Value };
         }
 
         // Перекрытые единицы - не повтор: лямбда внутри своего метода, окна одного блока со сдвигом меньше окна

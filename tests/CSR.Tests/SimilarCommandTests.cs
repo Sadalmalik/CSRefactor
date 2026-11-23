@@ -96,5 +96,68 @@ namespace CSR.Tests
         [Test]
         public void Help()
             => Assert.That(Cli.Run("help", "similar").Output, Does.StartWith("csr similar"));
+
+        [Test]
+        public void Kinds_UnknownKind_ExitTwo()
+        {
+            using var folder = new TempFolder();
+            folder.Write("Totals.cs", Totals);
+            var result = Cli.Run("similar", folder.Path, "--kinds", "member,classes");
+            Assert.That(result.ExitCode, Is.EqualTo(2));
+            Assert.That(result.Error, Does.Contain("неизвестный вид 'classes'"));
+        }
+
+        [Test]
+        public void ConfigSynonyms_ParameterSetPair()
+        {
+            using var folder = new TempFolder();
+            folder.Write(
+                "Projectiles.cs",
+                "class Projectiles { void Launch(Vector3 position, Vector3 direction, float speed) { } }");
+            folder.Write("Units.cs", "class Units { void Move(Vector3 pos, Vector3 dir, float speed, int frame) { } }");
+            var config = folder.Write("similar.jsonc", """
+                {
+                  "kinds": ["parameters"],
+                  "synonyms": { "Pos": "Position", "dir": "direction" },
+                  "weights": { "bodies": 3 }
+                }
+                """);
+            var result = Cli.Run("similar", folder.Path, "--config", config, "--format", "md");
+
+            Assert.That(result.ExitCode, Is.EqualTo(0), result.Error);
+            Assert.That(result.Output, Does.Contain("## 1. наборы параметров: мест 2, пар 1, оценка 0.75"));
+            Assert.That(result.Output, Does.Contain("Общее: `Vector3 position`, `Vector3 direction`, `float speed`"));
+            Assert.That(result.Output, Does.Contain("  - своё: `int frame`"));
+        }
+
+        [Test]
+        public void Changed_TypeAgainstCommitted()
+        {
+            const string rule = """
+                public class FirstRule : RuleBase
+                {
+                    private readonly int m_Depth = 2;
+                    public override string Name => "first";
+                    public override void Apply(Context context)
+                    {
+                        foreach (var node in context.Nodes)
+                        {
+                            if (node.Depth > 2)
+                                context.Report(node, "first: " + node.Text);
+                        }
+                    }
+                    private static bool Matches(string text) => text.StartsWith("a");
+                }
+                """;
+            using var folder = new TempFolder();
+            folder.Write("FirstRule.cs", rule);
+            Cli.InitRepository(folder.Path);
+            folder.Write("SecondRule.cs", rule.Replace("FirstRule", "SecondRule").Replace("\"first", "\"second"));
+            var result = Cli.Run("similar", folder.Path, "--changed", "--kinds", "type", "--format", "md");
+
+            Assert.That(result.ExitCode, Is.EqualTo(0), result.Error);
+            Assert.That(result.Output, Does.Match("## типы: `[^`]*SecondRule.cs:1-14` `SecondRule`"));
+            Assert.That(result.Output, Does.Match("- 1.00: `[^`]*FirstRule.cs:1-14` `FirstRule`"));
+        }
     }
 }
