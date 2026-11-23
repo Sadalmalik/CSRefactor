@@ -30,6 +30,13 @@
     "region-layout": { "severity": "hint", "inside": 1, "between": 2, "outside": 1 },
     "condition-wrap": { "severity": "warning", "max": 120, "argumentIndent": true, "continuationIndent": true, "assignmentIndent": false },
     "initializer-layout": { "severity": "warning", "max": 120, "trailingComma": true },
-    "ternary-wrap": { "severity": "warning", "max": 120, "nested": true }
+    "ternary-wrap": { "severity": "warning", "max": 120, "nested": true },
+    "field-prefix": { "severity": "warning", "instancePrefix": "m_", "staticPrefix": "s_", "staticReadonly": "pascal", "constants": "pascal" },
+    "bool-name": { "severity": "warning", "forbiddenWords": ["Not", "No", "Non", "Dont"], "negationPrefixes": [], "ignoreWords": [] },
+    "event-name": { "severity": "warning", "allowed": ["On*"], "forbidden": ["OnWill*", "OnDid*"], "delegatePrefixes": ["On"] },
+    "type-name": { "severity": "warning", "interfacePrefix": "I", "typeParameterPrefix": "T", "derivedNames": { "CommandBase": "*Command" } },
+    "namespace-name": { "severity": "warning", "roots": ["Company"], "forbiddenWords": ["Editor"], "maxDepth": 4 },
+    "enum-plural": { "severity": "hint" },
+    "collection-name": { "severity": "hint", "members": ["field", "property"] }
   }
 }

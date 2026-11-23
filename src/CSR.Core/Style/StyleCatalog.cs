@@ -35,6 +35,13 @@ namespace CSR.Core.Style
             new ConditionWrapCheck(),
             new InitializerLayoutCheck(),
             new TernaryWrapCheck(),
+            new FieldPrefixCheck(),
+            new BoolNameCheck(),
+            new EventNameCheck(),
+            new TypeNameCheck(),
+            new NamespaceNameCheck(),
+            new EnumPluralCheck(),
+            new CollectionNameCheck(),
         ];
 
         public static SyntaxCheck? Find(string name)

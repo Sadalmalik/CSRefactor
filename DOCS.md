@@ -28,6 +28,7 @@
   - Идиомы и типы: [`null-check`](#null-check), [`coalesce-assignment`](#coalesce-assignment), [`out-var`](#out-var), [`bool-local-type`](#bool-local-type), [`local-type`](#local-type), [`tuple-type`](#tuple-type)
   - Модификаторы: [`explicit-private`](#explicit-private), [`forbidden-modifier`](#forbidden-modifier), [`custom-delegate`](#custom-delegate)
   - Раскладка кода столбиком: [`expression-arrow`](#expression-arrow), [`signature-wrap`](#signature-wrap), [`call-wrap`](#call-wrap), [`region-layout`](#region-layout), [`condition-wrap`](#condition-wrap), [`initializer-layout`](#initializer-layout), [`ternary-wrap`](#ternary-wrap)
+  - Именование: [`field-prefix`](#field-prefix), [`bool-name`](#bool-name), [`event-name`](#event-name), [`type-name`](#type-name), [`namespace-name`](#namespace-name), [`enum-plural`](#enum-plural), [`collection-name`](#collection-name)
 - [5. Признаки `arch`](#5-признаки-arch)
   - По одному файлу: [`type-branch`](#type-branch), [`behaviour-logic`](#behaviour-logic), [`index-api`](#index-api), [`static-data-methods`](#static-data-methods), [`project-mechanism`](#project-mechanism), [`numeric-constant`](#numeric-constant), [`numeric-literal`](#numeric-literal), [`tuple-type`](#tuple-type-arch), [`partial-file`](#partial-file), [`debug-draw`](#debug-draw), [`obsolete-reason`](#obsolete-reason), [`persisted-class`](#persisted-class)
   - По решению: [`variant-flag`](#variant-flag), [`single-implementation`](#single-implementation), [`dead-member`](#dead-member), [`parameter-set`](#parameter-set), [`unraised-event`](#unraised-event), [`class-cohesion`](#class-cohesion)
@@ -56,7 +57,7 @@
 | [`coalesce-assignment`](#coalesce-assignment) | `if (x == null) x = …` вместо `??=` | да | — |
 | [`out-var`](#out-var) | тип переменной в `out`-аргументе | часть | `prefer`, `discardUnused` |
 | [`bool-local-type`](#bool-local-type) | `var` или `bool` у локальной с булевым инициализатором | да | `prefer` |
-| [`local-type`](#local-type) | `var` или явный тип у локальной и `foreach` | часть | `prefer`, `foreach`, `foreachExplicitTypes` |
+| [`local-type`](#local-type) | `var` или явный тип у локальной и `foreach` | часть | `prefer`, `foreach`, `foreachExplicitTypes`, `delegateTypes` |
 | [`tuple-type`](#tuple-type) | кортеж в сигнатуре или поле | нет | — |
 | [`explicit-private`](#explicit-private) | явный `private` у членов | да | `prefer`, `members` |
 | [`forbidden-modifier`](#forbidden-modifier) | запрещённые модификаторы | нет | `modifiers` |
@@ -68,6 +69,13 @@
 | [`condition-wrap`](#condition-wrap) | перенос логического условия | да | `max`, `argumentIndent`, `continuationIndent`, `assignmentIndent` |
 | [`initializer-layout`](#initializer-layout) | инициализатор столбиком | да | `max`, `trailingComma` |
 | [`ternary-wrap`](#ternary-wrap) | тернарный оператор столбиком | часть | `max`, `nested` |
+| [`field-prefix`](#field-prefix) | префиксы полей, регистр констант | нет | `instancePrefix`, `staticPrefix`, `staticReadonly`, `constants`, `prefixedAccess`, `pascalAfterPrefix`, `properties` |
+| [`bool-name`](#bool-name) | отрицание в имени `bool` | нет | `members`, `forbiddenWords`, `negationPrefixes`, `ignoreWords` |
+| [`event-name`](#event-name) | имя события по маскам, префикс `delegate` | нет | `allowed`, `forbidden`, `delegatePrefixes` |
+| [`type-name`](#type-name) | префиксы интерфейса и параметра-типа, имя наследника | нет | `interfacePrefix`, `typeParameterPrefix`, `derivedNames` |
+| [`namespace-name`](#namespace-name) | корень, слова и глубина пространства имён | нет | `roots`, `forbiddenWords`, `maxDepth` |
+| [`enum-plural`](#enum-plural) | число в имени `enum` по `[Flags]` | нет | `pluralWords`, `singularEndings` |
+| [`collection-name`](#collection-name) | коллекция с именем в единственном числе | нет | `members`, `collectionTypes`, `arrays`, `pluralWords`, `singularEndings` |
 
 ### Признаки `arch` (сводная таблица)
 
@@ -4110,6 +4118,528 @@ public class Report
 - Тернарник внутри другого выражения — находка без замены.
 - `nested: false` — вложенный тернарник столбиком только при превышении `max`.
 
+### Именование
+
+Проверки имён по синтаксису одного файла, без семантики: тип берётся из объявления, `var` не проверяется. Все слова, префиксы и маски задаются параметрами конфига. Замены нет ни у одной проверки: переименование затрагивает другие файлы, поэтому имя меняют через [`csr rename`](#csr-rename) (у полей Unity он сохраняет сериализованные данные). Если правило можно вывести из имени, в сообщении есть предлагаемое имя. Члены `override` и явные реализации интерфейса не проверяются: их имя задаёт база.
+
+#### `field-prefix`
+
+Префиксы полей и регистр констант:
+- у поля с доступом из `prefixedAccess` (по умолчанию закрытого) обязателен префикс: `instancePrefix` у поля экземпляра, `staticPrefix` у статического;
+- закрытое `static readonly` проверяется по параметру `staticReadonly`;
+- остальные поля и свойства должны быть без префиксов полей: `instancePrefix`, `staticPrefix` и общего вида (`m_`, `k_`, `_`);
+- константа проверяется по `constants`: PascalCase или UPPER_CASE.
+
+**Замена:** нет. В сообщении указано ожидаемое имя.
+
+**Параметры**
+
+| Параметр | Значения | По умолчанию | Описание |
+|---|---|---|---|
+| `instancePrefix` | строка | `"m_"` | префикс поля экземпляра; пусто — без префикса |
+| `staticPrefix` | строка | `"s_"` | префикс статического поля; пусто — без префикса |
+| `staticReadonly` | `static`, `pascal` | `static` | закрытое `static readonly`: `static` — префикс `staticPrefix`, `pascal` — без префикса, как константа |
+| `constants` | `pascal`, `upper`, `any` | `pascal` | регистр константы: `MaxSize`, `MAX_SIZE` или не проверять |
+| `prefixedAccess` | список: `private`, `protected`, `internal`, `public` | `["private"]` | доступ полей, у которых обязателен префикс. Поле без модификатора считается `private`; `protected internal` и `private protected` — `protected` |
+| `pascalAfterPrefix` | `true`, `false` | `true` | после префикса — заглавная буква (`m_Name`, не `m_name`) |
+| `properties` | `true`, `false` | `true` | проверять, что у свойств нет префиксов полей |
+
+**Пример**
+
+Конфиг:
+
+```jsonc
+{ "checks": { "field-prefix": { "severity": "warning", "staticReadonly": "pascal" } } }
+```
+
+Было (`Demo.cs`):
+
+```csharp
+public class Counter
+{
+    public const int MAX_COUNT = 10;
+    private const int Step = 1;
+    private static int s_Instances;
+    private static readonly string Prefix = "c";
+    private int count;
+    private int m_total;
+    protected int m_Limit;
+    public int m_Value;
+}
+```
+
+Находки (`--format md`):
+
+````markdown
+- 3: `field-prefix` (warning) - 'MAX_COUNT': константа в PascalCase - 'MaxCount'
+- 7: `field-prefix` (warning) - 'count': закрытое поле с префиксом 'm_' - 'm_Count'
+- 8: `field-prefix` (warning) - 'm_total': после префикса - заглавная буква - 'm_Total'
+- 9: `field-prefix` (warning) - 'm_Limit': поле без префикса 'm_' - 'Limit'
+- 10: `field-prefix` (warning) - 'm_Value': поле без префикса 'm_' - 'Value'
+````
+
+Стало (после `csr rename` по каждой находке):
+
+```csharp
+public class Counter
+{
+    public const int MaxCount = 10;
+    private const int Step = 1;
+    private static int s_Instances;
+    private static readonly string Prefix = "c";
+    private int m_Count;
+    private int m_Total;
+    protected int Limit;
+    public int Value;
+}
+```
+
+Если `protected`-поля тоже пишутся с `m_`, задайте `"prefixedAccess": ["private", "protected"]`: тогда `m_Limit` не даёт находку, а `protected int limit` даёт.
+
+**Ограничения**
+
+- Доступ определяется только по модификаторам: поле без модификатора считается закрытым.
+- В UPPER_CASE-имени цифра после `_` склеивается с предыдущим словом: для `Prime64_1` предлагается `Prime641`. Имя в сообщении — подсказка, а не замена.
+- Короткое имя константы из заглавных букв (`ID`, `UI`, до трёх букв) считается аббревиатурой и находки не даёт.
+
+#### `bool-name`
+
+Имя `bool` с отрицанием (`IsNotActive`, `NoSound`, `IsDisabled`). Имя без префикса поля делится на слова по `_` и по границам регистра. Отрицанием считается:
+- слово из `forbiddenWords`;
+- слово, которое начинается с приставки из `negationPrefixes` и длиннее её, если его нет в `ignoreWords`.
+
+Регистр при сравнении не учитывается.
+
+Тип `bool` определяется по объявлению: `bool`, `bool?`, `Boolean`. Проверяются поля, свойства, параметры и локальные переменные, в том числе `out bool x`.
+
+**Замена:** нет. Имя по состоянию (`IsLocked` вместо `IsNotUnlocked`) выбирает агент.
+
+**Параметры**
+
+| Параметр | Значения | По умолчанию | Описание |
+|---|---|---|---|
+| `members` | список: `field`, `property`, `parameter`, `local` | все четыре | какие объявления проверять |
+| `forbiddenWords` | список строк | `["Not", "No", "Non", "Dont"]` | запрещённые слова имени |
+| `negationPrefixes` | список строк | `[]` | приставки отрицания: слово, которое с неё начинается (`Dis` — `Disabled`) |
+| `ignoreWords` | список строк | `[]` | слова с приставкой, которые не означают отрицания (`Display`, `Under`) |
+
+**Пример**
+
+Конфиг:
+
+```jsonc
+{ "checks": { "bool-name": { "severity": "warning", "negationPrefixes": ["Dis"], "ignoreWords": ["Displayed"] } } }
+```
+
+Было (`Demo.cs`):
+
+```csharp
+public class Door
+{
+    private bool m_IsNotLocked;
+    private bool m_IsDisabled;
+    private bool m_IsDisplayed;
+
+    public bool NoSound { get; set; }
+
+    public void Open(bool dontAnimate)
+    {
+        bool isOpen = true;
+    }
+}
+```
+
+Находки (`--format md`):
+
+````markdown
+- 3: `bool-name` (warning) - bool 'm_IsNotLocked': отрицание 'Not' - имя по состоянию
+- 4: `bool-name` (warning) - bool 'm_IsDisabled': отрицание 'Disabled' - имя по состоянию
+- 7: `bool-name` (warning) - bool 'NoSound': отрицание 'No' - имя по состоянию
+- 9: `bool-name` (warning) - bool 'dontAnimate': отрицание 'dont' - имя по состоянию
+````
+
+Стало (правка агентом и `csr rename`):
+
+```csharp
+public class Door
+{
+    private bool m_CanOpen;
+    private bool m_IsEnabled;
+    private bool m_IsDisplayed;
+
+    public bool IsMuted { get; set; }
+
+    public void Open(bool animate)
+    {
+        bool isOpen = true;
+    }
+}
+```
+
+**Ограничения**
+
+- Слово отрицания может относиться не к значению флага, а к объекту: `IncludeDisabledComponents` (включать отключённые компоненты) тоже даёт находку.
+- Приставки (`negationPrefixes`) проверяются только по началу слова, словаря нет: `Un` совпадёт с `Unit`, `Dis` — с `Distance`. Такие слова перечисляются в `ignoreWords`.
+- Локальная `var x = a < b` не проверяется: без семантики тип не известен.
+
+#### `event-name`
+
+Имя события по маскам (`*` — любые символы):
+- находка, если имя подходит под маску из `forbidden`;
+- находка, если имя не подходит ни под одну маску из `allowed`; при пустом `allowed` годится любое имя.
+
+Проверяются `event`-поля и `event` с `add` / `remove`. Поля `Action` / `Func` не считаются событиями и не проверяются: это действие, а не оповещение.
+
+Имя своего `delegate` не должно начинаться с префикса из `delegatePrefixes`, если за префиксом идёт заглавная буква (`OnSpawnHandler` даёт находку, `OnlineHandler` — нет).
+
+**Замена:** нет.
+
+**Параметры**
+
+| Параметр | Значения | По умолчанию | Описание |
+|---|---|---|---|
+| `allowed` | список масок | `["On*"]` | допустимые имена события; пусто — любое имя |
+| `forbidden` | список масок | `["OnWill*", "OnDid*"]` | запрещённые имена события |
+| `delegatePrefixes` | список строк | `["On"]` | запрещённые префиксы имени `delegate` |
+
+**Пример**
+
+Конфиг:
+
+```jsonc
+{ "checks": { "event-name": { "severity": "warning", "allowed": ["OnBefore*", "OnAfter*"], "forbidden": ["On*ed", "On*ing"] } } }
+```
+
+Было (`Demo.cs`):
+
+```csharp
+using System;
+
+public class Spawner
+{
+    public event Action OnBeforeSpawn;
+    public event Action OnAfterSpawn;
+    public event Action OnSpawned;
+    public event Action Spawned;
+    public Action Execute;
+
+    public delegate void OnSpawnHandler();
+    public delegate void AfterSpawnDelegate();
+}
+```
+
+Находки (`--format md`):
+
+````markdown
+- 7: `event-name` (warning) - событие 'OnSpawned': запрещенная форма 'On*ed'
+- 8: `event-name` (warning) - событие 'Spawned': допустимо OnBefore*, OnAfter*
+- 11: `event-name` (warning) - delegate 'OnSpawnHandler': без префикса 'On'
+````
+
+Стало (`OnSpawned` и `Spawned` объединены в `OnAfterSpawn`, `delegate` переименован):
+
+```csharp
+using System;
+
+public class Spawner
+{
+    public event Action OnBeforeSpawn;
+    public event Action OnAfterSpawn;
+    public Action Execute;
+
+    public delegate void SpawnHandler();
+    public delegate void AfterSpawnDelegate();
+}
+```
+
+**Ограничения**
+
+- Запрещённые формы задаются масками, а не грамматикой: `On*ed` совпадёт и с `OnBeforeCreated`. Порядок проверки: сначала `forbidden`, затем `allowed`.
+
+#### `type-name`
+
+Имена типов:
+- имя интерфейса начинается с `interfacePrefix`, за которым идёт заглавная буква: `IStorage`, но не `Index`;
+- параметр-тип равен `typeParameterPrefix` или начинается с него перед заглавной буквой: `T`, `TItem`;
+- имя наследника базового типа из `derivedNames` подходит под маску: ключ — маска имени базы, значение — маска имени наследника.
+
+База определяется по имени в списке баз объявления, без пространства имён и аргументов типа: `Core.CommandBase<int>` даёт `CommandBase`.
+
+**Замена:** нет.
+
+**Параметры**
+
+| Параметр | Значения | По умолчанию | Описание |
+|---|---|---|---|
+| `interfacePrefix` | строка | `"I"` | префикс интерфейса; пусто — не проверять |
+| `typeParameterPrefix` | строка | `"T"` | префикс параметра-типа; пусто — не проверять |
+| `derivedNames` | объект «маска базы → маска имени» | `{}` | обязательная форма имени наследника (`{ "CommandBase": "*Command", "AssetBase": "Asset*" }`) |
+
+**Пример**
+
+Конфиг:
+
+```jsonc
+{ "checks": { "type-name": { "severity": "warning", "derivedNames": { "CommandBase": "*Command" } } } }
+```
+
+Было (`Demo.cs`):
+
+```csharp
+public interface IStorage { }
+public interface Storage { }
+
+public class Box<T, TItem, Value> { }
+
+public abstract class CommandBase { }
+public class SaveCommand : CommandBase { }
+public class Load : CommandBase { }
+```
+
+Находки (`--format md`):
+
+````markdown
+- 2: `type-name` (warning) - интерфейс 'Storage': префикс 'I'
+- 4: `type-name` (warning) - параметр-тип 'Value': префикс 'T'
+- 8: `type-name` (warning) - 'Load' наследует 'CommandBase': имя по маске '*Command'
+````
+
+Стало (после `csr rename`):
+
+```csharp
+public interface IStorage { }
+public interface IFileStorage { }
+
+public class Box<T, TItem, TValue> { }
+
+public abstract class CommandBase { }
+public class SaveCommand : CommandBase { }
+public class LoadCommand : CommandBase { }
+```
+
+**Ограничения**
+
+- Проверяется только прямая база из объявления: наследник через промежуточный тип (`class Quick : LoadCommand`) по `derivedNames` не проверяется.
+- Без семантики базовый класс от интерфейса не отличить: маска сравнивается с каждым именем в списке баз.
+
+#### `namespace-name`
+
+Пространство имён, в котором объявлены типы:
+- начинается с одного из `roots` (`Company` или `Company.…`);
+- в его частях нет слов из `forbiddenWords`; части делятся на слова, поэтому `EditorTools` даёт слово `Editor`;
+- в нём не больше `maxDepth` частей.
+
+Полное имя собирается с учётом внешних объявлений: `namespace A { namespace B.C }` даёт `A.B.C`. Если заданы `roots`, тип вне пространства имён тоже даёт находку.
+
+**Замена:** нет. Перенос в другое пространство затрагивает `using` во всех файлах, которые используют тип.
+
+**Параметры**
+
+| Параметр | Значения | По умолчанию | Описание |
+|---|---|---|---|
+| `roots` | список строк | `[]` | допустимые корни; пусто — не проверять |
+| `forbiddenWords` | список строк | `[]` | запрещённые слова (регистр не учитывается) |
+| `maxDepth` | число | `0` | предельное число частей; `0` — не проверять |
+
+**Пример**
+
+Конфиг:
+
+```jsonc
+{ "checks": { "namespace-name": { "severity": "warning", "roots": ["Company"], "forbiddenWords": ["Editor"], "maxDepth": 3 } } }
+```
+
+Было (`Demo.cs`):
+
+```csharp
+namespace Company.Tools.Editor.Views
+{
+    public class View { }
+}
+
+namespace Other.Tools
+{
+    public class Tool { }
+}
+
+public class Global { }
+```
+
+Находки (`--format md`):
+
+````markdown
+- 1: `namespace-name` (warning) - пространство 'Company.Tools.Editor.Views': слово 'Editor'
+- 1: `namespace-name` (warning) - пространство 'Company.Tools.Editor.Views': частей 4, предел 3
+- 6: `namespace-name` (warning) - пространство 'Other.Tools' вне корня: Company
+- 11: `namespace-name` (warning) - тип 'Global' вне пространства имен
+````
+
+Стало:
+
+```csharp
+namespace Company.Views
+{
+    public class View { }
+}
+
+namespace Company.Tools
+{
+    public class Tool { }
+}
+
+namespace Company
+{
+    public class Global { }
+}
+```
+
+**Ограничения**
+
+- Проверяется объявление, а не папка файла: расхождение пространства имён и пути проверка не ищет.
+- Объявление, в котором только вложенные пространства имён, отдельно не проверяется.
+
+#### `enum-plural`
+
+Число в имени `enum`: с `[Flags]` имя во множественном числе (`DamageTypes`), без `[Flags]` — в единственном (`DamageType`). Число определяется эвристикой по последнему слову имени:
+- множественное — слово из `pluralWords` или слово на `s`;
+- слово на `s` с окончанием из `singularEndings` (`Status`, `Class`, `Axis`) считается единственным.
+
+**Замена:** нет. Уровень — `hint`: эвристика окончания ошибается на словах вроде `News`, `Physics`.
+
+**Параметры**
+
+| Параметр | Значения | По умолчанию | Описание |
+|---|---|---|---|
+| `pluralWords` | список строк | `["Mask"]` | слова во множественном числе без `s` на конце |
+| `singularEndings` | список строк | `["ss", "us", "is"]` | окончания слов на `s` в единственном числе |
+
+**Пример**
+
+Конфиг:
+
+```jsonc
+{ "checks": { "enum-plural": { "severity": "hint" } } }
+```
+
+Было (`Demo.cs`):
+
+```csharp
+using System;
+
+[Flags]
+public enum DamageType { None = 0, Fire = 1, Ice = 2 }
+
+[Flags]
+public enum Layers { None = 0, Ground = 1 }
+
+public enum Colors { Red, Green }
+
+public enum Status { Ok, Failed }
+```
+
+Находки (`--format md`):
+
+````markdown
+- 4: `enum-plural` (hint) - enum 'DamageType' с [Flags]: имя во множественном числе
+- 9: `enum-plural` (hint) - enum 'Colors' без [Flags]: имя в единственном числе
+````
+
+Стало (после `csr rename`):
+
+```csharp
+using System;
+
+[Flags]
+public enum DamageTypes { None = 0, Fire = 1, Ice = 2 }
+
+[Flags]
+public enum Layers { None = 0, Ground = 1 }
+
+public enum Color { Red, Green }
+
+public enum Status { Ok, Failed }
+```
+
+**Ограничения**
+
+- `[Flags]` определяется по имени атрибута (`Flags`, `FlagsAttribute`, `System.Flags`).
+
+#### `collection-name`
+
+Коллекция с именем в единственном числе. Коллекцией считаются массив и тип из `collectionTypes`; тип берётся из объявления, `var` не проверяется. Множественное число определяется по последнему слову имени без префикса поля:
+- слово на `s`, кроме окончаний из `singularEndings`;
+- или слово из `pluralWords` — постфиксы коллекций (`List`, `Dict`, `Pool`) и слова без `s` (`Data`, `Children`).
+
+**Замена:** нет. Уровень — `hint`: правило «имя во множественном числе» требует суждения.
+
+**Параметры**
+
+| Параметр | Значения | По умолчанию | Описание |
+|---|---|---|---|
+| `members` | список: `field`, `property`, `parameter`, `local` | `["field", "property"]` | какие объявления проверять |
+| `collectionTypes` | список масок | `List<*>`, `IList<*>`, `IReadOnlyList<*>`, `ICollection<*>`, `IReadOnlyCollection<*>`, `IEnumerable<*>`, `HashSet<*>`, `ISet<*>`, `IReadOnlySet<*>`, `SortedSet<*>`, `Queue<*>`, `Stack<*>`, `LinkedList<*>`, `Dictionary<*>`, `IDictionary<*>`, `IReadOnlyDictionary<*>`, `SortedDictionary<*>`, `ConcurrentDictionary<*>` | типы-коллекции (без пространства имён) |
+| `arrays` | `true`, `false` | `true` | проверять массивы |
+| `pluralWords` | список строк | `List`, `Array`, `Dict`, `Dictionary`, `Set`, `Map`, `Queue`, `Stack`, `Collection`, `Lookup`, `Table`, `Index`, `Registry`, `Cache`, `Pool`, `Buffer`, `History`, `All`, `Data`, `Children`, `People` | последние слова, которые считаются множественным числом |
+| `singularEndings` | список строк | `["ss", "us", "is"]` | окончания слов на `s` в единственном числе |
+
+**Пример**
+
+Конфиг:
+
+```jsonc
+{ "checks": { "collection-name": { "severity": "hint" } } }
+```
+
+Было (`Demo.cs`):
+
+```csharp
+using System.Collections.Generic;
+
+public class Inventory
+{
+    private List<int> m_Item = new();
+    private List<int> m_Items = new();
+    private Dictionary<string, int> m_CountById = new();
+    private Dictionary<string, int> m_CountByIdDict = new();
+    private int[] m_Slot;
+    private Stack<int> m_NodePool = new();
+
+    public IReadOnlyList<int> Item => m_Items;
+}
+```
+
+Находки (`--format md`):
+
+````markdown
+- 5: `collection-name` (hint) - коллекция 'm_Item': имя во множественном числе
+- 7: `collection-name` (hint) - коллекция 'm_CountById': имя во множественном числе
+- 9: `collection-name` (hint) - коллекция 'm_Slot': имя во множественном числе
+- 12: `collection-name` (hint) - коллекция 'Item': имя во множественном числе
+````
+
+Стало (после `csr rename`):
+
+```csharp
+using System.Collections.Generic;
+
+public class Inventory
+{
+    private List<int> m_SelectedIds = new();
+    private List<int> m_Items = new();
+    private Dictionary<string, int> m_CountsById = new();
+    private Dictionary<string, int> m_CountByIdDict = new();
+    private int[] m_Slots;
+    private Stack<int> m_NodePool = new();
+
+    public IReadOnlyList<int> Items => m_Items;
+}
+```
+
+**Ограничения**
+
+- Причастия (`m_Pinned`, `m_Found`, `Generated`) дают находку: по правилу у коллекции окончание `s` или постфикс типа (`m_PinnedIds`).
+- Словаря нет: неправильное множественное число (`People`, `Children`) задаётся в `pluralWords`.
+- Тип из `using`-псевдонима или своя коллекция проверяются, только если они перечислены в `collectionTypes`.
 
 ## 5. Признаки `arch`
 
