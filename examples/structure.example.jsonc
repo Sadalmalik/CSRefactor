@@ -1,0 +1,25 @@
+// Пример конфига csr structure: csr structure <папка> --config structure.jsonc
+// Пороги - отметки в отчете (вход аудита), не находки. Описание - DOCS.md, раздел csr structure
+{
+  // Глубина вложенности владения: больше - отметка
+  "ownershipDepth": 3,
+
+  // Глубина наследования среди типов исходного кода: больше - отметка
+  "inheritanceDepth": 4,
+
+  // Объект-бог (Lanza - Marinescu): WMC не меньше, ATFD больше, TCC меньше
+  "godWmc": 47,
+  "godAtfd": 5,
+  "godTcc": 0.33,
+
+  // Свалка: папка не меньше dumpSize типов и сообществ не меньше dumpCommunities (или половина типов без связей)
+  "dumpSize": 30,
+  "dumpCommunities": 8,
+
+  // Глубина владения: база с больше чем infrastructureHosts хостами или registryVariants вариантами - не уровень
+  "infrastructureHosts": 5,
+  "registryVariants": 30,
+
+  // Размер топов отчета
+  "top": 10
+}
