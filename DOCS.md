@@ -585,7 +585,7 @@ csr: загрузка 1,8 с
 csr arch: проектов 1, файлов 11, находок 12, 1,4 с
 ````
 
-Фильтр по путям: `paths` и `excludePaths` — маски путей файлов (`*` — любые символы, без учёта регистра), в виде, как путь показан в отчёте. Маска `Common/*` ловит `Common/Core.cs` в текущей папке; `*/Common/*` — `src/Common/Core.cs`, но не `Common/Core.cs` без префикса.
+Фильтр по путям: `paths` и `excludePaths` — маски путей файлов (`*` — любые символы, без учёта регистра), в виде, как путь показан в отчёте. Путь проверяется и с ведущим `/`: маска `Common/*` ловит `Common/Core.cs` в текущей папке, `*/Common/*` — и `src/Common/Core.cs`, и `Common/Core.cs`. То же правило — у `excludePaths` механизмов в `project.jsonc`, у `excludePaths` проверок `style` и записей `forbidden`, у `paths` / `excludePaths` в `similar.jsonc`.
 
 ### `csr refs`
 

@@ -1,4 +1,3 @@
-using CSR.Core.Arch;
 using CSR.Core.Checks;
 
 namespace CSR.Core.Style.Naming.Requirements

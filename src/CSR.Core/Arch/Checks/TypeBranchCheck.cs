@@ -32,7 +32,7 @@ namespace CSR.Core.Arch.Checks
         protected override IReadOnlyList<CheckParameter> OwnParameters
             => AllParameters;
 
-        protected override void AnalyzeFile(CheckContext context)
+        public override void Analyze(CheckContext context)
         {
             var groups = new Dictionary<SyntaxNode, List<string>>();
             foreach (var node in context.Root.DescendantNodes())

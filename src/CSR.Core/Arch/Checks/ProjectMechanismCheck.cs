@@ -18,12 +18,11 @@ namespace CSR.Core.Arch.Checks
         public override string Question
             => "В проекте уже есть механизм для этой задачи - заменить им? Если свой нужен - назвать причину";
 
-        protected override void AnalyzeFile(CheckContext context)
+        public override void Analyze(CheckContext context)
         {
-            var path = context.Tree.FilePath.Replace('\\', '/');
             foreach (var mechanism in context.Project.Mechanisms)
             {
-                if (NameMask.Get(mechanism.ExcludePaths, true).IsMatch(path))
+                if (FileScope.IsMatch(mechanism.ExcludePaths, context.Tree.FilePath))
                     continue;
 
                 foreach (var type in context.Root.DescendantNodes().OfType<TypeDeclarationSyntax>())

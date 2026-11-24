@@ -1,4 +1,3 @@
-using CSR.Core.Arch;
 using CSR.Core.Checks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;

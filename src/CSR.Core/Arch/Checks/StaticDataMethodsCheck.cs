@@ -69,7 +69,7 @@ namespace CSR.Core.Arch.Checks
         protected override IReadOnlyList<CheckParameter> OwnParameters
             => AllParameters;
 
-        protected override void AnalyzeFile(CheckContext context)
+        public override void Analyze(CheckContext context)
         {
             bool isStaticOnly = context.Settings.GetBool("staticClassesOnly");
             foreach (var type in context.Root.DescendantNodes().OfType<TypeDeclarationSyntax>())

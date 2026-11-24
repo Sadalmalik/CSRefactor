@@ -38,7 +38,7 @@ namespace CSR.Core.Arch.Checks
         protected override IReadOnlyList<CheckParameter> OwnParameters
             => AllParameters;
 
-        protected override void AnalyzeFile(CheckContext context)
+        public override void Analyze(CheckContext context)
         {
             var fileName = Path.GetFileNameWithoutExtension(context.Tree.FilePath);
             var aspects = NameMask.Get(context.Settings.GetStrings("aspects"));

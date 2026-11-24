@@ -18,7 +18,7 @@ namespace CSR.Core.Arch.Checks
         public override string Question
             => "Какая причина и на что переходить? Дописать в [Obsolete(\"...\")]";
 
-        protected override void AnalyzeFile(CheckContext context)
+        public override void Analyze(CheckContext context)
         {
             foreach (var attribute in context.Root.DescendantNodes().OfType<AttributeSyntax>())
             {

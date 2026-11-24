@@ -1,4 +1,3 @@
-using CSR.Core.Arch;
 using CSR.Core.Checks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -31,9 +30,6 @@ namespace CSR.Core.Style.Checks
 
         public override void Analyze(CheckContext context)
         {
-            if (FileScope.IsExcluded(context))
-                return;
-
             var returnTypes = NameMask.Get(context.Settings.GetStrings("returnTypes"));
             bool requireYield = context.Settings.GetBool("requireYield");
             var use = context.Settings.GetString("use");

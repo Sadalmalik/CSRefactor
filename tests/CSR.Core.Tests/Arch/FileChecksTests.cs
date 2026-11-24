@@ -1,4 +1,5 @@
 using CSR.Core.Arch;
+using CSR.Core.Checks;
 using static CSR.Core.Tests.Arch.ArchTestCode;
 
 namespace CSR.Core.Tests.Arch
@@ -155,12 +156,23 @@ namespace CSR.Core.Tests.Arch
         public void ExcludePaths_SkipsFile()
         {
             var source = InMethod("if (shape is Circle circle) return;");
-            var findings = Run(
-                "type-branch",
-                source,
-                settings => settings.Set("excludePaths", new[] { "*/editor/*" }),
-                "Game/Editor/Sample.cs");
-            Assert.That(findings, Is.Empty);
+            void Exclude(CheckSettings settings)
+                => settings.Set("excludePaths", new[] { "*/editor/*" });
+
+            Assert.That(Run("type-branch", source, Exclude, "Game/Editor/Sample.cs"), Is.Empty);
+            Assert.That(Run("type-branch", source, Exclude, "Editor/Sample.cs"), Is.Empty);
+            Assert.That(Run("type-branch", source, Exclude, "Game/Sample.cs"), Has.Count.EqualTo(1));
+        }
+
+        [Test]
+        public void Paths_OnlyMatchingFiles()
+        {
+            var source = InMethod("if (shape is Circle circle) return;");
+            void Include(CheckSettings settings)
+                => settings.Set("paths", new[] { "*/Game/*" });
+
+            Assert.That(Run("type-branch", source, Include, "Game/Sample.cs"), Has.Count.EqualTo(1));
+            Assert.That(Run("type-branch", source, Include, "Tools/Sample.cs"), Is.Empty);
         }
 
         [Test]

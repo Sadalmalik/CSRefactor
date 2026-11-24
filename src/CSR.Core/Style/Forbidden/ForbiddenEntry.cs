@@ -1,4 +1,3 @@
-using CSR.Core.Arch;
 using CSR.Core.Checks;
 
 namespace CSR.Core.Style.Forbidden
@@ -9,7 +8,7 @@ namespace CSR.Core.Style.Forbidden
         private static readonly IReadOnlyList<string> Fields = ["kind", "mask", "use", "excludePaths", "severity", "rule"];
 
         private readonly NameMask m_Mask;
-        private readonly NameMask m_ExcludePaths;
+        private readonly IReadOnlyList<string> m_ExcludePaths;
 
         public ForbiddenEntry(
             string kind,
@@ -23,7 +22,7 @@ namespace CSR.Core.Style.Forbidden
             Mask = mask;
             Use = use;
             m_Mask = NameMask.Get([mask]);
-            m_ExcludePaths = NameMask.Get(excludePaths, true);
+            m_ExcludePaths = excludePaths;
             Severity = severity;
             Rule = rule;
         }
@@ -42,7 +41,7 @@ namespace CSR.Core.Style.Forbidden
             => m_Mask.IsMatch(name);
 
         public bool IsExcluded(string path)
-            => FileScope.IsExcluded(m_ExcludePaths, path);
+            => FileScope.IsMatch(m_ExcludePaths, path);
 
         public static ForbiddenEntry Parse(Record record)
         {

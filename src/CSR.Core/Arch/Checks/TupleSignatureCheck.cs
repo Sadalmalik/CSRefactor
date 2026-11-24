@@ -17,7 +17,7 @@ namespace CSR.Core.Arch.Checks
         public override string Question
             => "Несколько результатов - именованная структура или out?";
 
-        protected override void AnalyzeFile(CheckContext context)
+        public override void Analyze(CheckContext context)
             => m_Check.Analyze(context);
     }
 }

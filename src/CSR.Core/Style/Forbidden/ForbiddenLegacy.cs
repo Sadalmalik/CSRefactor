@@ -39,17 +39,15 @@ namespace CSR.Core.Style.Forbidden
                 settings => Translate(settings, map, kind));
         }
 
-        // Пара маски -> запись того же вида; excludePaths проверки - у каждой записи
+        // Пара маски -> запись того же вида; excludePaths проверки применяет движок
         private static Action<CheckContext> Translate(CheckSettings settings, string map, string kind)
         {
-            var excludePaths = settings.GetStrings("excludePaths");
             var entries = settings.GetMap(map)
                 .Select(pair => ForbiddenEntry.Parse(new Record(new Dictionary<string, object>
                 {
                     ["kind"] = kind,
                     ["mask"] = pair.Key,
                     ["use"] = pair.Value,
-                    ["excludePaths"] = excludePaths,
                 })))
                 .ToList();
             return context => ForbiddenCheck.Run(context, entries);

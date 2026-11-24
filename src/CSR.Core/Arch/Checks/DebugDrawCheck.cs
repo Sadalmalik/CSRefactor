@@ -52,7 +52,7 @@ namespace CSR.Core.Arch.Checks
         protected override IReadOnlyList<CheckParameter> OwnParameters
             => AllParameters;
 
-        protected override void AnalyzeFile(CheckContext context)
+        public override void Analyze(CheckContext context)
         {
             var drawMethods = NameMask.Get(context.Settings.GetStrings("drawMethods"));
             foreach (var invocation in context.Root.DescendantNodes().OfType<InvocationExpressionSyntax>())

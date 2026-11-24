@@ -1,7 +1,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
-using CSR.Core.Arch;
 using CSR.Core.Checks;
 using CSR.Core.Config;
 using CSR.Core.Graph;
@@ -126,15 +125,8 @@ namespace CSR.Commands
             return new CollectedUnits(units, graph);
         }
 
-        // Путь от текущей папки проверяется и с ведущим /: маска */Tests/* ловит и папку верхнего уровня
         private static bool IsInScope(string file, SimilarOptions options)
-        {
-            var path = SourceFiles.GetDisplayPath(file);
-            var paths = NameMask.Get(options.Paths, true);
-            var excluded = NameMask.Get(options.ExcludePaths, true);
-            bool isIncluded = paths.IsEmpty || paths.IsMatch(path) || paths.IsMatch("/" + path);
-            return isIncluded && !excluded.IsMatch(path) && !excluded.IsMatch("/" + path);
-        }
+            => FileScope.IsInScope(options.Paths, options.ExcludePaths, SourceFiles.GetDisplayPath(file));
 
         // Единица изменена, если задета хотя бы одна ее строка
         private static Func<SimilarUnit, bool> GetChangedFilter(Dictionary<string, ChangedLines> changed)

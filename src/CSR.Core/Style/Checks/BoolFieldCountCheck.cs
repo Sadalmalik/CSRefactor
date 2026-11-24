@@ -31,9 +31,6 @@ namespace CSR.Core.Style.Checks
 
         public override void Analyze(CheckContext context)
         {
-            if (FileScope.IsExcluded(context))
-                return;
-
             var baseTypes = NameMask.Get(context.Settings.GetStrings("baseTypes"));
             int minFields = context.Settings.GetInt("minFields");
             foreach (var type in context.Root.DescendantNodes().OfType<ClassDeclarationSyntax>())

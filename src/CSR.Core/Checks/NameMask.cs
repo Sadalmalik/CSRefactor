@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 
-namespace CSR.Core.Arch
+namespace CSR.Core.Checks
 {
     // Набор масок имен или путей: * - любые символы. Маски одного списка собираются в одно выражение и кэшируются
     public class NameMask

@@ -10,7 +10,7 @@ namespace CSR.Core.Arch
     {
         public abstract void AnalyzeSolution(SolutionCheckContext context);
 
-        protected override void AnalyzeFile(CheckContext context)
+        public override void Analyze(CheckContext context)
         {
         }
     }
@@ -63,7 +63,7 @@ namespace CSR.Core.Arch
                 return;
 
             var file = GetDisplayPath(location.SourceTree.FilePath);
-            if (!ArchCheck.IsInScope(Settings, file))
+            if (!FileScope.IsInScope(m_Configuration, file))
                 return;
 
             var span = location.GetLineSpan();

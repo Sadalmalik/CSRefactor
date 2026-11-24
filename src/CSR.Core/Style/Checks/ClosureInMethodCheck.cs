@@ -1,4 +1,3 @@
-using CSR.Core.Arch;
 using CSR.Core.Checks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -35,9 +34,6 @@ namespace CSR.Core.Style.Checks
 
         public override void Analyze(CheckContext context)
         {
-            if (FileScope.IsExcluded(context))
-                return;
-
             var methods = NameMask.Get(context.Settings.GetStrings("methods"));
             bool captureThis = context.Settings.GetBool("captureThis");
             foreach (var method in context.Root.DescendantNodes().OfType<MethodDeclarationSyntax>())

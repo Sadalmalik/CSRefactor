@@ -48,7 +48,7 @@ namespace CSR.Core.Arch.Checks
         protected override IReadOnlyList<CheckParameter> OwnParameters
             => AllParameters;
 
-        protected override void AnalyzeFile(CheckContext context)
+        public override void Analyze(CheckContext context)
         {
             bool isReadonlyIncluded = context.Settings.GetBool("staticReadonly");
             foreach (var node in context.Root.DescendantNodes())

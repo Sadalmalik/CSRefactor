@@ -44,9 +44,6 @@ namespace CSR.Core.Style.Checks
 
         public override void Analyze(CheckContext context)
         {
-            if (FileScope.IsExcluded(context))
-                return;
-
             foreach (var member in context.Root.DescendantNodes().OfType<MemberDeclarationSyntax>())
             {
                 if (!member.Modifiers.Any(SyntaxKind.StaticKeyword) || member.Parent is not TypeDeclarationSyntax owner)

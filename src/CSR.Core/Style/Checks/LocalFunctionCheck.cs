@@ -23,9 +23,6 @@ namespace CSR.Core.Style.Checks
 
         public override void Analyze(CheckContext context)
         {
-            if (FileScope.IsExcluded(context))
-                return;
-
             var use = context.Settings.GetString("use");
             foreach (var function in context.Root.DescendantNodes().OfType<LocalFunctionStatementSyntax>())
             {

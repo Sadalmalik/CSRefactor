@@ -76,6 +76,9 @@ namespace CSR.Core.Tests.Arch
             Assert.That(
                 Run("project-mechanism", "class BulletPool { }", Project, path: "Game/Pooling/BulletPool.cs"),
                 Is.Empty);
+            Assert.That(
+                Run("project-mechanism", "class BulletPool { }", Project, path: "Pooling/BulletPool.cs"),
+                Is.Empty);
         }
 
         [Test]

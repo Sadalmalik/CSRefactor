@@ -1,4 +1,3 @@
-using CSR.Core.Arch;
 using CSR.Core.Checks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -31,9 +30,6 @@ namespace CSR.Core.Style.Checks
 
         public override void Analyze(CheckContext context)
         {
-            if (FileScope.IsExcluded(context))
-                return;
-
             var sizeMembers = context.Settings.GetStrings("sizeMembers");
             var ignored = NameMask.Get(context.Settings.GetStrings("ignoreCollections"));
             foreach (var inner in context.Root.DescendantNodes().OfType<StatementSyntax>())

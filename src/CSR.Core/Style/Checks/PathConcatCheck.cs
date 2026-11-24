@@ -51,9 +51,6 @@ namespace CSR.Core.Style.Checks
 
         public override void Analyze(CheckContext context)
         {
-            if (FileScope.IsExcluded(context))
-                return;
-
             var separators = context.Settings.GetStrings("separators");
             bool replace = context.Settings.GetBool("replace");
             foreach (var chain in context.Root.DescendantNodes().OfType<BinaryExpressionSyntax>())

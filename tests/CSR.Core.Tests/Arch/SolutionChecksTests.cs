@@ -155,7 +155,7 @@ namespace CSR.Core.Tests.Arch
             var excluded = Analyze([compilation], "variant-flag", settings =>
             {
                 settings.Set("minFiles", 1);
-                settings.Set("excludePaths", new[] { "Builder.cs" });
+                settings.Set("excludePaths", new[] { "*/Builder.cs" });
             });
             Assert.That(excluded, Is.Empty);
         }

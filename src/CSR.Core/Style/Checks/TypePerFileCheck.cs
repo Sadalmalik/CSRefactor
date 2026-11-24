@@ -30,9 +30,6 @@ namespace CSR.Core.Style.Checks
 
         public override void Analyze(CheckContext context)
         {
-            if (FileScope.IsExcluded(context))
-                return;
-
             var types = new List<(MemberDeclarationSyntax Type, SyntaxToken Identifier)>();
             foreach (var member in context.Root.DescendantNodes(IsTypeContainer).OfType<MemberDeclarationSyntax>())
             {

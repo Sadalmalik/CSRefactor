@@ -9,7 +9,10 @@ namespace CSR.Core.Checks
         {
             var findings = new List<Finding>();
             foreach (var configuration in options.Checks)
-                configuration.Check.Analyze(new CheckContext(tree, project, configuration, findings));
+            {
+                if (FileScope.IsInScope(configuration, tree.FilePath))
+                    configuration.Check.Analyze(new CheckContext(tree, project, configuration, findings));
+            }
 
             return findings
                 .OrderBy(finding => finding.Line)
