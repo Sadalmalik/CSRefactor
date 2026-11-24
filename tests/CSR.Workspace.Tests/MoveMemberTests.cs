@@ -1,6 +1,5 @@
 using CSR.Workspace.Loading;
 using CSR.Workspace.Refactor;
-using CSR.Workspace.Rename;
 using CSR.Workspace.Symbols;
 using Microsoft.CodeAnalysis;
 

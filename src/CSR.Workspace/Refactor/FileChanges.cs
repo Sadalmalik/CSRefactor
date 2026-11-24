@@ -1,6 +1,5 @@
 using System.Text;
 using CSR.Workspace.References;
-using CSR.Workspace.Rename;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 

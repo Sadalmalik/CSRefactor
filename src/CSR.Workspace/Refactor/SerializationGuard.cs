@@ -1,7 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace CSR.Workspace.Rename
+namespace CSR.Workspace.Refactor
 {
     public enum SerializedKind
     {

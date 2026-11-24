@@ -1,7 +1,7 @@
 using CSR.Reports.Diff;
 using Microsoft.CodeAnalysis.Text;
 
-namespace CSR.Workspace.Rename
+namespace CSR.Workspace.Refactor
 {
     // Unified diff по правкам текста (TextChange): блоки - по правкам, пути a/<путь> и b/<путь>, как у git
     public static class TextDiff

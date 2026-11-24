@@ -1,7 +1,7 @@
 using System.Text.Json;
 using CSR.Reports.Config;
 
-namespace CSR.Workspace.Rename
+namespace CSR.Workspace.Refactor
 {
     // Параметры rename из refactor.jsonc
     public class RefactorOptions

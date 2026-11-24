@@ -1,4 +1,3 @@
-using CSR.Workspace.Rename;
 using Microsoft.CodeAnalysis;
 
 namespace CSR.Workspace.Refactor

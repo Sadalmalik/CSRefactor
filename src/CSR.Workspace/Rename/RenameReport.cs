@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using CSR.Workspace.Refactor;
 using CSR.Workspace.References;
 
 namespace CSR.Workspace.Rename

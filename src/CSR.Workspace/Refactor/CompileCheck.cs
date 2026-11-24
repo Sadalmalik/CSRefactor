@@ -3,7 +3,7 @@ using CSR.Workspace.References;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-namespace CSR.Workspace.Rename
+namespace CSR.Workspace.Refactor
 {
     public class CompileResult
     {
