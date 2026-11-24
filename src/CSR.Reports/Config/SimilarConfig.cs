@@ -10,86 +10,58 @@ namespace CSR.Reports.Config
     //   "paths": ["Assets/Code/*"], "excludePaths": ["*/Tests/*", "*.g.cs"] }
     public static class SimilarConfig
     {
+        // Виды единиц: массив в конфиге, список через запятую в командной строке
+        private static readonly OptionKind<HashSet<UnitKind>> Kinds = new()
+        {
+            ReadJson = (element, path) => ToKinds(JsonConfig.ReadStrings(element, path), path),
+            ParseText = (text, name) => ToKinds(text.Split(',').Select(part => part.Trim()).Where(part => part.Length > 0), name),
+        };
+
+        // Синонимы: имя -> имя, в нижнем регистре
+        private static readonly OptionKind<Dictionary<string, string>> Synonyms = new() { ReadJson = ReadSynonyms };
+
+        private static readonly OptionTable<TypeWeights> Weights = new OptionTable<TypeWeights>()
+            .Add("bases", OptionKinds.Weight, (weights, value) => weights.Bases = value)
+            .Add("overrides", OptionKinds.Weight, (weights, value) => weights.Overrides = value)
+            .Add("fields", OptionKinds.Weight, (weights, value) => weights.Fields = value)
+            .Add("signatures", OptionKinds.Weight, (weights, value) => weights.Signatures = value)
+            .Add("bodies", OptionKinds.Weight, (weights, value) => weights.Bodies = value);
+
+        public static readonly OptionTable<SimilarOptions> Table = new OptionTable<SimilarOptions>()
+            .Add("kinds", Kinds, (options, value) => options.Kinds = value, "--kinds")
+            .Add("threshold", OptionKinds.Share, (options, value) => options.Threshold = value, "--threshold")
+            .Add("minLines", OptionKinds.Count, (options, value) => options.MinLines = value, "--min-lines")
+            .Add("minNodes", OptionKinds.Count, (options, value) => options.MinNodes = value, "--min-nodes")
+            .Add("minShapes", OptionKinds.Count, (options, value) => options.MinShapes = value, "--min-shapes")
+            .Add("fragmentStatements", OptionKinds.Count, (options, value) => options.FragmentStatements = value, "--fragments")
+            .Add("setThreshold", OptionKinds.Share, (options, value) => options.SetThreshold = value, "--set-threshold")
+            .Add("minShared", OptionKinds.Count, (options, value) => options.MinShared = value, "--min-shared")
+            .Add("synonyms", Synonyms, (options, value) => options.Synonyms = value)
+            .Add("typeThreshold", OptionKinds.Share, (options, value) => options.TypeThreshold = value, "--type-threshold")
+            .Add("minTypeMembers", OptionKinds.Count, (options, value) => options.MinTypeMembers = value)
+            .Add("minCoreMembers", OptionKinds.Count, (options, value) => options.MinCoreMembers = value)
+            .AddSection("weights", Weights, options => options.Weights)
+            .Add("systemThreshold", OptionKinds.Share, (options, value) => options.SystemThreshold = value, "--system-threshold")
+            .Add("minSystemTypes", OptionKinds.Count, (options, value) => options.MinSystemTypes = value)
+            .Add("paths", OptionKinds.Strings, (options, value) => options.Paths = value)
+            .Add("excludePaths", OptionKinds.Strings, (options, value) => options.ExcludePaths = value);
+
         public static SimilarOptions Parse(string json)
         {
-            using var document = JsonConfig.Parse(json);
-            var root = document.RootElement;
-            JsonConfig.RequireObject(root, "similar");
-
             var options = new SimilarOptions();
-            foreach (var property in root.EnumerateObject())
-            {
-                var value = property.Value;
-                switch (property.Name)
-                {
-                    case "kinds":
-                        options.Kinds = ReadKinds(value, property.Name);
-                        break;
-                    case "threshold":
-                        options.Threshold = ReadThreshold(value, property.Name);
-                        break;
-                    case "setThreshold":
-                        options.SetThreshold = ReadThreshold(value, property.Name);
-                        break;
-                    case "minShared":
-                        options.MinShared = JsonConfig.ReadInt(value, property.Name);
-                        break;
-                    case "synonyms":
-                        options.Synonyms = ReadSynonyms(value, property.Name);
-                        break;
-                    case "typeThreshold":
-                        options.TypeThreshold = ReadThreshold(value, property.Name);
-                        break;
-                    case "minTypeMembers":
-                        options.MinTypeMembers = JsonConfig.ReadInt(value, property.Name);
-                        break;
-                    case "minCoreMembers":
-                        options.MinCoreMembers = JsonConfig.ReadInt(value, property.Name);
-                        break;
-                    case "systemThreshold":
-                        options.SystemThreshold = ReadThreshold(value, property.Name);
-                        break;
-                    case "minSystemTypes":
-                        options.MinSystemTypes = JsonConfig.ReadInt(value, property.Name);
-                        break;
-                    case "weights":
-                        options.Weights = ReadWeights(value, property.Name);
-                        break;
-                    case "minLines":
-                        options.MinLines = JsonConfig.ReadInt(value, property.Name);
-                        break;
-                    case "minNodes":
-                        options.MinNodes = JsonConfig.ReadInt(value, property.Name);
-                        break;
-                    case "minShapes":
-                        options.MinShapes = JsonConfig.ReadInt(value, property.Name);
-                        break;
-                    case "fragmentStatements":
-                        options.FragmentStatements = JsonConfig.ReadInt(value, property.Name);
-                        break;
-                    case "paths":
-                        options.Paths = JsonConfig.ReadStrings(value, property.Name);
-                        break;
-                    case "excludePaths":
-                        options.ExcludePaths = JsonConfig.ReadStrings(value, property.Name);
-                        break;
-                    default:
-                        throw new ConfigException($"неизвестный ключ '{property.Name}'");
-                }
-            }
-
+            Table.ReadRoot(json, "similar", options);
             return options;
         }
 
-        private static HashSet<UnitKind> ReadKinds(JsonElement value, string path)
+        private static HashSet<UnitKind> ToKinds(IEnumerable<string> keys, string name)
         {
             var kinds = new HashSet<UnitKind>();
-            foreach (var key in JsonConfig.ReadStrings(value, path))
+            foreach (var key in keys)
             {
                 var kind = UnitKinds.Find(key);
                 if (kind == null)
                     throw new ConfigException(
-                        $"{path}: неизвестный вид '{key}'; допустимо {string.Join(", ", UnitKinds.AllKeys)}");
+                        $"{name}: неизвестный вид '{key}'; допустимо {string.Join(", ", UnitKinds.AllKeys)}");
 
                 kinds.Add(kind.Value);
             }
@@ -97,7 +69,6 @@ namespace CSR.Reports.Config
             return kinds;
         }
 
-        // Синонимы: имя -> имя, в нижнем регистре
         private static Dictionary<string, string> ReadSynonyms(JsonElement value, string path)
         {
             JsonConfig.RequireObject(value, path);
@@ -111,52 +82,6 @@ namespace CSR.Reports.Config
             }
 
             return synonyms;
-        }
-
-        private static TypeWeights ReadWeights(JsonElement value, string path)
-        {
-            JsonConfig.RequireObject(value, path);
-            var weights = new TypeWeights();
-            foreach (var property in value.EnumerateObject())
-            {
-                var itemPath = path + "." + property.Name;
-                if (property.Value.ValueKind != JsonValueKind.Number || !property.Value.TryGetDouble(out double weight)
-                    || weight < 0)
-                    throw new ConfigException($"{itemPath}: ожидается неотрицательное число");
-
-                switch (property.Name)
-                {
-                    case "bases":
-                        weights.Bases = weight;
-                        break;
-                    case "overrides":
-                        weights.Overrides = weight;
-                        break;
-                    case "fields":
-                        weights.Fields = weight;
-                        break;
-                    case "signatures":
-                        weights.Signatures = weight;
-                        break;
-                    case "bodies":
-                        weights.Bodies = weight;
-                        break;
-                    default:
-                        throw new ConfigException($"{path}: неизвестный ключ '{property.Name}'");
-                }
-            }
-
-            return weights;
-        }
-
-        // Порог - число от 0 до 1
-        private static double ReadThreshold(JsonElement value, string path)
-        {
-            if (value.ValueKind != JsonValueKind.Number || !value.TryGetDouble(out double threshold)
-                || threshold is < 0 or > 1)
-                throw new ConfigException($"{path}: ожидается число от 0 до 1");
-
-            return threshold;
         }
     }
 }

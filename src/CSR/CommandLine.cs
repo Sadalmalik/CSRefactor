@@ -1,3 +1,5 @@
+using CSR.Reports.Config;
+
 namespace CSR
 {
     // Разбор аргументов команды: позиционные значения, опции со значением (--name value) и флаги (--name)
@@ -62,6 +64,19 @@ namespace CSR
                 throw new UsageException($"опция '{name}' задана несколько раз");
 
             return values[0];
+        }
+
+        // Опции таблицы ключей конфига поверх его значений; ошибка значения - ошибка запуска
+        public void ReadOptions<T>(OptionTable<T> table, T target)
+        {
+            try
+            {
+                table.ReadOptions(GetOption, target);
+            }
+            catch (ConfigException exception)
+            {
+                throw new UsageException(exception.Message);
+            }
         }
     }
 

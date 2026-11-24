@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Globalization;
 using CSR.Core.Structure;
 using CSR.Reports.Config;
 using CSR.Reports.Structure;
@@ -24,7 +23,8 @@ namespace CSR.Commands
             Коды возврата: 0 - успех (отметки ошибкой не считаются), 2 - ошибка запуска
             """;
 
-        private static readonly HashSet<string> OptionNames = ["--config", "--project", "--top", "--format", "--out"];
+        private static readonly HashSet<string> OptionNames =
+            ["--config", "--project", "--format", "--out", .. StructureConfig.Table.OptionNames];
 
         public static int Run(IEnumerable<string> args)
         {
@@ -62,14 +62,7 @@ namespace CSR.Commands
             var start = ConfigFiles.GetStart(commandLine.Positional[0], Environment.CurrentDirectory);
             var path = ConfigFiles.Find(commandLine.GetOption("--config"), "structure.jsonc", start);
             var options = path == null ? new StructureOptions() : StructureConfig.Parse(StyleCommand.ReadConfig(path));
-            var top = commandLine.GetOption("--top");
-            if (top == null)
-                return options;
-
-            if (!int.TryParse(top, NumberStyles.Integer, CultureInfo.InvariantCulture, out int value) || value < 1)
-                throw new UsageException($"--top: ожидается положительное целое, задано '{top}'");
-
-            options.Top = value;
+            commandLine.ReadOptions(StructureConfig.Table, options);
             return options;
         }
     }

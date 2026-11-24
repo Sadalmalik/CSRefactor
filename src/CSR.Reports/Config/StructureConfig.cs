@@ -1,4 +1,3 @@
-using System.Text.Json;
 using CSR.Core.Structure;
 
 namespace CSR.Reports.Config
@@ -8,62 +7,23 @@ namespace CSR.Reports.Config
     //   "dumpSize": 30, "dumpCommunities": 8, "infrastructureHosts": 5, "registryVariants": 30, "top": 10 }
     public static class StructureConfig
     {
+        public static readonly OptionTable<StructureOptions> Table = new OptionTable<StructureOptions>()
+            .Add("ownershipDepth", OptionKinds.Count, (options, value) => options.OwnershipDepth = value)
+            .Add("inheritanceDepth", OptionKinds.Count, (options, value) => options.InheritanceDepth = value)
+            .Add("godWmc", OptionKinds.Count, (options, value) => options.GodWmc = value)
+            .Add("godAtfd", OptionKinds.Count, (options, value) => options.GodAtfd = value)
+            .Add("godTcc", OptionKinds.Share, (options, value) => options.GodTcc = value)
+            .Add("dumpSize", OptionKinds.Count, (options, value) => options.DumpSize = value)
+            .Add("dumpCommunities", OptionKinds.Count, (options, value) => options.DumpCommunities = value)
+            .Add("infrastructureHosts", OptionKinds.Count, (options, value) => options.InfrastructureHosts = value)
+            .Add("registryVariants", OptionKinds.Count, (options, value) => options.RegistryVariants = value)
+            .Add("top", OptionKinds.Positive, (options, value) => options.Top = value, "--top");
+
         public static StructureOptions Parse(string json)
         {
-            using var document = JsonConfig.Parse(json);
-            var root = document.RootElement;
-            JsonConfig.RequireObject(root, "structure");
-
             var options = new StructureOptions();
-            foreach (var property in root.EnumerateObject())
-            {
-                var value = property.Value;
-                switch (property.Name)
-                {
-                    case "ownershipDepth":
-                        options.OwnershipDepth = JsonConfig.ReadInt(value, property.Name);
-                        break;
-                    case "inheritanceDepth":
-                        options.InheritanceDepth = JsonConfig.ReadInt(value, property.Name);
-                        break;
-                    case "godWmc":
-                        options.GodWmc = JsonConfig.ReadInt(value, property.Name);
-                        break;
-                    case "godAtfd":
-                        options.GodAtfd = JsonConfig.ReadInt(value, property.Name);
-                        break;
-                    case "godTcc":
-                        options.GodTcc = ReadShare(value, property.Name);
-                        break;
-                    case "dumpSize":
-                        options.DumpSize = JsonConfig.ReadInt(value, property.Name);
-                        break;
-                    case "dumpCommunities":
-                        options.DumpCommunities = JsonConfig.ReadInt(value, property.Name);
-                        break;
-                    case "infrastructureHosts":
-                        options.InfrastructureHosts = JsonConfig.ReadInt(value, property.Name);
-                        break;
-                    case "registryVariants":
-                        options.RegistryVariants = JsonConfig.ReadInt(value, property.Name);
-                        break;
-                    case "top":
-                        options.Top = JsonConfig.ReadInt(value, property.Name);
-                        break;
-                    default:
-                        throw new ConfigException($"неизвестный ключ '{property.Name}'");
-                }
-            }
-
+            Table.ReadRoot(json, "structure", options);
             return options;
-        }
-
-        private static double ReadShare(JsonElement value, string path)
-        {
-            if (value.ValueKind != JsonValueKind.Number || !value.TryGetDouble(out double share) || share is < 0 or > 1)
-                throw new ConfigException($"{path}: ожидается число от 0 до 1");
-
-            return share;
         }
     }
 }

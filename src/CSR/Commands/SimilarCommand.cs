@@ -49,19 +49,10 @@ namespace CSR.Commands
             "--config",
             "--project",
             "--diff",
-            "--kinds",
-            "--threshold",
-            "--set-threshold",
-            "--min-shared",
-            "--type-threshold",
-            "--system-threshold",
-            "--min-lines",
-            "--min-nodes",
-            "--min-shapes",
-            "--fragments",
             "--top",
             "--format",
             "--out",
+            .. SimilarConfig.Table.OptionNames,
         ];
 
         private static readonly HashSet<string> FlagNames = ["--changed"];
@@ -153,54 +144,8 @@ namespace CSR.Commands
             var path = ConfigFiles.Find(commandLine.GetOption("--config"), "similar.jsonc", start);
             var options = path == null ? new SimilarOptions() : SimilarConfig.Parse(StyleCommand.ReadConfig(path));
 
-            var kinds = commandLine.GetOption("--kinds");
-            if (kinds != null)
-                options.Kinds = ParseKinds(kinds);
-
-            options.Threshold = ReadThreshold(commandLine, "--threshold") ?? options.Threshold;
-            options.SetThreshold = ReadThreshold(commandLine, "--set-threshold") ?? options.SetThreshold;
-            options.TypeThreshold = ReadThreshold(commandLine, "--type-threshold") ?? options.TypeThreshold;
-            options.SystemThreshold = ReadThreshold(commandLine, "--system-threshold") ?? options.SystemThreshold;
-            options.MinShared = ReadInt(commandLine, "--min-shared") ?? options.MinShared;
-
-            options.MinLines = ReadInt(commandLine, "--min-lines") ?? options.MinLines;
-            options.MinNodes = ReadInt(commandLine, "--min-nodes") ?? options.MinNodes;
-            options.MinShapes = ReadInt(commandLine, "--min-shapes") ?? options.MinShapes;
-            options.FragmentStatements = ReadInt(commandLine, "--fragments") ?? options.FragmentStatements;
+            commandLine.ReadOptions(SimilarConfig.Table, options);
             return options;
-        }
-
-        private static HashSet<UnitKind> ParseKinds(string text)
-        {
-            var kinds = new HashSet<UnitKind>();
-            foreach (var key in text.Split(',').Select(part => part.Trim()).Where(part => part.Length > 0))
-            {
-                var kind = UnitKinds.Find(key);
-                if (kind == null)
-                    throw new UsageException(
-                        $"--kinds: неизвестный вид '{key}'; допустимо {string.Join(", ", UnitKinds.AllKeys)}");
-
-                kinds.Add(kind.Value);
-            }
-
-            return kinds;
-        }
-
-        private static double? ReadThreshold(CommandLine commandLine, string name)
-        {
-            var text = commandLine.GetOption(name);
-            if (text == null)
-                return null;
-
-            bool isNumber = double.TryParse(
-                text.Replace(',', '.'),
-                NumberStyles.Float,
-                CultureInfo.InvariantCulture,
-                out double value);
-            if (!isNumber || value is < 0 or > 1)
-                throw new UsageException($"{name}: ожидается число от 0 до 1, задано '{text}'");
-
-            return value;
         }
 
         private static int? ReadInt(CommandLine commandLine, string name)

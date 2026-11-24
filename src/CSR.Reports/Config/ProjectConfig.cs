@@ -11,121 +11,59 @@ namespace CSR.Reports.Config
     {
         private const string LoggerMechanism = "logger";
 
+        private static readonly OptionTable<LoggerSection> Logger = new OptionTable<LoggerSection>()
+            .Add("methods", OptionKinds.Strings, (logger, value) => logger.Methods = value)
+            .Add("bypass", OptionKinds.Strings, (logger, value) => logger.Bypass = value);
+
+        private static readonly OptionTable<MechanismSection> Mechanism = new OptionTable<MechanismSection>()
+            .Add("use", OptionKinds.Text, (mechanism, value) => mechanism.Use = value)
+            .Add("types", OptionKinds.Strings, (mechanism, value) => mechanism.Types = value)
+            .Add("fields", OptionKinds.Strings, (mechanism, value) => mechanism.Fields = value)
+            .Add("methods", OptionKinds.Strings, (mechanism, value) => mechanism.Methods = value)
+            .Add("calls", OptionKinds.Strings, (mechanism, value) => mechanism.Calls = value)
+            .Add("creates", OptionKinds.Strings, (mechanism, value) => mechanism.Creates = value)
+            .Add("excludePaths", OptionKinds.Strings, (mechanism, value) => mechanism.ExcludePaths = value);
+
+        private static readonly OptionKind<List<ProjectMechanism>> Mechanisms = new() { ReadJson = ReadMechanisms };
+
+        private static readonly OptionTable<ProjectSection> Table = new OptionTable<ProjectSection>()
+            .Add("preprocessorSymbols", OptionKinds.Strings, (project, value) => project.Symbols = value)
+            .AddSection("logger", Logger, project => project.Logger)
+            .Add("mechanisms", Mechanisms, (project, value) => project.Mechanisms.AddRange(value));
+
         public static ProjectOptions Parse(string json)
         {
-            using var document = JsonConfig.Parse(json);
-            var root = document.RootElement;
-            JsonConfig.RequireObject(root, "project");
-
-            IReadOnlyList<string>? symbols = null;
-            var logger = new LoggerSection();
-            var mechanisms = new List<ProjectMechanism>();
-            foreach (var property in root.EnumerateObject())
-            {
-                switch (property.Name)
-                {
-                    case "preprocessorSymbols":
-                        symbols = JsonConfig.ReadStrings(property.Value, "preprocessorSymbols");
-                        break;
-                    case "logger":
-                        logger = ReadLogger(property.Value);
-                        break;
-                    case "mechanisms":
-                        mechanisms.AddRange(ReadMechanisms(property.Value));
-                        break;
-                    default:
-                        throw new ConfigException($"неизвестный ключ '{property.Name}'");
-                }
-            }
-
+            var project = new ProjectSection();
+            Table.ReadRoot(json, "project", project);
+            var logger = project.Logger;
+            var mechanisms = project.Mechanisms;
             if (logger.Bypass.Count > 0)
                 mechanisms.Add(CreateLoggerMechanism(logger, mechanisms));
 
-            if (symbols == null)
+            if (project.Symbols == null)
                 return new ProjectOptions { LoggerMethods = logger.Methods, Mechanisms = mechanisms };
 
             return new ProjectOptions
             {
-                PreprocessorSymbols = symbols,
+                PreprocessorSymbols = project.Symbols,
                 LoggerMethods = logger.Methods,
                 Mechanisms = mechanisms,
             };
         }
 
-        private static LoggerSection ReadLogger(JsonElement element)
+        private static List<ProjectMechanism> ReadMechanisms(JsonElement element, string path)
         {
-            JsonConfig.RequireObject(element, "logger");
-            var logger = new LoggerSection();
-            foreach (var property in element.EnumerateObject())
-            {
-                switch (property.Name)
-                {
-                    case "methods":
-                        logger.Methods = JsonConfig.ReadStrings(property.Value, "logger.methods");
-                        break;
-                    case "bypass":
-                        logger.Bypass = JsonConfig.ReadStrings(property.Value, "logger.bypass");
-                        break;
-                    default:
-                        throw new ConfigException($"logger: неизвестный ключ '{property.Name}'");
-                }
-            }
-
-            return logger;
-        }
-
-        private static List<ProjectMechanism> ReadMechanisms(JsonElement element)
-        {
-            JsonConfig.RequireObject(element, "mechanisms");
+            JsonConfig.RequireObject(element, path);
             var mechanisms = new List<ProjectMechanism>();
             foreach (var property in element.EnumerateObject())
-                mechanisms.Add(ReadMechanism(property.Name, property.Value));
+            {
+                var section = new MechanismSection();
+                var mechanismPath = $"{path}.{property.Name}";
+                Mechanism.Read(property.Value, mechanismPath, section);
+                mechanisms.Add(section.Create(property.Name, mechanismPath));
+            }
 
             return mechanisms;
-        }
-
-        private static ProjectMechanism ReadMechanism(string name, JsonElement element)
-        {
-            var path = "mechanisms." + name;
-            JsonConfig.RequireObject(element, path);
-            string? use = null;
-            var lists = new Dictionary<string, List<string>>();
-            foreach (var property in element.EnumerateObject())
-            {
-                var key = path + "." + property.Name;
-                switch (property.Name)
-                {
-                    case "use":
-                        use = ReadString(property.Value, key);
-                        break;
-                    case "types" or "fields" or "methods" or "calls" or "creates" or "excludePaths":
-                        lists[property.Name] = JsonConfig.ReadStrings(property.Value, key);
-                        break;
-                    default:
-                        throw new ConfigException($"{path}: неизвестный ключ '{property.Name}'");
-                }
-            }
-
-            if (use == null)
-                throw new ConfigException($"{path}: не задан use - чем заменить повтор");
-
-            if (!lists.Keys.Any(key => key != "excludePaths"))
-            {
-                const string keys = "types, fields, methods, calls, creates";
-                throw new ConfigException($"{path}: не задано, как распознать повтор ({keys})");
-            }
-
-            return new ProjectMechanism
-            {
-                Name = name,
-                Use = use,
-                Types = GetList(lists, "types"),
-                Fields = GetList(lists, "fields"),
-                Methods = GetList(lists, "methods"),
-                Calls = GetList(lists, "calls"),
-                Creates = GetList(lists, "creates"),
-                ExcludePaths = GetList(lists, "excludePaths"),
-            };
         }
 
         private static ProjectMechanism CreateLoggerMechanism(LoggerSection logger, List<ProjectMechanism> mechanisms)
@@ -140,23 +78,64 @@ namespace CSR.Reports.Config
             return new ProjectMechanism { Name = LoggerMechanism, Use = use, Calls = logger.Bypass };
         }
 
-        private static IReadOnlyList<string> GetList(Dictionary<string, List<string>> lists, string key)
-            => lists.TryGetValue(key, out List<string>? values) ? values : Array.Empty<string>();
-
-        private static string ReadString(JsonElement value, string path)
-        {
-            if (value.ValueKind != JsonValueKind.String)
-                throw new ConfigException($"{path}: ожидается строка");
-
-            return value.GetString()!;
-        }
-
         // Раздел logger: методы логгера проекта и вызовы в обход него
         private class LoggerSection
         {
             public IReadOnlyList<string> Methods { get; set; } = Array.Empty<string>();
 
             public IReadOnlyList<string> Bypass { get; set; } = Array.Empty<string>();
+        }
+
+        private class ProjectSection
+        {
+            public IReadOnlyList<string>? Symbols { get; set; }
+
+            public LoggerSection Logger { get; } = new();
+
+            public List<ProjectMechanism> Mechanisms { get; } = new();
+        }
+
+        // Раздел механизма; списки null - не заданы
+        private class MechanismSection
+        {
+            public string? Use { get; set; }
+
+            public IReadOnlyList<string>? Types { get; set; }
+
+            public IReadOnlyList<string>? Fields { get; set; }
+
+            public IReadOnlyList<string>? Methods { get; set; }
+
+            public IReadOnlyList<string>? Calls { get; set; }
+
+            public IReadOnlyList<string>? Creates { get; set; }
+
+            public IReadOnlyList<string>? ExcludePaths { get; set; }
+
+            // Механизм с проверкой: use задан и есть хотя бы один признак повтора
+            public ProjectMechanism Create(string name, string path)
+            {
+                if (Use == null)
+                    throw new ConfigException($"{path}: не задан use - чем заменить повтор");
+
+                if (Types == null && Fields == null && Methods == null && Calls == null && Creates == null)
+                {
+                    const string keys = "types, fields, methods, calls, creates";
+                    throw new ConfigException($"{path}: не задано, как распознать повтор ({keys})");
+                }
+
+                return new ProjectMechanism
+                {
+                    Name = name,
+                    Use = Use,
+                    Types = Types ?? Array.Empty<string>(),
+                    Fields = Fields ?? Array.Empty<string>(),
+                    Methods = Methods ?? Array.Empty<string>(),
+                    Calls = Calls ?? Array.Empty<string>(),
+                    Creates = Creates ?? Array.Empty<string>(),
+                    ExcludePaths = ExcludePaths ?? Array.Empty<string>(),
+                };
+            }
         }
     }
 }

@@ -1,4 +1,3 @@
-using System.Text.Json;
 using CSR.Reports.Config;
 
 namespace CSR.Workspace.Refactor
@@ -35,72 +34,26 @@ namespace CSR.Workspace.Refactor
     //     "maxFileSizeKb": N, "maxMatches": N } }
     public static class RefactorConfig
     {
+        private static readonly OptionTable<RefactorOptions> Serialization = new OptionTable<RefactorOptions>()
+            .Add("attributes", OptionKinds.Strings, (options, value) => options.SerializationAttributes = value);
+
+        private static readonly OptionTable<RefactorOptions> Strings = new OptionTable<RefactorOptions>()
+            .Add("extensions", OptionKinds.Strings, (options, value) => options.StringExtensions = value)
+            .Add("unityExtensions", OptionKinds.Strings, (options, value) => options.UnityExtensions = value)
+            .Add("roots", OptionKinds.Strings, (options, value) => options.StringRoots = value)
+            .Add("exclude", OptionKinds.Strings, (options, value) => options.StringExclude = value)
+            .Add("maxFileSizeKb", OptionKinds.Count, (options, value) => options.MaxFileSizeKb = value)
+            .Add("maxMatches", OptionKinds.Count, (options, value) => options.MaxStringMatches = value);
+
+        private static readonly OptionTable<RefactorOptions> Table = new OptionTable<RefactorOptions>()
+            .AddSection("serialization", Serialization, options => options)
+            .AddSection("strings", Strings, options => options);
+
         public static RefactorOptions Parse(string json)
         {
             var options = new RefactorOptions();
-            using var document = JsonConfig.Parse(json);
-            var root = document.RootElement;
-            JsonConfig.RequireObject(root, "refactor");
-            foreach (var property in root.EnumerateObject())
-            {
-                switch (property.Name)
-                {
-                    case "serialization":
-                        ReadSerialization(property.Value, options);
-                        break;
-                    case "strings":
-                        ReadStrings(property.Value, options);
-                        break;
-                    default:
-                        throw new ConfigException($"refactor: неизвестный ключ '{property.Name}'");
-                }
-            }
-
+            Table.ReadRoot(json, "refactor", options, "refactor");
             return options;
-        }
-
-        private static void ReadSerialization(JsonElement element, RefactorOptions options)
-        {
-            JsonConfig.RequireObject(element, "serialization");
-            foreach (var property in element.EnumerateObject())
-            {
-                if (property.Name != "attributes")
-                    throw new ConfigException($"serialization: неизвестный ключ '{property.Name}'");
-
-                options.SerializationAttributes = JsonConfig.ReadStrings(property.Value, "serialization.attributes");
-            }
-        }
-
-        private static void ReadStrings(JsonElement element, RefactorOptions options)
-        {
-            JsonConfig.RequireObject(element, "strings");
-            foreach (var property in element.EnumerateObject())
-            {
-                var path = $"strings.{property.Name}";
-                switch (property.Name)
-                {
-                    case "extensions":
-                        options.StringExtensions = JsonConfig.ReadStrings(property.Value, path);
-                        break;
-                    case "unityExtensions":
-                        options.UnityExtensions = JsonConfig.ReadStrings(property.Value, path);
-                        break;
-                    case "roots":
-                        options.StringRoots = JsonConfig.ReadStrings(property.Value, path);
-                        break;
-                    case "exclude":
-                        options.StringExclude = JsonConfig.ReadStrings(property.Value, path);
-                        break;
-                    case "maxFileSizeKb":
-                        options.MaxFileSizeKb = JsonConfig.ReadInt(property.Value, path);
-                        break;
-                    case "maxMatches":
-                        options.MaxStringMatches = JsonConfig.ReadInt(property.Value, path);
-                        break;
-                    default:
-                        throw new ConfigException($"strings: неизвестный ключ '{property.Name}'");
-                }
-            }
         }
     }
 }

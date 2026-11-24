@@ -141,8 +141,10 @@ namespace CSR.Workspace.Tests
         [Test]
         public void Config_UnknownKey()
         {
-            Assert.Throws<ConfigException>(() => RefactorConfig.Parse("""{ "rename": {} }"""));
-            Assert.Throws<ConfigException>(() => RefactorConfig.Parse("""{ "strings": { "depth": 1 } }"""));
+            var root = Assert.Throws<ConfigException>(() => RefactorConfig.Parse("""{ "rename": {} }"""));
+            var strings = Assert.Throws<ConfigException>(() => RefactorConfig.Parse("""{ "strings": { "depth": 1 } }"""));
+            Assert.That(root!.Message, Is.EqualTo("refactor: неизвестный ключ 'rename'"));
+            Assert.That(strings!.Message, Is.EqualTo("strings: неизвестный ключ 'depth'"));
             var wrongType = """{ "serialization": { "attributes": [1] } }""";
             Assert.Throws<ConfigException>(() => RefactorConfig.Parse(wrongType));
         }
