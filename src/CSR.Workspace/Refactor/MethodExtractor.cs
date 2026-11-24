@@ -402,7 +402,7 @@ namespace CSR.Workspace.Refactor
                 return lines;
             }
 
-            // Строки выделения с правками тела (объявления выходов-out) и сдвигом отступа (TextLayout.Reindent)
+            // Строки выделения с правками тела (объявления выходов-out) и сдвигом отступа
             private IEnumerable<string> Reindent(string from, string to)
             {
                 var span = TextSpan.FromBounds(m_Text.Lines[m_StartLine].Start, m_Text.Lines[m_EndLine].End);

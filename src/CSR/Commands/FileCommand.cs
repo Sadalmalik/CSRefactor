@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace CSR.Commands
 {
-    // Файловая команда анализа: имя, свои опции, форматы и анализ. Общие шаги - FileCommands.Run
+    // Файловая команда анализа: имя, свои опции, форматы и анализ
     public class FileCommand
     {
         public required string Name { get; init; }
@@ -89,8 +89,7 @@ namespace CSR.Commands
         private static readonly string[] CommonOptions = ["--config", "--project", "--format", "--out"];
         private static readonly string[] ScopeOptions = ["--diff", "--scope"];
 
-        // Шаги: аргументы -> формат -> проект -> файлы (--diff / --scope) -> анализ -> --out -> сводка -> код возврата.
-        // Время в сводке - от начала команды
+        // Шаги: аргументы -> формат -> проект -> файлы -> анализ -> --out -> сводка со временем команды -> код возврата
         public static int Run(FileCommand command, IEnumerable<string> args)
         {
             var stopwatch = Stopwatch.StartNew();
@@ -111,12 +110,12 @@ namespace CSR.Commands
             return result.ExitCode;
         }
 
-        // --scope: без --diff - file, с --diff - changed-lines; changed-lines без --diff - от HEAD.
-        // С --diff или changed-lines файлы - только файлы диффа
+        // --scope: без --diff - file, с --diff - changed-lines (без --diff - от HEAD); при диффе файлы - только из него
         private static FileRun CreateRun(CommandLine commandLine, string format, bool hasScope)
         {
             var diff = hasScope ? commandLine.GetOption("--diff") : null;
-            var scope = hasScope ? commandLine.GetOption("--scope") ?? (diff == null ? "file" : "changed-lines") : "file";
+            var defaultScope = diff == null ? "file" : "changed-lines";
+            var scope = hasScope ? commandLine.GetOption("--scope") ?? defaultScope : "file";
             if (scope is not ("file" or "changed-lines"))
                 throw new UsageException($"неизвестный режим '{scope}'");
 

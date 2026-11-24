@@ -54,7 +54,8 @@ namespace CSR.Core.Style.Checks
                 var arrow = clause.ArrowToken;
                 var text = context.Text;
                 var arrowLine = TextLines.GetLineNumber(text, arrow.SpanStart);
-                var indent = TextLayout.Deeper(TextLayout.GetIndent(text, SyntaxParts.GetDeclarationStart(clause.Parent!)));
+                var start = SyntaxParts.GetDeclarationStart(clause.Parent!);
+                var indent = TextLayout.Deeper(TextLayout.GetIndent(text, start));
                 if (TextLines.GetLineNumber(text, clause.Expression.SpanStart) > arrowLine)
                 {
                     ReportTrailing(context, clause, indent);
@@ -98,7 +99,7 @@ namespace CSR.Core.Style.Checks
             var before = context.Text.ToString(TextSpan.FromBounds(line.Start, arrow.SpanStart)).TrimEnd();
             var after = context.Text.ToString(TextSpan.FromBounds(arrow.SpanStart, line.End));
             var message = isProperty ? "'=>' свойства - с новой строки" : "строка с '=>' длиннее порога";
-            context.Report(line.Span, message, context.ReplaceLines(line.LineNumber, line.LineNumber, [before, indent + after]));
+            context.Report(line.Span, message, context.ReplaceLines(line.Span, [before, indent + after]));
         }
 
         private static bool HasComments(ArrowExpressionClauseSyntax clause)

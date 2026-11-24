@@ -2,8 +2,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace CSR.Core.Text
 {
-    // Геометрия строк исходника для правок, которые вставляют и переносят текст: отступ строки, уровень глубже,
-    // пустая строка, перевод строки, сдвиг отступа
+    // Геометрия строк для правок, которые вставляют и переносят текст: отступ, перевод строки, сдвиг отступа
     public static class TextLayout
     {
         // Отступ строки, в которой стоит позиция
@@ -13,8 +12,7 @@ namespace CSR.Core.Text
             return content.Substring(0, content.Length - content.TrimStart().Length);
         }
 
-        // Отступ на уровень глубже: отступ кончается табом - таб, иначе 4 пробела (смешанный старый отступ
-        // не становится еще более смешанным)
+        // Отступ на уровень глубже: отступ кончается табом - таб, иначе 4 пробела
         public static string Deeper(string indent)
             => indent + (indent.EndsWith("\t", StringComparison.Ordinal) ? "\t" : "    ");
 
@@ -37,8 +35,7 @@ namespace CSR.Core.Text
             return "\n";
         }
 
-        // Строка (без перевода) со сдвигом отступа from -> to: пустая - пустой; директива # и строка с другим
-        // отступом - как есть (C# требует только # первым непробельным; колонку директивы задает стиль)
+        // Строка без перевода со сдвигом отступа from -> to: пустая - пустой, директива # и строка с другим отступом - как есть
         public static string Reindent(string content, string from, string to)
         {
             if (string.IsNullOrWhiteSpace(content))

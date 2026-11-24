@@ -4,8 +4,7 @@ using CSR.Reports.Config;
 
 namespace CSR.Commands
 {
-    // Конфиги команды: пути - от папки вызова (на сервере csr serve текущая папка процесса другая),
-    // поиск проектного слоя - от start (ConfigFiles); предупреждения - в error (на сервере - поток клиента)
+    // Конфиги команды: пути - от папки вызова, проектный слой - от start, предупреждения - в error
     public class CommandConfigs
     {
         private readonly CommandLine m_CommandLine;

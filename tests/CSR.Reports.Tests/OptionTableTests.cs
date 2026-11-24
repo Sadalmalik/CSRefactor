@@ -57,18 +57,18 @@ namespace CSR.Reports.Tests
             Assert.That(options.Threshold, Is.EqualTo(0.9));
             Assert.That(options.Kinds, Is.EquivalentTo(new[] { UnitKind.Member, UnitKind.Type }));
 
-            var exception = Assert.Throws<ConfigException>(() => SimilarConfig.Table.ReadOptions(
-                name => name == "--min-lines" ? "-1" : null,
-                options));
+            var exception = Assert.Throws<ConfigException>(
+                () => SimilarConfig.Table.ReadOptions(name => name == "--min-lines" ? "-1" : null, options));
             Assert.That(exception!.Message, Is.EqualTo("--min-lines: ожидается неотрицательное целое, задано '-1'"));
         }
 
         [Test]
         public void Section_KeysInSameOptions()
         {
+            var limits = new OptionTable<SimilarOptions>()
+                .Add("lines", OptionKinds.Count, (options, value) => options.MinLines = value);
             var table = new OptionTable<SimilarOptions>()
-                .AddSection("limits", new OptionTable<SimilarOptions>()
-                    .Add("lines", OptionKinds.Count, (options, value) => options.MinLines = value), options => options);
+                .AddSection("limits", limits, options => options);
             var target = new SimilarOptions();
 
             table.ReadRoot("""{ "limits": { "lines": 7 } }""", "test", target);

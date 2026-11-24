@@ -14,7 +14,8 @@ namespace CSR.Reports.Config
         private static readonly OptionKind<HashSet<UnitKind>> Kinds = new()
         {
             ReadJson = (element, path) => ToKinds(JsonConfig.ReadStrings(element, path), path),
-            ParseText = (text, name) => ToKinds(text.Split(',').Select(part => part.Trim()).Where(part => part.Length > 0), name),
+            ParseText = (text, name)
+                => ToKinds(text.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries), name),
         };
 
         // Синонимы: имя -> имя, в нижнем регистре

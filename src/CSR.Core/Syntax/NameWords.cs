@@ -3,8 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace CSR.Core.Syntax
 {
-    // Разбор имени на слова для проверок обоих режимов: части через '_' (и другие не буквы и не цифры) и границы
-    // регистра; цифры - часть слова
+    // Разбор имени на слова: части через '_' и другие не буквы и не цифры, границы регистра; цифры - часть слова
     public static class NameWords
     {
         private static readonly Regex FieldPrefix = new("^(?:[a-z]{1,2}_|_+)", RegexOptions.CultureInvariant);
@@ -91,8 +90,7 @@ namespace CSR.Core.Syntax
                 => string.Equals(candidate, word, StringComparison.OrdinalIgnoreCase)));
         }
 
-        // Имя в PascalCase из слов, по частям через '.': MAX_POOL_SIZE -> MaxPoolSize, game.items -> Game.Items,
-        // @class -> Class
+        // Имя в PascalCase по частям через '.': MAX_POOL_SIZE -> MaxPoolSize, game.items -> Game.Items, @class -> Class
         public static string ToPascal(string name)
             => string.Join(".", name.Split('.').Select(ToPascalPart));
 

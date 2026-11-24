@@ -488,14 +488,16 @@ namespace CSR.Workspace.Refactor
                 if (root.Usings.Count == 0)
                 {
                     var firstBreak = TextLayout.GetLineBreak(edit.Text, 0);
-                    edit.Insert(0, string.Concat(usings.Select(item => item + firstBreak)) + firstBreak);
+                    var firstBlock = string.Concat(usings.Select(item => item + firstBreak));
+                    edit.Insert(0, firstBlock + firstBreak);
                     return;
                 }
 
                 // Перевод строки - последнего using, после которого идет вставка
                 var last = edit.Text.Lines.GetLineFromPosition(root.Usings[^1].Span.End);
                 var lineBreak = TextLayout.GetLineBreak(edit.Text, last.LineNumber);
-                edit.Insert(last.EndIncludingLineBreak, string.Concat(usings.Select(item => item + lineBreak)));
+                var block = string.Concat(usings.Select(item => item + lineBreak));
+                edit.Insert(last.EndIncludingLineBreak, block);
             }
 
 #endregion

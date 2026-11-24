@@ -90,7 +90,7 @@ namespace CSR.Core.Style.Checks
             context.Report(
                 line.Span,
                 $"цепочка '{operatorText}' длиннее порога - по операнду на строку",
-                context.ReplaceLines(line.LineNumber, line.LineNumber, lines));
+                context.ReplaceLines(line.Span, lines));
         }
 
         private static bool IsLogical(BinaryExpressionSyntax binary)
@@ -130,7 +130,7 @@ namespace CSR.Core.Style.Checks
                 context.Report(
                     line.Span,
                     "отступ продолжения условия - +4 к инструкции",
-                    context.ReplaceLines(line.LineNumber, line.LineNumber, [normal + value.TrimStart()]));
+                    context.ReplaceLines(line.Span, [normal + value.TrimStart()]));
             }
         }
 
@@ -166,7 +166,7 @@ namespace CSR.Core.Style.Checks
                 context.Report(
                     line.Span,
                     message,
-                    context.ReplaceLines(line.LineNumber, line.LineNumber, [wanted + value.TrimStart()]));
+                    context.ReplaceLines(line.Span, [wanted + value.TrimStart()]));
             }
         }
     }

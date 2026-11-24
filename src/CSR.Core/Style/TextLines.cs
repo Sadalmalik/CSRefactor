@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace CSR.Core.Style
 {
-    // Строки исходного текста для проверок, которые переносят и склеивают строки (отступ и перевод - TextLayout)
+    // Строки исходного текста для проверок, которые переносят и склеивают строки
     public static class TextLines
     {
         public static int GetLineNumber(SourceText text, int position)

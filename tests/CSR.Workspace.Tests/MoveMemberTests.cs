@@ -64,8 +64,8 @@ namespace CSR.Workspace.Tests
             """;
 
         // Приемник с переводами LF, кроме первой строки (CRLF)
-        private const string Modes = "using System;\r\nusing System.Linq;\n\nnamespace Sample.Items;\n\n"
-            + "public static class Modes\n{\n    public static int Count()\n        => 1;\n}\n";
+        private const string Modes = "using System;\r\nusing System.Linq;\n\nnamespace Sample.Items;\n\n" +
+            "public static class Modes\n{\n    public static int Count()\n        => 1;\n}\n";
 
         private static readonly RefactorOptions Options = new() { SerializationAttributes = ["Sample.Storage.Saved"] };
 

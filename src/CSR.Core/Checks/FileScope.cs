@@ -22,7 +22,7 @@ namespace CSR.Core.Checks
 
         public static bool IsMatch(IReadOnlyList<string> masks, string filePath)
         {
-            var mask = NameMask.Get(masks, true);
+            var mask = NameMask.Get(masks, isIgnoreCase: true);
             var path = filePath.Replace('\\', '/');
             return mask.IsMatch(path) || mask.IsMatch($"/{path}");
         }

@@ -81,7 +81,7 @@ namespace CSR.Core.Arch.Checks
             if (hint == null)
                 return;
 
-            var value = variable.Initializer == null ? "" : " = " + SyntaxParts.Shorten(variable.Initializer.Value, 40);
+            var value = variable.Initializer == null ? "" : $" = {SyntaxParts.Shorten(variable.Initializer.Value, 40)}";
             context.Report(
                 variable.Identifier.Span,
                 $"константа {declaration.Type} {variable.Identifier.Text}{value} (подсказка '{hint}')");

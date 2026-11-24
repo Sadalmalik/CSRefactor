@@ -3,8 +3,7 @@ using System.Text.Json;
 
 namespace CSR.Reports.Config
 {
-    // Вид значения опции: одно правило для ключа .jsonc и опции командной строки. Ошибка - ConfigException
-    // с путем ключа или именем опции
+    // Вид значения для ключа .jsonc и опции командной строки; ошибка - ConfigException с путем ключа или именем опции
     public class OptionKind<TValue>
     {
         public required Func<JsonElement, string, TValue> ReadJson { get; init; }
@@ -17,7 +16,7 @@ namespace CSR.Reports.Config
     {
         private const string ShareText = "число от 0 до 1";
 
-        public static readonly OptionKind<int> Count = Int(0, "неотрицательное целое");
+        public static readonly OptionKind<int> Count = CreateInt(0, "неотрицательное целое");
 
         // Доля от 0 до 1; в командной строке - с точкой или запятой
         public static readonly OptionKind<double> Share = new()
@@ -34,19 +33,19 @@ namespace CSR.Reports.Config
         public static readonly OptionKind<string> Text = new()
         {
             ReadJson = (element, path)
-                => element.ValueKind == JsonValueKind.String ? element.GetString()! : throw Expected(path, "строка"),
+                => element.ValueKind == JsonValueKind.String ? element.GetString()! : throw CreateError(path, "строка"),
         };
 
         public static readonly OptionKind<List<string>> Strings = new() { ReadJson = JsonConfig.ReadStrings };
 
         // text - значение опции командной строки (в конфиге - null)
-        private static ConfigException Expected(string name, string expected, string? text = null)
+        private static ConfigException CreateError(string name, string expected, string? text = null)
         {
             var message = $"{name}: ожидается {expected}";
             return new ConfigException(text == null ? message : $"{message}, задано '{text}'");
         }
 
-        private static OptionKind<int> Int(int min, string expected)
+        private static OptionKind<int> CreateInt(int min, string expected)
         {
             return new OptionKind<int>
             {
@@ -65,7 +64,7 @@ namespace CSR.Reports.Config
             where T : struct
         {
             if (value == null || !isValid(value.Value))
-                throw Expected(name, expected, text);
+                throw CreateError(name, expected, text);
 
             return value.Value;
         }

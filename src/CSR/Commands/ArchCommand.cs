@@ -41,7 +41,7 @@ namespace CSR.Commands
 
         private static readonly HashSet<string> FlagNames = ["--no-server"];
 
-        private static readonly FileCommand FileMode = new()
+        private static readonly FileCommand FileModeCommand = new()
         {
             Name = "arch",
             Flags = FlagNames,
@@ -57,7 +57,7 @@ namespace CSR.Commands
             if (commandLine.GetOption("--solution") != null || commandLine.GetOptions("--projects").Count > 0)
                 return WorkspaceCommands.Run("arch", arguments, OptionNames, FlagNames, ValidateSolutionMode);
 
-            return FileCommands.Run(FileMode, arguments);
+            return FileCommands.Run(FileModeCommand, arguments);
         }
 
         private static FileResult AnalyzeFiles(FileRun run)

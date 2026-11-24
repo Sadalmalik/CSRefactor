@@ -91,8 +91,7 @@ namespace CSR.Core.Checks
         public void Report(TextSpan span, string message, LineReplacement? replacement = null)
             => Report(span, message, m_Configuration.Severity, m_Configuration.Rule, replacement);
 
-        // Находка с уровнем и меткой правила конфига (запись правила проверки), а не проверки. Строки находки с
-        // заменой - строки span и замены вместе
+        // Находка с уровнем и меткой правила конфига; строки находки с заменой - строки span и замены вместе
         public void Report(
             TextSpan span,
             string message,

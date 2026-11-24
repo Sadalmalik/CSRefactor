@@ -70,7 +70,7 @@ namespace CSR
         public void ReadOptions<T>(OptionTable<T> table, T target)
             => ReadValues(() => table.ReadOptions(GetOption, target));
 
-        // Целое >= 0 по правилу конфигов (OptionKinds.Count); null - опция не задана
+        // Целое >= 0 по правилу конфигов; null - опция не задана
         public int? ReadCount(string name)
         {
             var text = GetOption(name);

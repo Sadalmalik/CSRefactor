@@ -118,7 +118,11 @@ namespace CSR.Reports.Config
                 if (Use == null)
                     throw new ConfigException($"{path}: не задан use - чем заменить повтор");
 
-                if (Types == null && Fields == null && Methods == null && Calls == null && Creates == null)
+                if (Types == null
+                    && Fields == null
+                    && Methods == null
+                    && Calls == null
+                    && Creates == null)
                 {
                     const string keys = "types, fields, methods, calls, creates";
                     throw new ConfigException($"{path}: не задано, как распознать повтор ({keys})");

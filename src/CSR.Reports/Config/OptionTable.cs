@@ -2,8 +2,7 @@ using System.Text.Json;
 
 namespace CSR.Reports.Config
 {
-    // Ключи раздела .jsonc над классом опций: ключ -> вид значения -> присвоение; неизвестный ключ - ошибка.
-    // Ключ с опцией командной строки читается и из нее - тем же видом
+    // Ключи раздела .jsonc: ключ -> вид значения -> присвоение; ключ с опцией читается и из командной строки
     public class OptionTable<T>
     {
         private readonly Dictionary<string, Action<T, JsonElement, string>> m_Keys = new(StringComparer.Ordinal);
@@ -35,8 +34,7 @@ namespace CSR.Reports.Config
             return this;
         }
 
-        // Корень документа; name - имя конфига в ошибке "не объект". unknownPrefix - префикс ошибки неизвестного
-        // ключа корня (refactor.jsonc: прежний текст "refactor: неизвестный ключ")
+        // Корень документа; name - имя конфига в ошибке "не объект", unknownPrefix - префикс ошибки неизвестного ключа
         public void ReadRoot(string json, string name, T target, string unknownPrefix = "")
         {
             using var document = JsonConfig.Parse(json);

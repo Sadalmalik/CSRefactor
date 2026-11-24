@@ -157,23 +157,21 @@ namespace CSR.Core.Tests.Arch
         public void ExcludePaths_SkipsFile()
         {
             var source = InMethod("if (shape is Circle circle) return;");
-            void Exclude(CheckSettings settings)
-                => settings.Set("excludePaths", new[] { "*/editor/*" });
+            Action<CheckSettings> exclude = settings => settings.Set("excludePaths", new[] { "*/editor/*" });
 
-            Assert.That(Run("type-branch", source, Exclude, "Game/Editor/Sample.cs"), Is.Empty);
-            Assert.That(Run("type-branch", source, Exclude, "Editor/Sample.cs"), Is.Empty);
-            Assert.That(Run("type-branch", source, Exclude, "Game/Sample.cs"), Has.Count.EqualTo(1));
+            Assert.That(Run("type-branch", source, exclude, "Game/Editor/Sample.cs"), Is.Empty);
+            Assert.That(Run("type-branch", source, exclude, "Editor/Sample.cs"), Is.Empty);
+            Assert.That(Run("type-branch", source, exclude, "Game/Sample.cs"), Has.Count.EqualTo(1));
         }
 
         [Test]
         public void Paths_OnlyMatchingFiles()
         {
             var source = InMethod("if (shape is Circle circle) return;");
-            void Include(CheckSettings settings)
-                => settings.Set("paths", new[] { "*/Game/*" });
+            Action<CheckSettings> include = settings => settings.Set("paths", new[] { "*/Game/*" });
 
-            Assert.That(Run("type-branch", source, Include, "Game/Sample.cs"), Has.Count.EqualTo(1));
-            Assert.That(Run("type-branch", source, Include, "Tools/Sample.cs"), Is.Empty);
+            Assert.That(Run("type-branch", source, include, "Game/Sample.cs"), Has.Count.EqualTo(1));
+            Assert.That(Run("type-branch", source, include, "Tools/Sample.cs"), Is.Empty);
         }
 
         [Test]

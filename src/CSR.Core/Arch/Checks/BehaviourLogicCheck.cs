@@ -105,8 +105,8 @@ namespace CSR.Core.Arch.Checks
                 return;
 
             var baseName = type.BaseList!.Types.First().Type.ToString();
-            var message = $"{baseName} '{type.Identifier.Text}': своих методов {own.Count} (порог {maxMethods}): "
-                + SyntaxParts.JoinNames(own);
+            var names = SyntaxParts.JoinNames(own);
+            var message = $"{baseName} '{type.Identifier.Text}': своих методов {own.Count} (порог {maxMethods}): {names}";
             context.Report(type.Identifier.Span, message);
         }
 

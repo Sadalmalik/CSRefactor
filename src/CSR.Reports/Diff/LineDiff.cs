@@ -1,6 +1,6 @@
 namespace CSR.Reports.Diff
 {
-    // Unified diff двух текстов построчно (пути a/<путь>, b/<путь>): весь текст - один блок для DiffWriter
+    // Unified diff двух текстов построчно (пути a/<путь>, b/<путь>): весь текст - один блок
     public static class LineDiff
     {
         public static string Build(string path, string before, string after)
