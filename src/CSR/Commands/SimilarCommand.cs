@@ -113,23 +113,15 @@ namespace CSR.Commands
         // Единицы L1-L3 по деревьям файлов; системы L4 - по графу типов компиляции этих деревьев
         internal static CollectedUnits Collect(List<string> files, SimilarOptions options, ProjectOptions project)
         {
-            var trees = new ConcurrentBag<SyntaxTree>();
+            var trees = SourceGraph.Parse(files, project);
             var results = new ConcurrentBag<List<SimilarUnit>>();
-            Parallel.ForEach(files, file =>
-            {
-                var source = File.ReadAllText(file);
-                var tree = CSharpSyntaxTree.ParseText(source, project.ParseOptions, SourceFiles.GetDisplayPath(file));
-                trees.Add(tree);
-                results.Add(SimilarUnits.Collect(tree, options));
-            });
+            Parallel.ForEach(trees, tree => results.Add(SimilarUnits.Collect(tree, options)));
 
             var units = results.SelectMany(list => list).ToList();
             if (!options.Kinds.Contains(UnitKind.System))
                 return new CollectedUnits(units, null);
 
-            var sorted = trees.OrderBy(tree => tree.FilePath, StringComparer.Ordinal).ToList();
-            var compilation = SourceCompilation.Create(sorted);
-            var graph = TypeGraphBuilder.Build([compilation], sorted, path => path, CancellationToken.None);
+            var graph = SourceGraph.Build(trees).Graph;
             units.AddRange(SystemUnits.Collect(graph, options));
             return new CollectedUnits(units, graph);
         }
