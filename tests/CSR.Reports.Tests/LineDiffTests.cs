@@ -43,6 +43,28 @@ namespace CSR.Reports.Tests
             Assert.That(diff, Does.EndWith("@@ -1,2 +1,2 @@\n a\n-b\n+c\n"));
         }
 
+        // Тексты отличаются только переводом в конце: дифф не пустой, у строки без перевода - маркер
+        [Test]
+        public void Diff_OnlyFinalNewLine()
+        {
+            const string marker = "\\ No newline at end of file\n";
+
+            var added = LineDiff.Build("f.cs", "a\nb", "a\nb\n");
+            var removed = LineDiff.Build("f.cs", "a\nb\n", "a\nb");
+
+            Assert.That(added, Is.EqualTo($"--- a/f.cs\n+++ b/f.cs\n@@ -1,2 +1,2 @@\n a\n-b\n{marker}+b\n"));
+            Assert.That(removed, Is.EqualTo($"--- a/f.cs\n+++ b/f.cs\n@@ -1,2 +1,2 @@\n a\n-b\n+b\n{marker}"));
+        }
+
+        // Последняя строка без перевода в обоих текстах - в контексте с маркером
+        [Test]
+        public void Diff_NoEndingInContext()
+        {
+            var diff = LineDiff.Build("f.cs", "a\nb", "x\nb");
+
+            Assert.That(diff, Does.EndWith("@@ -1,2 +1,2 @@\n-a\n+x\n b\n\\ No newline at end of file\n"));
+        }
+
         [Test]
         public void Diff_EmptyToText()
         {

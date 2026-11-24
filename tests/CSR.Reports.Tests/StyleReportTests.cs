@@ -114,6 +114,51 @@ namespace CSR.Reports.Tests
             Assert.That(Changed(lines, 33), Is.False);
         }
 
+        // Дифф с контекстом (git diff -U3, вывод csr): изменены только строки '+', не контекст
+        [Test]
+        public void Diff_ContextLinesNotChanged()
+        {
+            const string diff = """
+                --- a/src/A.cs
+                +++ b/src/A.cs
+                @@ -1,7 +1,7 @@
+                 a
+                 b
+                 c
+                -d
+                +X
+                 e
+                 f
+                 g
+                @@ -20,3 +20,4 @@
+                 t
+                +u
+                 v
+                 w
+                """;
+            var lines = UnifiedDiff.Parse(diff)["src/A.cs"];
+
+            var changed = Enumerable.Range(1, 30).Where(line => Changed(lines, line));
+            Assert.That(changed, Is.EqualTo(new[] { 4, 21 }));
+        }
+
+        // Добавленная строка "++ x" в теле ханка - "+++ x", не заголовок файла
+        [Test]
+        public void Diff_AddedLineLikeHeader()
+        {
+            const string diff = """
+                --- a/src/A.cs
+                +++ b/src/A.cs
+                @@ -1,0 +2,2 @@
+                +++ x
+                +y
+                """;
+            var files = UnifiedDiff.Parse(diff);
+
+            Assert.That(files.Keys, Is.EqualTo(new[] { "src/A.cs" }));
+            Assert.That(Changed(files["src/A.cs"], 3), Is.True);
+        }
+
         [Test]
         public void Json_FindingsAndSummary()
         {

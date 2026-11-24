@@ -102,7 +102,7 @@ namespace CSR.Commands
                 var lines = changed?[file];
                 var result = SyntaxFixer.Fix(source, display, options, project, fix, lines);
                 var diff = LineDiff.Build(display.Replace('\\', '/'), source, result.Text);
-                results.Add(new FileFix(file, result, diff));
+                results.Add(new FileFix(file, result, diff, result.Text != source));
             });
 
             return results.OrderBy(result => result.Path, StringComparer.Ordinal).ToList();
@@ -111,7 +111,7 @@ namespace CSR.Commands
         // Запись только измененных файлов, с прежней кодировкой и BOM
         private static void Write(List<FileFix> results)
         {
-            foreach (var result in results.Where(item => item.Diff.Length > 0))
+            foreach (var result in results.Where(item => item.IsChanged))
                 File.WriteAllText(result.Path, result.Fix.Text, DetectEncoding(result.Path));
         }
 
@@ -136,7 +136,7 @@ namespace CSR.Commands
 
                 writer.WriteEndArray();
                 writer.WriteStartArray("files");
-                foreach (var result in results.Where(item => item.Diff.Length > 0))
+                foreach (var result in results.Where(item => item.IsChanged))
                     writer.WriteStringValue(SourceFiles.GetDisplayPath(result.Path).Replace('\\', '/'));
                 writer.WriteEndArray();
                 writer.WriteString("diff", patch);
@@ -156,7 +156,7 @@ namespace CSR.Commands
         {
             var groups = GroupApplied(results);
             var fixedCount = groups.Sum(group => group.Count);
-            var files = results.Count(result => result.Diff.Length > 0);
+            var files = results.Count(result => result.IsChanged);
             var errors = report.Findings.Count(finding => finding.Severity == Severity.Error);
             var text = new StringBuilder();
             var write = apply ? "записано" : "без записи (--apply - записать)";
@@ -209,7 +209,8 @@ namespace CSR.Commands
             return new UTF8Encoding(false);
         }
 
-        private record FileFix(string Path, FixResult Fix, string Diff);
+        // IsChanged - по тексту: дифф не видит смену одних переводов строк
+        private record FileFix(string Path, FixResult Fix, string Diff, bool IsChanged);
 
         private record AppliedGroup(string Check, string? Rule, int Count);
     }

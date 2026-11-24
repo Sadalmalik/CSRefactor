@@ -75,7 +75,7 @@ namespace CSR.Workspace.Tests
 
             var diff = TextDiff.Build("f.cs", before, before.WithChanges(change), [change]);
 
-            Assert.That(diff, Is.EqualTo("--- a/f.cs\n+++ b/f.cs\n@@ -1,4 +1,5 @@\n a\n+new\n b\n c\n \n"));
+            Assert.That(diff, Is.EqualTo("--- a/f.cs\n+++ b/f.cs\n@@ -1,3 +1,4 @@\n a\n+new\n b\n c\n"));
         }
 
         [Test]
@@ -90,8 +90,20 @@ namespace CSR.Workspace.Tests
             var diff = TextDiff.Build("f.cs", before, before.WithChanges(first, second), [first, second]);
 
             Assert.That(diff, Does.Contain("@@ -1,5 +1,5 @@"));
-            Assert.That(diff, Does.Contain("@@ -15,7 +15,7 @@"));
+            Assert.That(diff, Does.Contain("@@ -15,6 +15,6 @@"));
             Assert.That(diff, Does.Contain("-line18\n+eighteen\n"));
+        }
+
+        // Правка последней строки файла без перевода строки и добавление перевода в конце
+        [Test]
+        public void Diff_NoEndingMarker()
+        {
+            var before = SourceText.From("a\nb");
+            var change = new TextChange(new TextSpan(2, 1), "c\n");
+
+            var diff = TextDiff.Build("f.cs", before, before.WithChanges(change), [change]);
+
+            Assert.That(diff, Is.EqualTo("--- a/f.cs\n+++ b/f.cs\n@@ -1,2 +1,2 @@\n a\n-b\n\\ No newline at end of file\n+c\n"));
         }
 
         [Test]
