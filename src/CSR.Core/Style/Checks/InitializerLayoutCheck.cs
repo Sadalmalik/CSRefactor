@@ -111,7 +111,10 @@ namespace CSR.Core.Style.Checks
 
             var tail = text.ToString(TextSpan.FromBounds(initializer.CloseBraceToken.Span.End, closeLine.End));
             lines.Add(indent + "}" + tail);
-            context.Report(TextSpan.FromBounds(firstLine.Start, closeLine.End), problem, lines);
+            context.Report(
+                TextSpan.FromBounds(firstLine.Start, closeLine.End),
+                problem,
+                context.ReplaceLines(firstLine.LineNumber, closeLine.LineNumber, lines));
         }
     }
 }

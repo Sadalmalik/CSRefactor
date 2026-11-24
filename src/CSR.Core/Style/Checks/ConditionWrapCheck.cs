@@ -86,7 +86,10 @@ namespace CSR.Core.Style.Checks
                 lines.Add($"{indent}{operatorText} {operands[i]}");
 
             lines[lines.Count - 1] += text.ToString(TextSpan.FromBounds(condition.Span.End, line.End));
-            context.Report(line.Span, $"цепочка '{operatorText}' длиннее порога - по операнду на строку", lines);
+            context.Report(
+                line.Span,
+                $"цепочка '{operatorText}' длиннее порога - по операнду на строку",
+                context.ReplaceLines(line.LineNumber, line.LineNumber, lines));
         }
 
         private static bool IsLogical(BinaryExpressionSyntax binary)
@@ -123,7 +126,10 @@ namespace CSR.Core.Style.Checks
                 if (line.Start + indent.Length != token.SpanStart || indent == normal)
                     continue;
 
-                context.Report(line.Span, "отступ продолжения условия - +4 к инструкции", [normal + value.TrimStart()]);
+                context.Report(
+                    line.Span,
+                    "отступ продолжения условия - +4 к инструкции",
+                    context.ReplaceLines(line.LineNumber, line.LineNumber, [normal + value.TrimStart()]));
             }
         }
 
@@ -156,7 +162,10 @@ namespace CSR.Core.Style.Checks
                     continue;
 
                 var message = "аргумент вызова в условии на уровне тела - на +8";
-                context.Report(line.Span, message, [wanted + value.TrimStart()]);
+                context.Report(
+                    line.Span,
+                    message,
+                    context.ReplaceLines(line.LineNumber, line.LineNumber, [wanted + value.TrimStart()]));
             }
         }
     }

@@ -151,7 +151,10 @@ namespace CSR.Core.Style.Checks
                 lines.Add(inner + (i < tails.Count - 1 ? part.TrimEnd() : part));
             }
 
-            context.Report(TextSpan.FromBounds(openLine.Start, closeLine.End), problem, lines);
+            context.Report(
+                TextSpan.FromBounds(openLine.Start, closeLine.End),
+                problem,
+                context.ReplaceLines(openLine.LineNumber, closeLine.LineNumber, lines));
         }
 
         private static int GetDeclarationStart(SyntaxNode member)

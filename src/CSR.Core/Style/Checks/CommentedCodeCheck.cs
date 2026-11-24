@@ -57,12 +57,12 @@ namespace CSR.Core.Style.Checks
             if (run.Count > 1 && IsCode(string.Join("\n", run.Select(comment => comment.Content))))
             {
                 var span = TextSpan.FromBounds(run[0].Span.Start, run[run.Count - 1].Span.End);
-                context.Report(span, "закомментированный код", Array.Empty<string>());
+                context.Report(span, "закомментированный код", context.ReplaceLines(span, []));
                 return;
             }
 
             foreach (var comment in candidates)
-                context.Report(comment.Span, "закомментированный код", Array.Empty<string>());
+                context.Report(comment.Span, "закомментированный код", context.ReplaceLines(comment.Span, []));
         }
 
         // Хвост после кода: result += step; // * weight;

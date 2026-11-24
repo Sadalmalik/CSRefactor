@@ -60,7 +60,7 @@ namespace CSR.Core.Style.Checks
         }
 
         // Оператор в конце строки -> в начало строки правого операнда (она - следующая, комментариев нет)
-        private static IReadOnlyList<string>? MoveToNextLine(CheckContext context, SyntaxToken token, int rightLine)
+        private static LineReplacement? MoveToNextLine(CheckContext context, SyntaxToken token, int rightLine)
         {
             var text = context.Text;
             var operatorLine = text.Lines.GetLineFromPosition(token.SpanStart);
@@ -70,11 +70,11 @@ namespace CSR.Core.Style.Checks
             var before = text.ToString(TextSpan.FromBounds(operatorLine.Start, token.SpanStart)).TrimEnd();
             var next = TextLines.GetLine(text, rightLine);
             var indent = next.Substring(0, next.Length - next.TrimStart().Length);
-            return [before, $"{indent}{token.Text} {next.TrimStart()}"];
+            return context.ReplaceLines(operatorLine.LineNumber, rightLine, [before, $"{indent}{token.Text} {next.TrimStart()}"]);
         }
 
         // Оператор в начале строки -> в конец строки левого операнда (она - предыдущая)
-        private static IReadOnlyList<string>? MoveToPreviousLine(CheckContext context, SyntaxToken token, int leftLine)
+        private static LineReplacement? MoveToPreviousLine(CheckContext context, SyntaxToken token, int leftLine)
         {
             var text = context.Text;
             var operatorLine = text.Lines.GetLineFromPosition(token.SpanStart);
@@ -84,7 +84,7 @@ namespace CSR.Core.Style.Checks
             var previous = TextLines.GetLine(text, leftLine).TrimEnd();
             var rest = text.ToString(TextSpan.FromBounds(token.Span.End, operatorLine.End)).TrimStart();
             var indent = TextLines.GetIndent(text, token.SpanStart);
-            return [$"{previous} {token.Text}", indent + rest];
+            return context.ReplaceLines(leftLine, operatorLine.LineNumber, [$"{previous} {token.Text}", indent + rest]);
         }
 
         private static TextSpan GetLinesSpan(CheckContext context, int first, int last)

@@ -94,7 +94,7 @@ namespace CSR.Core.Style.Checks
 
             AddBranches(lines, conditional, TextLines.Deeper(indent));
             lines[lines.Count - 1] += text.ToString(TextSpan.FromBounds(conditional.Span.End, line.End));
-            context.Report(line.Span, message, lines);
+            context.Report(line.Span, message, context.ReplaceLines(line.LineNumber, line.LineNumber, lines));
         }
 
         // '? a' и ': b' с отступом branchIndent; вложенный тернарник в ветви - его ветви еще +4

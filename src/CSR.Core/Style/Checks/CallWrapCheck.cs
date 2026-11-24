@@ -181,7 +181,10 @@ namespace CSR.Core.Style.Checks
             }
 
             lines[lines.Count - 1] += text.ToString(TextSpan.FromBounds(list.CloseParenToken.Span.End, closeLine.End));
-            context.Report(TextSpan.FromBounds(openLine.Start, closeLine.End), message, lines);
+            context.Report(
+                TextSpan.FromBounds(openLine.Start, closeLine.End),
+                message,
+                context.ReplaceLines(openLine.LineNumber, closeLine.LineNumber, lines));
         }
     }
 }

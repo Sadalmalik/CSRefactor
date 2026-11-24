@@ -108,7 +108,7 @@ namespace CSR.Core.Style.Checks
             lines.AddRange(Enumerable.Repeat("", want.Value));
             lines.Add(TextLines.GetLine(text, last));
             var span = TextSpan.FromBounds(text.Lines[first].Start, text.Lines[last].End);
-            context.Report(span, $"{place}: пустых строк {gap}, нужно {want}", lines);
+            context.Report(span, $"{place}: пустых строк {gap}, нужно {want}", context.ReplaceLines(first, last, lines));
         }
 
         private static int FindNonBlank(SourceText text, int line, int direction)

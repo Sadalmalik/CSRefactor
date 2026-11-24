@@ -105,6 +105,30 @@ namespace CSR.Core.Tests.Fix
             Assert.That(result.Applied, Has.Count.EqualTo(2));
         }
 
+        // Удаление 'private' в конце строки забирает перевод строки: находка - на обе склеиваемые строки
+        [Test]
+        public void Fix_RemovedPrivateAtLineEnd_LinesNotDuplicated()
+        {
+            const string source = """
+                public class Sample
+                {
+                    private
+                        int m_Value;
+                }
+                """;
+            var options = CreateOptions("explicit-private");
+            options.Checks[0].Settings.Set("prefer", "implicit");
+
+            var result = SyntaxFixer.Fix(source, "Sample.cs", options, Project, new FixOptions(), null);
+
+            Assert.That(result.Text, Is.EqualTo("""
+                public class Sample
+                {
+                            int m_Value;
+                }
+                """));
+        }
+
         [Test]
         public void Fix_DeletesLinesAndShiftsLater()
         {
@@ -216,10 +240,8 @@ namespace CSR.Core.Tests.Fix
                 if (!context.Text.ToString().Contains("return a == b;"))
                     return;
 
-                var method = context.Text.Lines[9];
-                var end = context.Text.Lines[15];
-                var span = Microsoft.CodeAnalysis.Text.TextSpan.FromBounds(method.Start, end.End);
-                context.Report(span, "сломать", ["        public bool Check(object a, object b)"]);
+                var span = context.Text.Lines[9].Span;
+                context.Report(span, "сломать", context.ReplaceLines(9, 15, ["        public bool Check(object a, object b)"]));
             }
         }
 

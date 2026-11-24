@@ -88,19 +88,22 @@ namespace CSR.Core.Checks
         public string? Rule
             => m_Configuration.Rule;
 
-        public void Report(TextSpan span, string message, IReadOnlyList<string>? replacement = null)
+        public void Report(TextSpan span, string message, LineReplacement? replacement = null)
             => Report(span, message, m_Configuration.Severity, m_Configuration.Rule, replacement);
 
-        // Находка с уровнем и меткой правила конфига (запись правила проверки), а не проверки
+        // Находка с уровнем и меткой правила конфига (запись правила проверки), а не проверки. Строки находки с
+        // заменой - строки span и замены вместе
         public void Report(
             TextSpan span,
             string message,
             Severity severity,
             string? rule,
-            IReadOnlyList<string>? replacement = null)
+            LineReplacement? replacement = null)
         {
             var start = Text.Lines.GetLinePosition(span.Start);
             var end = Text.Lines.GetLinePosition(span.IsEmpty ? span.Start : span.End - 1);
+            var first = replacement == null ? start.Line : Math.Min(start.Line, replacement.Start);
+            var last = replacement == null ? end.Line : Math.Max(end.Line, replacement.End);
             m_Findings.Add(new Finding
             {
                 Check = m_Configuration.Check.Name,
@@ -108,18 +111,32 @@ namespace CSR.Core.Checks
                 Severity = severity,
                 Message = message,
                 File = Tree.FilePath,
-                Line = start.Line + 1,
-                EndLine = end.Line + 1,
-                Column = start.Character + 1,
-                Replacement = replacement,
+                Line = first + 1,
+                EndLine = last + 1,
+                Column = first == start.Line ? start.Character + 1 : 1,
+                Replacement = replacement == null ? null : Widen(replacement, first, last),
             });
         }
 
+        // Строки замены, дополненные исходными строками до first..last
+        private List<string> Widen(LineReplacement replacement, int first, int last)
+        {
+            var lines = new List<string>();
+            for (var line = first; line < replacement.Start; line++)
+                lines.Add(Text.Lines[line].ToString());
+
+            lines.AddRange(replacement.Lines);
+            for (var line = replacement.End + 1; line <= last; line++)
+                lines.Add(Text.Lines[line].ToString());
+
+            return lines;
+        }
+
         // Замена для находки: строки, которые задевает span, после подстановки newText вместо span
-        public IReadOnlyList<string> ReplaceInLines(TextSpan span, string newText)
+        public LineReplacement ReplaceInLines(TextSpan span, string newText)
             => ReplaceInLines(new[] { new TextChange(span, newText) });
 
-        public IReadOnlyList<string> ReplaceInLines(IReadOnlyList<TextChange> changes)
+        public LineReplacement ReplaceInLines(IReadOnlyList<TextChange> changes)
         {
             var first = Text.Lines.GetLineFromPosition(changes.Min(change => change.Span.Start));
             var last = Text.Lines.GetLineFromPosition(changes.Max(change => change.Span.End));
@@ -131,7 +148,20 @@ namespace CSR.Core.Checks
                 .ToList();
 
             var changed = lines.WithChanges(shifted).ToString();
-            return changed.Split('\n').Select(line => line.TrimEnd('\r')).ToList();
+            var replaced = changed.Split('\n').Select(line => line.TrimEnd('\r')).ToList();
+            return new LineReplacement(first.LineNumber, last.LineNumber, replaced);
+        }
+
+        // Замена строк start..end (индексы Text.Lines) целиком: проверка собирает новые строки сама
+        public LineReplacement ReplaceLines(int start, int end, IReadOnlyList<string> lines)
+            => new(start, end, lines);
+
+        // Замена строк, которые задевает span, целиком
+        public LineReplacement ReplaceLines(TextSpan span, IReadOnlyList<string> lines)
+        {
+            var start = Text.Lines.GetLineFromPosition(span.Start).LineNumber;
+            var end = Text.Lines.GetLineFromPosition(span.IsEmpty ? span.Start : span.End - 1).LineNumber;
+            return new LineReplacement(start, end, lines);
         }
 
         // Строки начала и конца span целиком - для находки с удалением строк

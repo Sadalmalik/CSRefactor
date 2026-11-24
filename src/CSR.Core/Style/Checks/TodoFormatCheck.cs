@@ -69,7 +69,7 @@ namespace CSR.Core.Style.Checks
                     continue;
 
                 // Замена - только когда неверен лишь префикс
-                IReadOnlyList<string>? replacement = null;
+                LineReplacement? replacement = null;
                 if (isPrefixWrong && problems.Count == 1 && task.Length > 0)
                     replacement = context.ReplaceInLines(comment.Span, "// TODO: " + task);
 

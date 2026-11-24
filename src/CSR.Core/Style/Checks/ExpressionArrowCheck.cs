@@ -83,7 +83,10 @@ namespace CSR.Core.Style.Checks
             var before = text.ToString(TextSpan.FromBounds(arrowLine.Start, clause.ArrowToken.SpanStart)).TrimEnd();
             var expression = expressionLine.ToString().TrimStart();
             var span = TextSpan.FromBounds(arrowLine.Start, expressionLine.End);
-            context.Report(span, "'=>' в конце строки", [before, $"{indent}=> {expression}"]);
+            context.Report(
+                span,
+                "'=>' в конце строки",
+                context.ReplaceLines(arrowLine.LineNumber, expressionLine.LineNumber, [before, $"{indent}=> {expression}"]));
         }
 
         // '=>' в строке объявления: с '=>' - на следующую строку
@@ -93,7 +96,7 @@ namespace CSR.Core.Style.Checks
             var before = context.Text.ToString(TextSpan.FromBounds(line.Start, arrow.SpanStart)).TrimEnd();
             var after = context.Text.ToString(TextSpan.FromBounds(arrow.SpanStart, line.End));
             var message = isProperty ? "'=>' свойства - с новой строки" : "строка с '=>' длиннее порога";
-            context.Report(line.Span, message, [before, indent + after]);
+            context.Report(line.Span, message, context.ReplaceLines(line.LineNumber, line.LineNumber, [before, indent + after]));
         }
 
         private static bool HasComments(ArrowExpressionClauseSyntax clause)

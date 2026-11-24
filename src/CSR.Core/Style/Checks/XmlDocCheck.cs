@@ -48,7 +48,7 @@ namespace CSR.Core.Style.Checks
                 bool isAlone = context.Text.ToString(TextSpan.FromBounds(lines.Start, span.Start)).Trim().Length == 0
                     && context.Text.ToString(TextSpan.FromBounds(span.End, lines.End)).Trim().Length == 0;
                 var replacement = isAlone ? GetReplacement(context, trivia, span, explanation, max) : null;
-                context.Report(span, "XML-документация", replacement);
+                context.Report(span, "XML-документация", replacement == null ? null : context.ReplaceLines(span, replacement));
             }
         }
 
