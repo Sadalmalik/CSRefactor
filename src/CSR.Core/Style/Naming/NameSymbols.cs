@@ -1,4 +1,4 @@
-using CSR.Core.Arch;
+using CSR.Core.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -174,7 +174,7 @@ namespace CSR.Core.Style.Naming
                 Access = GetAccess(type, modifiers),
                 Modifiers = GetModifiers(modifiers),
                 Attributes = GetAttributes(attributes),
-                Bases = bases?.Types.Select(item => ArchSyntax.GetSimpleTypeName(item.Type)).ToList() ?? [],
+                Bases = bases?.Types.Select(item => SyntaxParts.GetSimpleTypeName(item.Type)).ToList() ?? [],
             };
         }
 
@@ -287,7 +287,7 @@ namespace CSR.Core.Style.Naming
             return lists
                 .Where(list => list.Target == null)
                 .SelectMany(list => list.Attributes)
-                .Select(attribute => Invocations.GetSimpleName(attribute.Name))
+                .Select(attribute => SyntaxParts.GetAttributeName(attribute.Name))
                 .ToList();
         }
 

@@ -1,4 +1,5 @@
 using CSR.Core.Checks;
+using CSR.Core.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -56,7 +57,7 @@ namespace CSR.Core.Style.Checks
 
                 if (preferExplicit && !member.Modifiers.Any(IsAccessModifier))
                 {
-                    var start = GetDeclarationStart(member);
+                    var start = SyntaxParts.GetDeclarationStart(member);
                     var span = new TextSpan(start, 0);
                     // находка - на строке начала объявления (без атрибутов): замена - только эта строка
                     context.Report(span, "нет явного 'private'", context.ReplaceInLines(span, "private "));
@@ -106,14 +107,6 @@ namespace CSR.Core.Style.Checks
                 or SyntaxKind.ProtectedKeyword
                 or SyntaxKind.InternalKeyword
                 or SyntaxKind.FileKeyword;
-        }
-
-        // Начало объявления после атрибутов: первый модификатор или тип
-        private static int GetDeclarationStart(MemberDeclarationSyntax member)
-        {
-            var first = member.DescendantTokens()
-                .First(token => !token.Parent!.AncestorsAndSelf().OfType<AttributeListSyntax>().Any());
-            return first.SpanStart;
         }
     }
 }

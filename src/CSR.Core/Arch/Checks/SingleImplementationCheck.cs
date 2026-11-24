@@ -1,4 +1,5 @@
 using CSR.Core.Checks;
+using CSR.Core.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -81,7 +82,7 @@ namespace CSR.Core.Arch.Checks
 
             var attributes = NameMask.Get(context.Settings.GetStrings("ignoreAttributes"));
             if (contract.GetAttributes().Any(attribute => attribute.AttributeClass != null
-                && attributes.IsMatch(TrimAttribute(attribute.AttributeClass.Name))))
+                && attributes.IsMatch(SyntaxParts.TrimAttributeSuffix(attribute.AttributeClass.Name))))
                 return true;
 
             var contracts = NameMask.Get(context.Settings.GetStrings("contractMasks"), true);
@@ -100,8 +101,5 @@ namespace CSR.Core.Arch.Checks
                 .Select(text => text.TrimStart('/').Trim())
                 .Any(contracts.IsMatch);
         }
-
-        private static string TrimAttribute(string name)
-            => name.EndsWith("Attribute", StringComparison.Ordinal) ? name.Substring(0, name.Length - 9) : name;
     }
 }

@@ -1,5 +1,5 @@
-using CSR.Core.Arch;
 using CSR.Core.Checks;
+using CSR.Core.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -44,7 +44,7 @@ namespace CSR.Core.Style.Checks
 
             var baseTypes = NameMask.Get(context.Settings.GetStrings("baseTypes"));
             bool hasDerived = baseTypes.IsEmpty
-                || types.Any(item => item.Type is TypeDeclarationSyntax type && ArchSyntax.HasBaseType(type, baseTypes));
+                || types.Any(item => item.Type is TypeDeclarationSyntax type && SyntaxParts.HasBaseType(type, baseTypes));
             if (!hasDerived)
                 return;
 

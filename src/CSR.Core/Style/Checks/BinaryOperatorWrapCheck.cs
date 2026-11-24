@@ -70,7 +70,7 @@ namespace CSR.Core.Style.Checks
 
             var before = text.ToString(TextSpan.FromBounds(operatorLine.Start, token.SpanStart)).TrimEnd();
             var next = TextLines.GetLine(text, rightLine);
-            var indent = next.Substring(0, next.Length - next.TrimStart().Length);
+            var indent = TextLayout.GetIndent(text, text.Lines[rightLine].Start);
             return context.ReplaceLines(operatorLine.LineNumber, rightLine, [before, $"{indent}{token.Text} {next.TrimStart()}"]);
         }
 

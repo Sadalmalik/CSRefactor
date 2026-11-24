@@ -1,5 +1,5 @@
 using CSR.Core.Checks;
-using CSR.Core.Style;
+using CSR.Core.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -22,7 +22,7 @@ namespace CSR.Core.Arch.Checks
         {
             foreach (var attribute in context.Root.DescendantNodes().OfType<AttributeSyntax>())
             {
-                if (Invocations.GetSimpleName(attribute.Name) != "Obsolete" || HasReason(attribute))
+                if (SyntaxParts.GetAttributeName(attribute.Name) != "Obsolete" || HasReason(attribute))
                     continue;
 
                 var owner = attribute.Parent?.Parent;

@@ -123,7 +123,7 @@ namespace CSR.Core.Style.Checks
             {
                 var line = text.Lines.GetLineFromPosition(token.SpanStart);
                 var value = line.ToString();
-                var indent = value.Substring(0, value.Length - value.TrimStart().Length);
+                var indent = TextLayout.GetIndent(text, line.Start);
                 if (line.Start + indent.Length != token.SpanStart || indent == normal)
                     continue;
 
@@ -158,7 +158,7 @@ namespace CSR.Core.Style.Checks
             {
                 var line = text.Lines.GetLineFromPosition(argument.SpanStart);
                 var value = line.ToString();
-                var indent = value.Substring(0, value.Length - value.TrimStart().Length);
+                var indent = TextLayout.GetIndent(text, line.Start);
                 if (line.Start + indent.Length != argument.SpanStart || indent != body)
                     continue;
 

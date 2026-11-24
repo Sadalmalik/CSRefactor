@@ -1,4 +1,5 @@
 using CSR.Core.Checks;
+using CSR.Core.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -57,7 +58,7 @@ namespace CSR.Core.Arch.Checks
                     .OrderBy(file => file, StringComparer.Ordinal)
                     .ToList();
                 var message = $"флаг '{flag.Symbol.ContainingType.Name}.{flag.Symbol.Name}' ветвит код других типов: "
-                    + $"мест {flag.Uses} в {flag.Files.Count} файлах: {ArchSyntax.JoinNames(files)}";
+                    + $"мест {flag.Uses} в {flag.Files.Count} файлах: {SyntaxParts.JoinNames(files)}";
                 context.Report(flag.Symbol.Locations.First(location => location.IsInSource), message);
             }
         }

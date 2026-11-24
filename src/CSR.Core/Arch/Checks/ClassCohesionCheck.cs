@@ -1,4 +1,5 @@
 using CSR.Core.Checks;
+using CSR.Core.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -84,9 +85,9 @@ namespace CSR.Core.Arch.Checks
         {
             var operations = part.Where(graph.IsOperation).Select(member => member.Name).Distinct().ToList();
             var fields = part.Where(member => !graph.IsOperation(member)).Select(member => member.Name).ToList();
-            var text = ArchSyntax.JoinNames(operations, 4);
+            var text = SyntaxParts.JoinNames(operations, 4);
             if (fields.Count > 0)
-                text += $" | поля {ArchSyntax.JoinNames(fields, 3)}";
+                text += $" | поля {SyntaxParts.JoinNames(fields, 3)}";
 
             var syntax = part.Where(graph.IsOperation)
                 .SelectMany(member => member.DeclaringSyntaxReferences)
@@ -98,17 +99,17 @@ namespace CSR.Core.Arch.Checks
                 .Distinct()
                 .ToList();
             if (regionNames.Count > 0)
-                text += $" | регион {ArchSyntax.JoinNames(regionNames, 2)}";
+                text += $" | регион {SyntaxParts.JoinNames(regionNames, 2)}";
 
             if (isSplit)
             {
                 var files = syntax.Select(node => Path.GetFileName(node.SyntaxTree.FilePath)).Distinct().ToList();
-                text += $" | {ArchSyntax.JoinNames(files, 2)}";
+                text += $" | {SyntaxParts.JoinNames(files, 2)}";
             }
 
             var consumers = graph.GetConsumers(part);
             if (consumers.Count > 0)
-                text += $" | потребители {ArchSyntax.JoinNames(consumers, 3)}";
+                text += $" | потребители {SyntaxParts.JoinNames(consumers, 3)}";
 
             return text;
         }

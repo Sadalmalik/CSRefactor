@@ -1,4 +1,5 @@
 using CSR.Core.Checks;
+using CSR.Core.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -123,7 +124,7 @@ namespace CSR.Core.Arch.Checks
         private static void CheckMember(SolutionCheckContext context, ISymbol member, bool isData)
         {
             var references = context.Index.GetReferences(member)
-                .Where(reference => !IsInside(reference.Node, member))
+                .Where(reference => !SyntaxParts.IsInside(reference.Node, member))
                 .ToList();
             var name = $"{member.ContainingType.Name}.{member.Name}";
             var location = member.Locations.First(candidate => candidate.IsInSource);
@@ -219,12 +220,6 @@ namespace CSR.Core.Arch.Checks
                     type.FindImplementationForInterfaceMember(contractMember), member));
         }
 
-        private static bool IsInside(SyntaxNode node, ISymbol member)
-        {
-            return member.DeclaringSyntaxReferences.Any(reference => reference.SyntaxTree == node.SyntaxTree
-                && reference.Span.Contains(node.Span));
-        }
-
         private static bool HasAttribute(ISymbol symbol, NameMask attributes)
         {
             var own = symbol.GetAttributes();
@@ -235,7 +230,7 @@ namespace CSR.Core.Arch.Checks
                 : Enumerable.Empty<AttributeData>();
 
             return own.Concat(backing).Any(attribute => attribute.AttributeClass != null
-                && attributes.IsMatch(TrimAttribute(attribute.AttributeClass.Name)));
+                && attributes.IsMatch(SyntaxParts.TrimAttributeSuffix(attribute.AttributeClass.Name)));
         }
 
         private static string GetAccessibility(ISymbol member)
@@ -260,8 +255,5 @@ namespace CSR.Core.Arch.Checks
                 _ => "событие",
             };
         }
-
-        private static string TrimAttribute(string name)
-            => name.EndsWith("Attribute", StringComparison.Ordinal) ? name.Substring(0, name.Length - 9) : name;
     }
 }

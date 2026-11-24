@@ -1,5 +1,5 @@
-using CSR.Core.Arch;
 using CSR.Core.Checks;
+using CSR.Core.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -124,7 +124,7 @@ namespace CSR.Core.Style.Checks
             if (!context.Settings.GetBool("singleton"))
                 return false;
 
-            return ArchSyntax.GetSimpleTypeName(type) == owner.Identifier.Text;
+            return SyntaxParts.GetSimpleTypeName(type) == owner.Identifier.Text;
         }
 
         private static bool IsIgnored(CheckContext context, MemberDeclarationSyntax member, TypeDeclarationSyntax owner)
@@ -133,7 +133,7 @@ namespace CSR.Core.Style.Checks
             var attributeNames = member.AttributeLists
                 .Concat(owner.AttributeLists)
                 .SelectMany(list => list.Attributes)
-                .Select(attribute => Invocations.GetSimpleName(attribute.Name));
+                .Select(attribute => SyntaxParts.GetAttributeName(attribute.Name));
             if (attributeNames.Any(attributes.IsMatch))
                 return true;
 

@@ -1,5 +1,6 @@
 using System.Text;
 using CSR.Core.Checks;
+using CSR.Core.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -45,7 +46,7 @@ namespace CSR.Core.Style.Checks
             var replacements = context.Settings.GetMap("replace");
             foreach (var trivia in context.Root.DescendantTrivia())
             {
-                if (IsComment(trivia))
+                if (SyntaxParts.IsComment(trivia))
                     Check(context, trivia.Span, replacements, null);
             }
 
@@ -131,14 +132,6 @@ namespace CSR.Core.Style.Checks
             return expression?.StringStartToken.Text ?? "";
         }
 
-        private static bool IsComment(SyntaxTrivia trivia)
-        {
-            return trivia.IsKind(SyntaxKind.SingleLineCommentTrivia)
-                || trivia.IsKind(SyntaxKind.MultiLineCommentTrivia)
-                || trivia.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia)
-                || trivia.IsKind(SyntaxKind.MultiLineDocumentationCommentTrivia);
-        }
-
         private static bool IsStringText(SyntaxToken token)
         {
             return token.IsKind(SyntaxKind.StringLiteralToken)
@@ -155,7 +148,7 @@ namespace CSR.Core.Style.Checks
             foreach (var ancestor in token.Parent!.Ancestors())
             {
                 if (ancestor is AttributeSyntax attribute)
-                    return attributes.Contains(Invocations.GetSimpleName(attribute.Name));
+                    return attributes.Contains(SyntaxParts.GetAttributeName(attribute.Name));
 
                 bool isLog = ancestor is InvocationExpressionSyntax invocation
                     && Invocations.IsLoggerCall(context, invocation);

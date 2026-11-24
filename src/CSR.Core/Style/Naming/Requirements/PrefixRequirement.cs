@@ -1,4 +1,5 @@
 using CSR.Core.Checks;
+using CSR.Core.Syntax;
 
 namespace CSR.Core.Style.Naming.Requirements
 {

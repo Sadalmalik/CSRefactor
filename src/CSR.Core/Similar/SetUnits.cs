@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using CSR.Core.Style;
+using CSR.Core.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;

@@ -1,4 +1,5 @@
 using CSR.Core.Checks;
+using CSR.Core.Syntax;
 using CSR.Core.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -125,7 +126,7 @@ namespace CSR.Core.Style.Checks
         {
             var text = context.Text;
             var member = list.Parent!;
-            var indent = TextLayout.GetIndent(text, GetDeclarationStart(member));
+            var indent = TextLayout.GetIndent(text, SyntaxParts.GetDeclarationStart(member));
             var inner = TextLayout.Deeper(indent);
             var openLine = text.Lines.GetLineFromPosition(list.OpenParenToken.SpanStart);
             var closeLine = text.Lines.GetLineFromPosition(list.CloseParenToken.SpanStart);
@@ -156,13 +157,6 @@ namespace CSR.Core.Style.Checks
                 TextSpan.FromBounds(openLine.Start, closeLine.End),
                 problem,
                 context.ReplaceLines(openLine.LineNumber, closeLine.LineNumber, lines));
-        }
-
-        private static int GetDeclarationStart(SyntaxNode member)
-        {
-            var first = member.DescendantTokens()
-                .First(token => !token.Parent!.AncestorsAndSelf().OfType<AttributeListSyntax>().Any());
-            return first.SpanStart;
         }
     }
 }

@@ -1,5 +1,5 @@
 using CSR.Core.Checks;
-using CSR.Core.Style;
+using CSR.Core.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -51,14 +51,14 @@ namespace CSR.Core.Arch.Checks
             var caches = NameMask.Get(context.Settings.GetStrings("cacheNames"), true);
             foreach (var type in context.Root.DescendantNodes().OfType<TypeDeclarationSyntax>())
             {
-                if (type is InterfaceDeclarationSyntax || !type.Members.Any(member => HasAttribute(member, save)))
+                if (type is InterfaceDeclarationSyntax || !type.Members.Any(member => SyntaxParts.HasAttribute(member, save)))
                     continue;
 
                 if (type is not StructDeclarationSyntax)
                     CheckConstructors(context, type);
                 foreach (var member in type.Members)
                 {
-                    if (member is PropertyDeclarationSyntax property && HasAttribute(property, save)
+                    if (member is PropertyDeclarationSyntax property && SyntaxParts.HasAttribute(property, save)
                         && IsDerived(property))
                     {
                         var message = $"производное свойство '{property.Identifier.Text}' сохраняется";
@@ -66,7 +66,7 @@ namespace CSR.Core.Arch.Checks
                     }
 
                     if (member is FieldDeclarationSyntax field && IsInstanceField(field)
-                        && !HasAttribute(field, ignore))
+                        && !SyntaxParts.HasAttribute(field, ignore))
                         CheckCacheField(context, field, caches);
                 }
             }
@@ -80,7 +80,7 @@ namespace CSR.Core.Arch.Checks
                 .ToList();
             var marked = context.Settings.GetStrings("constructorAttributes");
             bool hasEmpty = constructors.Any(constructor => constructor.ParameterList.Parameters.Count == 0);
-            bool hasMarked = constructors.Any(constructor => HasAttribute(constructor, marked));
+            bool hasMarked = constructors.Any(constructor => SyntaxParts.HasAttribute(constructor, marked));
             if (constructors.Count == 0 || hasEmpty || hasMarked)
                 return;
 
@@ -92,7 +92,7 @@ namespace CSR.Core.Arch.Checks
         {
             foreach (var variable in field.Declaration.Variables)
             {
-                var name = string.Concat(ArchSyntax.SplitWords(variable.Identifier.Text));
+                var name = string.Concat(NameWords.GetWords(variable.Identifier.Text));
                 var message = $"поле-кэш '{variable.Identifier.Text}' без явного исключения из сохранения";
                 if (caches.IsMatch(name))
                     context.Report(variable.Identifier.Span, message);
@@ -116,12 +116,5 @@ namespace CSR.Core.Arch.Checks
 
         private static bool IsInstanceField(FieldDeclarationSyntax field)
             => !field.Modifiers.Any(SyntaxKind.ConstKeyword) && !field.Modifiers.Any(SyntaxKind.StaticKeyword);
-
-        private static bool HasAttribute(MemberDeclarationSyntax member, IReadOnlyList<string> names)
-        {
-            return member.AttributeLists
-                .SelectMany(list => list.Attributes)
-                .Any(attribute => names.Contains(Invocations.GetSimpleName(attribute.Name)));
-        }
     }
 }

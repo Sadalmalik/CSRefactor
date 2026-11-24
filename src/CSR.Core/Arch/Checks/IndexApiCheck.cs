@@ -1,4 +1,5 @@
 using CSR.Core.Checks;
+using CSR.Core.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -40,7 +41,7 @@ namespace CSR.Core.Arch.Checks
         {
             foreach (var member in context.Root.DescendantNodes().OfType<MemberDeclarationSyntax>())
             {
-                if (!ArchSyntax.IsApi(member) || member.Modifiers.Any(SyntaxKind.OverrideKeyword))
+                if (!SyntaxParts.IsApi(member) || member.Modifiers.Any(SyntaxKind.OverrideKeyword))
                     continue;
 
                 var reasons = member switch
@@ -60,7 +61,7 @@ namespace CSR.Core.Arch.Checks
         private static List<string> GetMethodReasons(CheckContext context, MethodDeclarationSyntax method)
         {
             var reasons = GetParameterReasons(context, method.ParameterList);
-            if (!ArchSyntax.IsIntegerType(method.ReturnType))
+            if (!SyntaxParts.IsIntegerType(method.ReturnType))
                 return reasons;
 
             if (IsIndexName(context, method.Identifier.Text))
@@ -78,7 +79,7 @@ namespace CSR.Core.Arch.Checks
             int outInts = 0;
             foreach (var parameter in parameters.Parameters)
             {
-                if (parameter.Type == null || !ArchSyntax.IsIntegerType(parameter.Type))
+                if (parameter.Type == null || !SyntaxParts.IsIntegerType(parameter.Type))
                     continue;
 
                 if (parameter.Modifiers.Any(SyntaxKind.OutKeyword))
@@ -98,7 +99,7 @@ namespace CSR.Core.Arch.Checks
         private static List<string> GetPropertyReasons(CheckContext context, PropertyDeclarationSyntax property)
         {
             var reasons = new List<string>();
-            if (ArchSyntax.IsIntegerType(property.Type) && IsIndexName(context, property.Identifier.Text))
+            if (SyntaxParts.IsIntegerType(property.Type) && IsIndexName(context, property.Identifier.Text))
                 reasons.Add($"свойство {property.Type} {property.Identifier.Text}");
 
             return reasons;
@@ -111,7 +112,7 @@ namespace CSR.Core.Arch.Checks
             bool isConstant = modifiers.Any(SyntaxKind.ConstKeyword)
                 || (modifiers.Any(SyntaxKind.StaticKeyword) && modifiers.Any(SyntaxKind.ReadOnlyKeyword));
             if (!context.Settings.GetBool("notFoundMarker") || !isConstant
-                || !ArchSyntax.IsIntegerType(field.Declaration.Type))
+                || !SyntaxParts.IsIntegerType(field.Declaration.Type))
                 return reasons;
 
             foreach (var variable in field.Declaration.Variables)
@@ -126,7 +127,7 @@ namespace CSR.Core.Arch.Checks
         // Номер сущности по имени: последнее слово из names или indexWords после слова из names
         private static bool IsIndexName(CheckContext context, string name)
         {
-            var words = ArchSyntax.SplitWords(name);
+            var words = NameWords.GetWords(name);
             if (words.Count == 0)
                 return false;
 

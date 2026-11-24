@@ -1,4 +1,5 @@
 using CSR.Core.Checks;
+using CSR.Core.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
@@ -38,7 +39,7 @@ namespace CSR.Core.Style.Checks
                     continue;
 
                 var start = FirstNonSpace(context.Text, line);
-                if (ignoreComments && IsComment(context.Root.FindTrivia(start)))
+                if (ignoreComments && SyntaxParts.IsComment(context.Root.FindTrivia(start)))
                     continue;
 
                 if (ignoreStrings && IsString(context.Root.FindToken(start)))
@@ -56,14 +57,6 @@ namespace CSR.Core.Style.Checks
                 position++;
 
             return position;
-        }
-
-        private static bool IsComment(SyntaxTrivia trivia)
-        {
-            return trivia.IsKind(SyntaxKind.SingleLineCommentTrivia)
-                || trivia.IsKind(SyntaxKind.MultiLineCommentTrivia)
-                || trivia.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia)
-                || trivia.IsKind(SyntaxKind.MultiLineDocumentationCommentTrivia);
         }
 
         private static bool IsString(SyntaxToken token)

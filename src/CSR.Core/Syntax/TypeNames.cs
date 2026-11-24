@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace CSR.Core.Style
+namespace CSR.Core.Syntax
 {
     // Имена типов по синтаксису для масок проверок
     public static class TypeNames

@@ -1,5 +1,5 @@
 using CSR.Core.Checks;
-using CSR.Core.Style;
+using CSR.Core.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -82,7 +82,7 @@ namespace CSR.Core.Arch.Checks
             var baseTypes = NameMask.Get(context.Settings.GetStrings("baseTypes"));
             foreach (var type in context.Root.DescendantNodes().OfType<ClassDeclarationSyntax>())
             {
-                if (ArchSyntax.HasBaseType(type, baseTypes))
+                if (SyntaxParts.HasBaseType(type, baseTypes))
                     CheckBehaviour(context, type);
                 else if (!IsPartWithoutBase(type))
                     CheckLookups(context, type);
@@ -96,7 +96,7 @@ namespace CSR.Core.Arch.Checks
             var own = type.Members
                 .OfType<MethodDeclarationSyntax>()
                 .Where(method => !messages.IsMatch(method.Identifier.Text))
-                .Where(method => !HasAttribute(method, ignoredAttributes))
+                .Where(method => !SyntaxParts.HasAttribute(method, ignoredAttributes))
                 .Select(method => method.Identifier.Text)
                 .ToList();
 
@@ -106,7 +106,7 @@ namespace CSR.Core.Arch.Checks
 
             var baseName = type.BaseList!.Types.First().Type.ToString();
             var message = $"{baseName} '{type.Identifier.Text}': своих методов {own.Count} (порог {maxMethods}): "
-                + ArchSyntax.JoinNames(own);
+                + SyntaxParts.JoinNames(own);
             context.Report(type.Identifier.Span, message);
         }
 
@@ -116,12 +116,12 @@ namespace CSR.Core.Arch.Checks
             var lookups = context.Settings.GetStrings("lookupMethods");
             foreach (var invocation in type.DescendantNodes().OfType<InvocationExpressionSyntax>())
             {
-                if (ArchSyntax.GetEnclosingType(invocation) != type)
+                if (SyntaxParts.GetEnclosingType(invocation) != type)
                     continue;
 
                 var name = GetMethodName(invocation.Expression);
                 if (name != null && lookups.Contains(name))
-                    context.Report(invocation.Span, $"'{name}' вне компонента сцены: {ArchSyntax.Shorten(invocation)}");
+                    context.Report(invocation.Span, $"'{name}' вне компонента сцены: {SyntaxParts.Shorten(invocation)}");
             }
         }
 
@@ -137,13 +137,6 @@ namespace CSR.Core.Arch.Checks
                 return null;
 
             return access.Name.Identifier.Text;
-        }
-
-        private static bool HasAttribute(MethodDeclarationSyntax method, IReadOnlyList<string> names)
-        {
-            return method.AttributeLists
-                .SelectMany(list => list.Attributes)
-                .Any(attribute => names.Contains(Invocations.GetSimpleName(attribute.Name)));
         }
     }
 }

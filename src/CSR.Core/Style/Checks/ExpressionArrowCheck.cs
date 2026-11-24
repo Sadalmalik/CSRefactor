@@ -1,4 +1,5 @@
 using CSR.Core.Checks;
+using CSR.Core.Syntax;
 using CSR.Core.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -53,7 +54,7 @@ namespace CSR.Core.Style.Checks
                 var arrow = clause.ArrowToken;
                 var text = context.Text;
                 var arrowLine = TextLines.GetLineNumber(text, arrow.SpanStart);
-                var indent = TextLayout.Deeper(TextLayout.GetIndent(text, GetDeclarationStart(clause.Parent!)));
+                var indent = TextLayout.Deeper(TextLayout.GetIndent(text, SyntaxParts.GetDeclarationStart(clause.Parent!)));
                 if (TextLines.GetLineNumber(text, clause.Expression.SpanStart) > arrowLine)
                 {
                     ReportTrailing(context, clause, indent);
@@ -109,14 +110,6 @@ namespace CSR.Core.Style.Checks
                     trivia => trivia.ToString().TrimStart().StartsWith(
                         "/",
                         StringComparison.Ordinal) || trivia.IsDirective);
-        }
-
-        // Начало объявления без атрибутов: от его строки считается отступ
-        private static int GetDeclarationStart(SyntaxNode member)
-        {
-            var first = member.DescendantTokens()
-                .First(token => !token.Parent!.AncestorsAndSelf().OfType<AttributeListSyntax>().Any());
-            return first.SpanStart;
         }
     }
 }

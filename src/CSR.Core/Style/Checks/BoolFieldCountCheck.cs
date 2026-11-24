@@ -1,5 +1,5 @@
-using CSR.Core.Arch;
 using CSR.Core.Checks;
+using CSR.Core.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -35,7 +35,7 @@ namespace CSR.Core.Style.Checks
             int minFields = context.Settings.GetInt("minFields");
             foreach (var type in context.Root.DescendantNodes().OfType<ClassDeclarationSyntax>())
             {
-                if (!baseTypes.IsEmpty && !ArchSyntax.HasBaseType(type, baseTypes))
+                if (!baseTypes.IsEmpty && !SyntaxParts.HasBaseType(type, baseTypes))
                     continue;
 
                 var names = type.Members

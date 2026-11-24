@@ -1,5 +1,6 @@
 using CSR.Core.Arch;
 using CSR.Core.Checks;
+using CSR.Core.Syntax;
 using static CSR.Core.Tests.Arch.ArchTestCode;
 
 namespace CSR.Core.Tests.Arch
@@ -187,9 +188,10 @@ namespace CSR.Core.Tests.Arch
         [TestCase("m_EnterRadius", new[] { "Enter", "Radius" })]
         [TestCase("cellIndex", new[] { "cell", "Index" })]
         [TestCase("MAX_SPEED", new[] { "MAX", "SPEED" })]
-        [TestCase("HTTPServer2", new[] { "HTTP", "Server", "2" })]
+        [TestCase("HTTPServer2", new[] { "HTTP", "Server2" })]
+        [TestCase("Vector3Pool", new[] { "Vector3", "Pool" })]
         public void SplitWords(string name, string[] words)
-            => Assert.That(ArchSyntax.SplitWords(name), Is.EqualTo(words));
+            => Assert.That(NameWords.GetWords(name), Is.EqualTo(words));
 
 #endregion
     }

@@ -1,4 +1,5 @@
 using CSR.Core.Checks;
+using CSR.Core.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -61,7 +62,7 @@ namespace CSR.Core.Arch.Checks
                     _ => null,
                 };
 
-                if (declaration == null || !ArchSyntax.IsNumericType(declaration.Type))
+                if (declaration == null || !SyntaxParts.IsNumericType(declaration.Type))
                     continue;
 
                 foreach (var variable in declaration.Variables)
@@ -74,13 +75,13 @@ namespace CSR.Core.Arch.Checks
             VariableDeclarationSyntax declaration,
             VariableDeclaratorSyntax variable)
         {
-            var words = ArchSyntax.SplitWords(variable.Identifier.Text);
+            var words = NameWords.GetWords(variable.Identifier.Text);
             var hint = context.Settings.GetStrings("hints")
-                .FirstOrDefault(phrase => ArchSyntax.ContainsPhrase(words, phrase));
+                .FirstOrDefault(phrase => NameWords.ContainsPhrase(words, phrase));
             if (hint == null)
                 return;
 
-            var value = variable.Initializer == null ? "" : " = " + ArchSyntax.Shorten(variable.Initializer.Value, 40);
+            var value = variable.Initializer == null ? "" : " = " + SyntaxParts.Shorten(variable.Initializer.Value, 40);
             context.Report(
                 variable.Identifier.Span,
                 $"константа {declaration.Type} {variable.Identifier.Text}{value} (подсказка '{hint}')");

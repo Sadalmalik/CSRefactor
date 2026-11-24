@@ -1,4 +1,5 @@
 using CSR.Core.Checks;
+using CSR.Core.Syntax;
 
 namespace CSR.Core.Style.Naming.Requirements
 {
@@ -33,7 +34,7 @@ namespace CSR.Core.Style.Naming.Requirements
         public string? Check(NameSymbol symbol)
         {
             var words = symbol.Name.Split('.')
-                .SelectMany(part => NameWords.Split(NameWords.StripFieldPrefix(part)))
+                .SelectMany(part => NameWords.GetWords(part))
                 .ToList();
             var word = NameWords.FindWord(words, m_Forbidden) ?? FindPrefixed(words);
             if (word == null)

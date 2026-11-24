@@ -1,5 +1,5 @@
 using CSR.Core.Checks;
-using CSR.Core.Style;
+using CSR.Core.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -67,7 +67,7 @@ namespace CSR.Core.Arch.Checks
 
         private static void CheckDraw(CheckContext context, InvocationExpressionSyntax invocation)
         {
-            var member = ArchSyntax.GetEnclosingMemberName(invocation);
+            var member = SyntaxParts.GetEnclosingMemberName(invocation);
             if (member != null && NameMask.Get(context.Settings.GetStrings("debugMethods")).IsMatch(member))
                 return;
 
@@ -143,7 +143,7 @@ namespace CSR.Core.Arch.Checks
             {
                 foreach (var identifier in GetBoolMembers(member))
                 {
-                    var name = string.Concat(ArchSyntax.SplitWords(identifier.Text));
+                    var name = string.Concat(NameWords.GetWords(identifier.Text));
                     var message = $"флаг отладки '{identifier.Text}' полем '{type.Identifier.Text}'";
                     if (flags.IsMatch(name))
                         context.Report(identifier.Span, message);

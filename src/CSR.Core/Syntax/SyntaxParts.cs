@@ -1,64 +1,13 @@
-using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using CSR.Core.Checks;
 
-namespace CSR.Core.Arch
+namespace CSR.Core.Syntax
 {
-    // Общие разборы синтаксиса для признаков: слова имен, имена типов, видимость, базовые типы
-    public static class ArchSyntax
+    // Общие разборы синтаксиса для проверок style и arch: имена типов и атрибутов, видимость, базовые типы
+    public static class SyntaxParts
     {
-        private static readonly string[] FieldPrefixes = ["m_", "s_", "k_", "_"];
-
-        // Слова идентификатора без префикса поля: m_EnterRadius -> Enter, Radius; cellIndex -> cell, Index;
-        // MAX_SPEED -> MAX, SPEED
-        public static List<string> SplitWords(string name)
-        {
-            var prefix = FieldPrefixes
-                .FirstOrDefault(candidate => name.StartsWith(candidate, StringComparison.Ordinal));
-            var text = prefix == null ? name : name.Substring(prefix.Length);
-            var words = new List<string>();
-            var word = new StringBuilder();
-            for (int i = 0; i < text.Length; i++)
-            {
-                var symbol = text[i];
-                if (symbol == '_' || !char.IsLetterOrDigit(symbol))
-                {
-                    Flush(words, word);
-                    continue;
-                }
-
-                if (word.Length > 0 && IsWordStart(text, i))
-                    Flush(words, word);
-
-                word.Append(symbol);
-            }
-
-            Flush(words, word);
-            return words;
-        }
-
-        // Есть ли в словах имени фраза подряд (DeadZone -> Dead, Zone), без учета регистра
-        public static bool ContainsPhrase(IReadOnlyList<string> words, string phrase)
-        {
-            var parts = SplitWords(phrase);
-            if (parts.Count == 0)
-                return false;
-
-            for (int start = 0; start + parts.Count <= words.Count; start++)
-            {
-                bool isMatch = true;
-                for (int i = 0; i < parts.Count && isMatch; i++)
-                    isMatch = string.Equals(words[start + i], parts[i], StringComparison.OrdinalIgnoreCase);
-
-                if (isMatch)
-                    return true;
-            }
-
-            return false;
-        }
-
         // Имя типа без пространства имен, аргументов типа и '?': List<int> -> List, A.B -> B
         public static string GetSimpleTypeName(TypeSyntax type)
         {
@@ -161,29 +110,43 @@ namespace CSR.Core.Arch
             return text.Length <= limit ? text : text.Substring(0, limit - 3) + "...";
         }
 
-        private static bool IsWordStart(string text, int index)
+        // Имя атрибута без пространства имен и суффикса Attribute
+        public static string GetAttributeName(NameSyntax name)
+            => TrimAttributeSuffix(GetSimpleTypeName(name));
+
+        public static string TrimAttributeSuffix(string name)
+            => name.EndsWith("Attribute", StringComparison.Ordinal) ? name.Substring(0, name.Length - 9) : name;
+
+        // У члена есть атрибут с одним из имен (без суффикса Attribute)
+        public static bool HasAttribute(MemberDeclarationSyntax member, IReadOnlyList<string> names)
         {
-            var symbol = text[index];
-            var previous = text[index - 1];
-            if (char.IsDigit(symbol) != char.IsDigit(previous))
-                return true;
-
-            if (!char.IsUpper(symbol))
-                return false;
-
-            if (char.IsLower(previous))
-                return true;
-
-            return index + 1 < text.Length && char.IsLower(text[index + 1]) && char.IsUpper(previous);
+            return member.AttributeLists
+                .SelectMany(list => list.Attributes)
+                .Any(attribute => names.Contains(GetAttributeName(attribute.Name)));
         }
 
-        private static void Flush(List<string> words, StringBuilder word)
+        // Начало объявления после атрибутов: первый модификатор или тип; от его строки считается отступ
+        public static int GetDeclarationStart(SyntaxNode member)
         {
-            if (word.Length == 0)
-                return;
+            var first = member.DescendantTokens()
+                .First(token => !token.Parent!.AncestorsAndSelf().OfType<AttributeListSyntax>().Any());
+            return first.SpanStart;
+        }
 
-            words.Add(word.ToString());
-            word.Clear();
+        // Узел внутри объявления символа
+        public static bool IsInside(SyntaxNode node, ISymbol symbol)
+        {
+            return symbol.DeclaringSyntaxReferences.Any(reference => reference.SyntaxTree == node.SyntaxTree
+                && reference.Span.Contains(node.Span));
+        }
+
+        // Комментарий, в том числе документирующий
+        public static bool IsComment(SyntaxTrivia trivia)
+        {
+            return trivia.IsKind(SyntaxKind.SingleLineCommentTrivia)
+                || trivia.IsKind(SyntaxKind.MultiLineCommentTrivia)
+                || trivia.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia)
+                || trivia.IsKind(SyntaxKind.MultiLineDocumentationCommentTrivia);
         }
     }
 }

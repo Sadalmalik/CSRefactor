@@ -1,9 +1,10 @@
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace CSR.Core.Style
+namespace CSR.Core.Syntax
 {
-    // Разбор имени на слова для проверок именования: части через '_' и границы регистра
+    // Разбор имени на слова для проверок обоих режимов: части через '_' (и другие не буквы и не цифры) и границы
+    // регистра; цифры - часть слова
     public static class NameWords
     {
         private static readonly Regex FieldPrefix = new("^(?:[a-z]{1,2}_|_+)", RegexOptions.CultureInvariant);
@@ -16,7 +17,7 @@ namespace CSR.Core.Style
             for (int i = 0; i < name.Length; i++)
             {
                 char current = name[i];
-                if (current == '_')
+                if (current == '_' || !char.IsLetterOrDigit(current))
                 {
                     Flush(words, word);
                     continue;
@@ -30,6 +31,30 @@ namespace CSR.Core.Style
 
             Flush(words, word);
             return words;
+        }
+
+        // Слова идентификатора без префикса поля: m_EnterRadius -> Enter, Radius; MAX_SPEED -> MAX, SPEED
+        public static IReadOnlyList<string> GetWords(string name)
+            => Split(StripFieldPrefix(name));
+
+        // Есть ли в словах имени фраза подряд (DeadZone -> Dead, Zone), без учета регистра
+        public static bool ContainsPhrase(IReadOnlyList<string> words, string phrase)
+        {
+            var parts = GetWords(phrase);
+            if (parts.Count == 0)
+                return false;
+
+            for (int start = 0; start + parts.Count <= words.Count; start++)
+            {
+                bool isMatch = true;
+                for (int i = 0; i < parts.Count && isMatch; i++)
+                    isMatch = string.Equals(words[start + i], parts[i], StringComparison.OrdinalIgnoreCase);
+
+                if (isMatch)
+                    return true;
+            }
+
+            return false;
         }
 
         // Имя без префикса поля: m_Name -> Name, s_Count -> Count, _name -> name

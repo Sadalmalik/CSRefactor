@@ -1,4 +1,5 @@
 using CSR.Core.Checks;
+using CSR.Core.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -89,7 +90,7 @@ namespace CSR.Core.Arch.Checks
 
             var location = type.Locations.First(candidate => candidate.IsInSource);
             var handlers = references
-                .Where(reference => !IsInside(reference.Node, type))
+                .Where(reference => !SyntaxParts.IsInside(reference.Node, type))
                 .Select(GetOwnerName)
                 .Where(name => name != null)
                 .Select(name => name!)
@@ -98,7 +99,7 @@ namespace CSR.Core.Arch.Checks
                 .ToList();
             var message = handlers.Count == 0
                 ? $"событие '{type.Name}' никто не поднимает и не обрабатывает"
-                : $"событие '{type.Name}' никто не поднимает; обрабатывают: {ArchSyntax.JoinNames(handlers)}";
+                : $"событие '{type.Name}' никто не поднимает; обрабатывают: {SyntaxParts.JoinNames(handlers)}";
             context.Report(location, message);
         }
 
@@ -193,14 +194,8 @@ namespace CSR.Core.Arch.Checks
         // Тип, в котором стоит ссылка; null - вне типов
         private static string? GetOwnerName(SymbolReference reference)
         {
-            var declaration = ArchSyntax.GetEnclosingType(reference.Node);
+            var declaration = SyntaxParts.GetEnclosingType(reference.Node);
             return declaration?.Identifier.Text;
-        }
-
-        private static bool IsInside(SyntaxNode node, ISymbol symbol)
-        {
-            return symbol.DeclaringSyntaxReferences.Any(reference => reference.SyntaxTree == node.SyntaxTree
-                && reference.Span.Contains(node.Span));
         }
     }
 }

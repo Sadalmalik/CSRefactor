@@ -1,4 +1,4 @@
-using CSR.Core.Style;
+using CSR.Core.Syntax;
 using static CSR.Core.Tests.Style.StyleTestCode;
 
 namespace CSR.Core.Tests.Style

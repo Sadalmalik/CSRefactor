@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace CSR.Core.Style
+namespace CSR.Core.Syntax
 {
     public static class Invocations
     {
@@ -26,20 +26,6 @@ namespace CSR.Core.Style
 
         public static bool IsLoggerCall(CheckContext context, InvocationExpressionSyntax invocation)
             => context.Project.IsLoggerMethod(GetTargetText(invocation));
-
-        // Имя атрибута без пространства имен и суффикса Attribute
-        public static string GetSimpleName(NameSyntax name)
-        {
-            var text = name switch
-            {
-                QualifiedNameSyntax qualified => qualified.Right.Identifier.Text,
-                AliasQualifiedNameSyntax alias => alias.Name.Identifier.Text,
-                SimpleNameSyntax simple => simple.Identifier.Text,
-                _ => name.ToString(),
-            };
-
-            return text.EndsWith("Attribute", StringComparison.Ordinal) ? text.Substring(0, text.Length - 9) : text;
-        }
 
         // Текстовые аргументы сообщения: литерал, интерполяция или сложение со строкой
         public static bool IsStringLike(ExpressionSyntax expression)

@@ -1,5 +1,6 @@
 using System.Globalization;
 using CSR.Core.Checks;
+using CSR.Core.Syntax;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -78,7 +79,7 @@ namespace CSR.Core.Arch.Checks
 
                 var value = Normalize(literal, operand != literal);
                 if (!neutral.IsMatch(value))
-                    context.Report(operand.Span, $"число {operand} в '{ArchSyntax.Shorten(expression!, 60)}'");
+                    context.Report(operand.Span, $"число {operand} в '{SyntaxParts.Shorten(expression!, 60)}'");
             }
         }
 
@@ -118,7 +119,7 @@ namespace CSR.Core.Arch.Checks
                     case LocalDeclarationStatementSyntax local when local.IsConst:
                         return true;
                     case BaseMethodDeclarationSyntax or PropertyDeclarationSyntax or IndexerDeclarationSyntax:
-                        var name = ArchSyntax.GetEnclosingMemberName(literal);
+                        var name = SyntaxParts.GetEnclosingMemberName(literal);
                         return name != null && ignoredMethods.IsMatch(name);
                 }
             }
