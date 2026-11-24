@@ -1,4 +1,5 @@
 using CSR.Core.Checks;
+using CSR.Core.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
@@ -52,7 +53,7 @@ namespace CSR.Core.Style.Checks
                 var arrow = clause.ArrowToken;
                 var text = context.Text;
                 var arrowLine = TextLines.GetLineNumber(text, arrow.SpanStart);
-                var indent = TextLines.Deeper(TextLines.GetIndent(text, GetDeclarationStart(clause.Parent!)));
+                var indent = TextLayout.Deeper(TextLayout.GetIndent(text, GetDeclarationStart(clause.Parent!)));
                 if (TextLines.GetLineNumber(text, clause.Expression.SpanStart) > arrowLine)
                 {
                     ReportTrailing(context, clause, indent);

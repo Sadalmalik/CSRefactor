@@ -1,4 +1,5 @@
 using System.Text;
+using CSR.Core.Text;
 using CSR.Workspace.Loading;
 using CSR.Workspace.References;
 using CSR.Workspace.Symbols;
@@ -178,7 +179,7 @@ namespace CSR.Workspace.Refactor
             MemberDeclarationSyntax declaration,
             SemanticModel model)
         {
-            var lineBreak = SourceLines.GetLineBreak(text);
+            var lineBreak = TextLayout.GetLineBreak(text, text.Lines.GetLineFromPosition(declaration.SpanStart).LineNumber);
             var usage = UsingAnalysis.Collect(model, [declaration]);
             var lines = new List<string>();
             foreach (var alias in root.Externs)
@@ -190,7 +191,7 @@ namespace CSR.Workspace.Refactor
             foreach (var space in namespaces)
             {
                 AddBlank(lines);
-                var indent = GetIndent(text, space.SpanStart);
+                var indent = TextLayout.GetIndent(text, space.SpanStart);
                 if (space is FileScopedNamespaceDeclarationSyntax)
                 {
                     lines.Add($"{indent}namespace {space.Name};");
@@ -199,8 +200,8 @@ namespace CSR.Workspace.Refactor
                 {
                     var block = (NamespaceDeclarationSyntax)space;
                     lines.Add($"{indent}namespace {space.Name}");
-                    lines.Add(GetIndent(text, block.OpenBraceToken.SpanStart) + "{");
-                    closing.Insert(0, GetIndent(text, block.CloseBraceToken.SpanStart) + "}");
+                    lines.Add(TextLayout.GetIndent(text, block.OpenBraceToken.SpanStart) + "{");
+                    closing.Insert(0, TextLayout.GetIndent(text, block.CloseBraceToken.SpanStart) + "}");
                 }
 
                 var before = lines.Count;
@@ -251,7 +252,7 @@ namespace CSR.Workspace.Refactor
             foreach (var directive in usings)
             {
                 if (directive.GlobalKeyword == default && UsingAnalysis.IsNeeded(model, directive, usage))
-                    lines.Add(GetIndent(text, directive.SpanStart) + directive.ToString());
+                    lines.Add(TextLayout.GetIndent(text, directive.SpanStart) + directive.ToString());
             }
         }
 
@@ -259,13 +260,6 @@ namespace CSR.Workspace.Refactor
         {
             if (lines.Count > 0 && lines[^1].Length > 0)
                 lines.Add("");
-        }
-
-        private static string GetIndent(SourceText text, int position)
-        {
-            var line = text.Lines.GetLineFromPosition(position);
-            var content = line.ToString();
-            return content.Substring(0, content.Length - content.TrimStart().Length);
         }
 
 #endregion

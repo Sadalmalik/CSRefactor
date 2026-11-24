@@ -1,4 +1,5 @@
 using CSR.Core.Checks;
+using CSR.Core.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
@@ -86,13 +87,13 @@ namespace CSR.Core.Style.Checks
         {
             var text = context.Text;
             var line = text.Lines.GetLineFromPosition(conditional.SpanStart);
-            var indent = TextLines.GetIndent(text, conditional.SpanStart);
+            var indent = TextLayout.GetIndent(text, conditional.SpanStart);
             var lines = new List<string>
             {
                 text.ToString(TextSpan.FromBounds(line.Start, conditional.Condition.Span.End)),
             };
 
-            AddBranches(lines, conditional, TextLines.Deeper(indent));
+            AddBranches(lines, conditional, TextLayout.Deeper(indent));
             lines[lines.Count - 1] += text.ToString(TextSpan.FromBounds(conditional.Span.End, line.End));
             context.Report(line.Span, message, context.ReplaceLines(line.LineNumber, line.LineNumber, lines));
         }
@@ -116,7 +117,7 @@ namespace CSR.Core.Style.Checks
             }
 
             lines.Add($"{indent}{mark} {Normalize(inner.Condition)}");
-            AddBranches(lines, inner, TextLines.Deeper(indent));
+            AddBranches(lines, inner, TextLayout.Deeper(indent));
         }
 
         private static string Normalize(SyntaxNode node)

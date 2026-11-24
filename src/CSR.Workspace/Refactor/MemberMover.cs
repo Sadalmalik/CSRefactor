@@ -1,3 +1,4 @@
+using CSR.Core.Text;
 using CSR.Workspace.Loading;
 using CSR.Workspace.Symbols;
 using Microsoft.CodeAnalysis;
@@ -381,9 +382,9 @@ namespace CSR.Workspace.Refactor
                 if (m_Receiver != null)
                     RemoveReceiverParameter(edit, offset);
 
-                var from = GetIndent(sourceText, m_Declaration.SpanStart);
+                var from = TextLayout.GetIndent(sourceText, m_Declaration.SpanStart);
                 var to = GetMemberIndent(targetText);
-                var lineBreak = SourceLines.GetLineBreak(targetText);
+                var lineBreak = TextLayout.GetLineBreak(targetText, targetText.Lines.GetLineFromPosition(insertion).LineNumber);
                 var text = Reindent(edit.Apply().ToString(), from, to).TrimEnd('\r', '\n') + lineBreak;
                 var previous = insertion > 0
                     ? targetText.Lines.GetLineFromPosition(insertion - 1).ToString().Trim()
@@ -419,31 +420,20 @@ namespace CSR.Workspace.Refactor
             {
                 var first = m_TargetDeclaration.Members.FirstOrDefault();
                 if (first != null)
-                    return GetIndent(targetText, first.SpanStart);
+                    return TextLayout.GetIndent(targetText, first.SpanStart);
 
-                var indent = GetIndent(targetText, m_TargetDeclaration.SpanStart);
-                return indent.EndsWith("\t", StringComparison.Ordinal) ? indent + "\t" : indent + "    ";
+                return TextLayout.Deeper(TextLayout.GetIndent(targetText, m_TargetDeclaration.SpanStart));
             }
 
+            // Сдвиг отступа строк текста с сохранением их переводов
             private static string Reindent(string text, string from, string to)
             {
                 var lines = text.Split('\n').Select(line =>
                 {
                     var content = line.TrimEnd('\r');
-                    if (content.Trim().Length == 0)
-                        return line.Substring(content.Length);
-
-                    return content.StartsWith(from, StringComparison.Ordinal)
-                        ? to + line.Substring(from.Length)
-                        : line;
+                    return TextLayout.Reindent(content, from, to) + line.Substring(content.Length);
                 });
                 return string.Join("\n", lines);
-            }
-
-            private static string GetIndent(SourceText text, int position)
-            {
-                var content = text.Lines.GetLineFromPosition(position).ToString();
-                return content.Substring(0, content.Length - content.TrimStart().Length);
             }
 
 #endregion
@@ -495,7 +485,7 @@ namespace CSR.Workspace.Refactor
 
             private static void InsertUsings(DocumentEdit edit, CompilationUnitSyntax root, List<string> usings)
             {
-                var lineBreak = SourceLines.GetLineBreak(edit.Text);
+                var lineBreak = TextLayout.GetLineBreak(edit.Text, 0);
                 var block = string.Concat(usings.Select(item => item + lineBreak));
                 if (root.Usings.Count == 0)
                 {

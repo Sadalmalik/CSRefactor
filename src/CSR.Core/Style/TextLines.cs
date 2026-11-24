@@ -1,24 +1,12 @@
+using CSR.Core.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
 namespace CSR.Core.Style
 {
-    // Строки исходного текста для проверок, которые переносят и склеивают строки
+    // Строки исходного текста для проверок, которые переносят и склеивают строки (отступ и перевод - TextLayout)
     public static class TextLines
     {
-        // Отступ строки, в которой стоит позиция
-        public static string GetIndent(SourceText text, int position)
-        {
-            var line = text.Lines.GetLineFromPosition(position);
-            var value = line.ToString();
-            return value.Substring(0, value.Length - value.TrimStart().Length);
-        }
-
-        // Отступ на уровень глубже: отступ кончается табом - таб, иначе 4 пробела (смешанный старый отступ
-        // не становится еще более смешанным)
-        public static string Deeper(string indent)
-            => indent + (indent.EndsWith("\t", StringComparison.Ordinal) ? "\t" : "    ");
-
         public static int GetLineNumber(SourceText text, int position)
             => text.Lines.GetLineFromPosition(position).LineNumber;
 
@@ -32,9 +20,6 @@ namespace CSR.Core.Style
         // Колонка позиции с 0
         public static int GetColumn(SourceText text, int position)
             => position - text.Lines.GetLineFromPosition(position).Start;
-
-        public static bool IsBlank(SourceText text, int lineNumber)
-            => string.IsNullOrWhiteSpace(text.Lines[lineNumber].ToString());
 
         // В узле есть комментарий или директива: перенос строк мог бы их сломать или потерять
         public static bool HasCommentOrDirective(SyntaxNode node)
@@ -67,7 +52,7 @@ namespace CSR.Core.Style
             if (owner == null)
                 return 0;
 
-            var normal = Deeper(GetIndent(text, owner.SpanStart)).Length;
+            var normal = TextLayout.Deeper(TextLayout.GetIndent(text, owner.SpanStart)).Length;
             return Math.Max(0, indent - normal);
         }
 

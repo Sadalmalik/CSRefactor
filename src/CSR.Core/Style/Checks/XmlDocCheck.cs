@@ -1,5 +1,6 @@
 using System.Text;
 using CSR.Core.Checks;
+using CSR.Core.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -84,7 +85,7 @@ namespace CSR.Core.Style.Checks
             if (summary.Length == 0)
                 return Array.Empty<string>();
 
-            var indent = TextLines.GetIndent(context.Text, span.Start);
+            var indent = TextLayout.GetIndent(context.Text, span.Start);
             var line = $"{indent}// {summary.TrimEnd('.')}";
             return line.Length <= max ? [line] : null;
         }

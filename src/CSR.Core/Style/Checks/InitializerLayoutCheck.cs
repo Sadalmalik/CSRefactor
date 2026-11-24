@@ -1,4 +1,5 @@
 using CSR.Core.Checks;
+using CSR.Core.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -93,8 +94,8 @@ namespace CSR.Core.Style.Checks
             var creation = initializer.Parent!;
             var firstLine = text.Lines.GetLineFromPosition(creation.SpanStart);
             var closeLine = text.Lines.GetLineFromPosition(initializer.CloseBraceToken.SpanStart);
-            var indent = TextLines.GetIndent(text, creation.SpanStart);
-            var inner = TextLines.Deeper(indent);
+            var indent = TextLayout.GetIndent(text, creation.SpanStart);
+            var inner = TextLayout.Deeper(indent);
             var head = text.ToString(
                 TextSpan.FromBounds(firstLine.Start, initializer.OpenBraceToken.SpanStart)).TrimEnd();
             if (head.Contains('\n'))

@@ -1,4 +1,5 @@
 using CSR.Core.Checks;
+using CSR.Core.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
@@ -115,7 +116,7 @@ namespace CSR.Core.Style.Checks
         {
             for (var index = line + direction; index >= 0 && index < text.Lines.Count; index += direction)
             {
-                if (!TextLines.IsBlank(text, index))
+                if (!TextLayout.IsBlank(text, index))
                     return index;
             }
 

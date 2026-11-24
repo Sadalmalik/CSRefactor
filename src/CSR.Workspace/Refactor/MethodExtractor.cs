@@ -1,3 +1,4 @@
+using CSR.Core.Text;
 using CSR.Workspace.Loading;
 using CSR.Workspace.References;
 using CSR.Workspace.Symbols;
@@ -109,7 +110,7 @@ namespace CSR.Workspace.Refactor
             {
                 var first = m_Text.Lines[m_StartLine];
                 var last = m_Text.Lines[m_EndLine];
-                var lineBreak = SourceLines.GetLineBreak(m_Text);
+                var lineBreak = TextLayout.GetLineBreak(m_Text, m_StartLine);
                 var statementIndent = GetIndent(m_Statements[0].SpanStart);
                 var call = statementIndent + BuildCall(name) + lineBreak;
                 yield return new TextChange(TextSpan.FromBounds(first.Start, last.EndIncludingLineBreak), call);
@@ -363,7 +364,7 @@ namespace CSR.Workspace.Refactor
             private List<string> BuildMethod(string name)
             {
                 var memberIndent = GetIndent(m_Anchor.SpanStart);
-                var bodyIndent = Deeper(memberIndent);
+                var bodyIndent = TextLayout.Deeper(memberIndent);
                 var position = m_Anchor.SpanStart;
                 var returnType = m_Outputs.Count == 1 ? Display(GetType(m_Outputs[0]), position) : "void";
                 var parameters = m_Inputs
@@ -401,8 +402,7 @@ namespace CSR.Workspace.Refactor
                 return lines;
             }
 
-            // Строки выделения со сдвигом отступа; директивы препроцессора и строки с меньшим отступом - как есть
-            // Строки выделения с правками тела (объявления выходов-out) и сдвигом отступа
+            // Строки выделения с правками тела (объявления выходов-out) и сдвигом отступа (TextLayout.Reindent)
             private IEnumerable<string> Reindent(string from, string to)
             {
                 var span = TextSpan.FromBounds(m_Text.Lines[m_StartLine].Start, m_Text.Lines[m_EndLine].End);
@@ -411,16 +411,7 @@ namespace CSR.Workspace.Refactor
                     .Select(removed => new TextChange(removed, ""))
                     .OrderBy(change => change.Span.Start);
                 var selected = SourceText.From(m_Text.ToString(span)).WithChanges(changes);
-                foreach (var line in selected.Lines)
-                {
-                    var content = line.ToString();
-                    if (string.IsNullOrWhiteSpace(content))
-                        yield return "";
-                    else if (content.StartsWith(from, StringComparison.Ordinal) && !content.TrimStart().StartsWith("#"))
-                        yield return to + content.Substring(from.Length);
-                    else
-                        yield return content;
-                }
+                return selected.Lines.Select(line => TextLayout.Reindent(line.ToString(), from, to));
             }
 
             // Тип в объявлении выходной переменной: var или явный тип, как в исходном объявлении
@@ -494,13 +485,7 @@ namespace CSR.Workspace.Refactor
                 => type.ToMinimalDisplayString(m_Model, position);
 
             private string GetIndent(int position)
-            {
-                var content = m_Text.Lines.GetLineFromPosition(position).ToString();
-                return content.Substring(0, content.Length - content.TrimStart().Length);
-            }
-
-            private static string Deeper(string indent)
-                => indent.EndsWith("\t", StringComparison.Ordinal) ? indent + "\t" : indent + "    ";
+                => TextLayout.GetIndent(m_Text, position);
         }
     }
 }

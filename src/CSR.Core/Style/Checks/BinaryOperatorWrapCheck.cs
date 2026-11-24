@@ -1,4 +1,5 @@
 using CSR.Core.Checks;
+using CSR.Core.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
@@ -83,7 +84,7 @@ namespace CSR.Core.Style.Checks
 
             var previous = TextLines.GetLine(text, leftLine).TrimEnd();
             var rest = text.ToString(TextSpan.FromBounds(token.Span.End, operatorLine.End)).TrimStart();
-            var indent = TextLines.GetIndent(text, token.SpanStart);
+            var indent = TextLayout.GetIndent(text, token.SpanStart);
             return context.ReplaceLines(leftLine, operatorLine.LineNumber, [$"{previous} {token.Text}", indent + rest]);
         }
 

@@ -1,3 +1,4 @@
+using CSR.Core.Text;
 using CSR.Workspace.Refactor;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -117,7 +118,7 @@ namespace CSR.Workspace.Rename
 
         private static TextChange CreateUsingInsert(CompilationUnitSyntax root, SourceText text)
         {
-            var newLine = GetNewLine(text);
+            var newLine = TextLayout.GetLineBreak(text, 0);
             var statement = $"using {UnityNamespace};";
             var next = root.Usings.FirstOrDefault(item =>
                 item.StaticKeyword.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.None)
@@ -169,16 +170,8 @@ namespace CSR.Workspace.Rename
             if (!string.IsNullOrWhiteSpace(prefix))
                 return new TextChange(new TextSpan(memberStart, 0), attribute + " ");
 
-            return new TextChange(new TextSpan(line.Start, 0), prefix + attribute + GetNewLine(text));
-        }
-
-        private static string GetNewLine(SourceText text)
-        {
-            if (text.Lines.Count < 2)
-                return Environment.NewLine;
-
-            var first = text.Lines[0];
-            return first.EndIncludingLineBreak - first.End == 2 ? "\r\n" : "\n";
+            var lineBreak = TextLayout.GetLineBreak(text, line.LineNumber);
+            return new TextChange(new TextSpan(line.Start, 0), prefix + attribute + lineBreak);
         }
 
         private static void Add(

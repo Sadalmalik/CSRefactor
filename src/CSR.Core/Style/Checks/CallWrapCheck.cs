@@ -1,4 +1,5 @@
 using CSR.Core.Checks;
+using CSR.Core.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -167,7 +168,7 @@ namespace CSR.Core.Style.Checks
 
             var openLine = text.Lines.GetLineFromPosition(list.OpenParenToken.SpanStart);
             var closeLine = text.Lines.GetLineFromPosition(list.CloseParenToken.SpanStart);
-            var inner = TextLines.Deeper(TextLines.GetIndent(text, list.OpenParenToken.SpanStart));
+            var inner = TextLayout.Deeper(TextLayout.GetIndent(text, list.OpenParenToken.SpanStart));
             var lines = new List<string>
             {
                 text.ToString(TextSpan.FromBounds(openLine.Start, list.OpenParenToken.Span.End)),

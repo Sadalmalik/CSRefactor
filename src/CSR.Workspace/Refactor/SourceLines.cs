@@ -1,3 +1,4 @@
+using CSR.Core.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
@@ -49,11 +50,11 @@ namespace CSR.Workspace.Refactor
 
             var line = text.Lines.GetLineFromPosition(Math.Min(position, text.Length)).LineNumber;
             var previous = line - 1;
-            while (previous >= 0 && IsBlank(text, previous))
+            while (previous >= 0 && TextLayout.IsBlank(text, previous))
                 previous--;
 
             var next = line;
-            while (next < text.Lines.Count && IsBlank(text, next))
+            while (next < text.Lines.Count && TextLayout.IsBlank(text, next))
                 next++;
 
             var start = previous < 0 ? 0 : text.Lines[previous].EndIncludingLineBreak;
@@ -64,14 +65,8 @@ namespace CSR.Workspace.Refactor
             bool isEdge = previous < 0 || next >= text.Lines.Count
                 || text.Lines[previous].ToString().TrimEnd().EndsWith("{", StringComparison.Ordinal)
                 || text.Lines[next].ToString().TrimStart().StartsWith("}", StringComparison.Ordinal);
-            var blank = isEdge ? "" : GetLineBreak(text);
+            var blank = isEdge ? "" : TextLayout.GetLineBreak(text, previous);
             return text.WithChanges(new TextChange(TextSpan.FromBounds(start, end), blank));
         }
-
-        public static string GetLineBreak(SourceText text)
-            => text.ToString().Contains("\r\n") ? "\r\n" : "\n";
-
-        private static bool IsBlank(SourceText text, int line)
-            => string.IsNullOrWhiteSpace(text.Lines[line].ToString());
     }
 }

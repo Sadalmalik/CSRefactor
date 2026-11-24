@@ -1,4 +1,5 @@
 using CSR.Core.Checks;
+using CSR.Core.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -79,7 +80,7 @@ namespace CSR.Core.Style.Checks
             var operands = new List<ExpressionSyntax>();
             Flatten(binary, binary.Kind(), operands);
             var line = text.Lines.GetLineFromPosition(condition.SpanStart);
-            var indent = TextLines.Deeper(TextLines.GetIndent(text, statement.SpanStart));
+            var indent = TextLayout.Deeper(TextLayout.GetIndent(text, statement.SpanStart));
             var operatorText = binary.OperatorToken.Text;
             var lines = new List<string> { text.ToString(TextSpan.FromBounds(line.Start, operands[0].Span.End)) };
             for (var i = 1; i < operands.Count; i++)
@@ -115,7 +116,7 @@ namespace CSR.Core.Style.Checks
                 return;
 
             var text = context.Text;
-            var normal = TextLines.Deeper(TextLines.GetIndent(text, statement.SpanStart));
+            var normal = TextLayout.Deeper(TextLayout.GetIndent(text, statement.SpanStart));
             var operators = new List<SyntaxToken>();
             CollectOperators(binary, binary.Kind(), operators);
             foreach (var token in operators)
@@ -150,8 +151,8 @@ namespace CSR.Core.Style.Checks
             if (TextLines.IsSingleLine(text, condition.Span))
                 return;
 
-            var body = TextLines.Deeper(TextLines.GetIndent(text, statement.SpanStart));
-            var wanted = TextLines.Deeper(body);
+            var body = TextLayout.Deeper(TextLayout.GetIndent(text, statement.SpanStart));
+            var wanted = TextLayout.Deeper(body);
             var arguments = condition.DescendantNodes().OfType<ArgumentSyntax>();
             foreach (var argument in arguments)
             {
