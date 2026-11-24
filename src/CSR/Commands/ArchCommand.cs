@@ -41,6 +41,15 @@ namespace CSR.Commands
 
         private static readonly HashSet<string> FlagNames = ["--no-server"];
 
+        private static readonly FileCommand FileMode = new()
+        {
+            Name = "arch",
+            Flags = FlagNames,
+            HasScope = true,
+            MissingFiles = "не заданы файлы или папки (или --solution)",
+            Analyze = AnalyzeFiles,
+        };
+
         public static int Run(IEnumerable<string> args)
         {
             var arguments = args.ToList();
@@ -48,36 +57,20 @@ namespace CSR.Commands
             if (commandLine.GetOption("--solution") != null || commandLine.GetOptions("--projects").Count > 0)
                 return WorkspaceCommands.Run("arch", arguments, OptionNames, FlagNames, ValidateSolutionMode);
 
-            if (commandLine.Positional.Count == 0)
-                throw new UsageException("не заданы файлы или папки (или --solution)");
+            return FileCommands.Run(FileMode, arguments);
+        }
 
-            var format = GetFormat(commandLine);
-            var directory = Environment.CurrentDirectory;
-            var start = ConfigFiles.GetStart(commandLine.Positional[0], directory);
-            var options = LoadOptions(commandLine, directory, start);
-            var project = LoadProject(commandLine, directory, start);
-            var diff = commandLine.GetOption("--diff");
-            var scope = commandLine.GetOption("--scope") ?? (diff == null ? "file" : "changed-lines");
-            if (scope is not ("file" or "changed-lines"))
-                throw new UsageException($"неизвестный режим '{scope}'");
-
-            var files = SourceFiles.Collect(commandLine.Positional);
-            Dictionary<string, ChangedLines>? changed = null;
-            if (diff != null || scope == "changed-lines")
+        private static FileResult AnalyzeFiles(FileRun run)
+        {
+            var options = run.Configs.LoadChecks("arch.jsonc", ArchConfig.Apply);
+            var findings = run.Analyze(options);
+            var report = new CheckReport { FileCount = run.Files.Count, Scope = run.Scope, Findings = findings };
+            return new FileResult
             {
-                changed = GitDiff.Collect(diff ?? "HEAD", commandLine.Positional[0]);
-                files = files.Where(changed.ContainsKey).ToList();
-            }
-
-            var stopwatch = Stopwatch.StartNew();
-            var filter = scope == "changed-lines" ? changed : null;
-            var findings = StyleCommand.Analyze(files, options, project, filter);
-            var report = new CheckReport { FileCount = files.Count, Scope = scope, Findings = findings };
-            Output.Write(Write(report, format), commandLine.GetOption("--out"));
-
-            var seconds = stopwatch.Elapsed.TotalSeconds;
-            Console.Error.WriteLine($"csr arch: файлов {files.Count}, находок {findings.Count}, {seconds:F1} с");
-            return report.HasErrors ? 1 : 0;
+                Text = Write(report, run.Format),
+                Summary = $"файлов {run.Files.Count}, находок {findings.Count}",
+                ExitCode = report.HasErrors ? 1 : 0,
+            };
         }
 
         // Режим решения: в процессе CLI или на сервере csr serve
@@ -90,8 +83,9 @@ namespace CSR.Commands
             ValidateSolutionMode(commandLine);
             var format = GetFormat(commandLine);
             var directory = context.WorkingDirectory;
-            var options = LoadOptions(commandLine, directory, context.Solution.Root);
-            var project = LoadProject(commandLine, directory, context.Solution.Root);
+            var configs = new CommandConfigs(commandLine, directory, context.Solution.Root, context.Error);
+            var options = configs.LoadChecks("arch.jsonc", ArchConfig.Apply);
+            var project = configs.LoadProject();
 
             var stopwatch = Stopwatch.StartNew();
             var compilations = await GetCompilationsAsync(context, commandLine.GetOptions("--projects"), cancellation);
@@ -162,30 +156,6 @@ namespace CSR.Commands
 
         private static string Write(CheckReport report, string format)
             => format == "md" ? ArchMarkdownWriter.Write(report) : ArchJsonWriter.Write(report);
-
-        // Конфиги - явные или найденные от start (ConfigFiles)
-        private static CheckOptions LoadOptions(CommandLine commandLine, string directory, string start)
-        {
-            var paths = ConfigFiles.GetLayers(commandLine.GetOptions("--config"), "arch.jsonc", start);
-            if (paths.Count == 0)
-                throw new UsageException(ConfigFiles.GetMissingMessage("arch.jsonc"));
-
-            var options = new CheckOptions();
-            foreach (var path in paths)
-                ArchConfig.Apply(ReadConfig(path, directory), options);
-
-            return options;
-        }
-
-        private static ProjectOptions LoadProject(CommandLine commandLine, string directory, string start)
-        {
-            var path = ConfigFiles.Find(commandLine.GetOption("--project"), "project.jsonc", start);
-            return path == null ? new ProjectOptions() : ProjectConfig.Parse(ReadConfig(path, directory));
-        }
-
-        // Путь конфига - от папки вызова (на сервере текущая папка процесса другая)
-        private static string ReadConfig(string path, string directory)
-            => StyleCommand.ReadConfig(Path.GetFullPath(Path.Combine(directory, path)));
 
         // Путь для отчета: от папки вызова, если файл внутри нее, иначе полный; разделитель - '/'
         private static string GetDisplayPath(string fullPath, string directory)

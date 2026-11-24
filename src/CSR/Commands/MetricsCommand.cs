@@ -1,6 +1,4 @@
 using System.Collections.Concurrent;
-using System.Diagnostics;
-using CSR.Core.Config;
 using CSR.Core.Metrics;
 using CSR.Reports.Config;
 using CSR.Reports.Metrics;
@@ -18,7 +16,7 @@ namespace CSR.Commands
                                          в папке цели или выше, иначе config/metrics.jsonc рядом с csr.exe
               --project <project.jsonc>  символы препроцессора (по умолчанию UNITY_EDITOR); поиск - как у --config
               --format json | md         формат отчета (по умолчанию json)
-              --top <N>                  размер топа по каждой метрике (по умолчанию 10)
+              --top <N>                  размер топа по каждой метрике (по умолчанию 10); 0 - все
               --all                      в JSON - все функции и типы по файлам
               --coverage <opencover.xml> покрытие (OpenCover XML): покрытие и CRAP функций, топ по CRAP;
                                          несколько файлов объединяются
@@ -26,41 +24,36 @@ namespace CSR.Commands
               --out <файл>               записать отчет в файл вместо stdout
             """;
 
-        private static readonly HashSet<string> OptionNames =
-            ["--config", "--project", "--format", "--top", "--out", "--coverage", "--edn"];
-        private static readonly HashSet<string> FlagNames = ["--all"];
+        private static readonly FileCommand Command = new()
+        {
+            Name = "metrics",
+            Options = ["--top", "--coverage", "--edn"],
+            Flags = ["--all"],
+            Analyze = Analyze,
+        };
 
         public static int Run(IEnumerable<string> args)
+            => FileCommands.Run(Command, args);
+
+        private static FileResult Analyze(FileRun run)
         {
-            var commandLine = CommandLine.Parse(args, OptionNames, FlagNames);
-            if (commandLine.Positional.Count == 0)
-                throw new UsageException("не заданы файлы или папки");
-
-            var format = commandLine.GetOption("--format") ?? "json";
-            if (format is not ("json" or "md"))
-                throw new UsageException($"неизвестный формат '{format}'");
-
-            var options = LoadOptions(commandLine);
-            var project = LoadProject(commandLine);
-            var files = SourceFiles.Collect(commandLine.Positional);
-            var coverage = LoadCoverage(commandLine.GetOptions("--coverage"));
-
-            var stopwatch = Stopwatch.StartNew();
-            var results = Measure(files, project.ParseOptions, coverage);
+            var config = run.Configs.Read("metrics.jsonc");
+            var options = config == null ? new MetricsOptions() : MetricsConfig.Parse(config);
+            options.Top = run.CommandLine.ReadCount("--top") ?? options.Top;
+            var coverage = LoadCoverage(run.CommandLine.GetOptions("--coverage"));
+            var results = Measure(run.Files, run.Project.ParseOptions, coverage);
             var report = MetricsReport.Build(results, options);
-            var edn = commandLine.GetOption("--edn");
+            var edn = run.CommandLine.GetOption("--edn");
             if (edn != null)
                 Output.Write(CrapEdnWriter.Write(results), edn);
 
-            var text = format == "md"
-                ? MetricsMarkdownWriter.Write(report)
-                : MetricsJsonWriter.Write(report, commandLine.HasFlag("--all"));
-
-            Output.Write(text, commandLine.GetOption("--out"));
-            double seconds = stopwatch.Elapsed.TotalSeconds;
-            int functions = report.FunctionCount;
-            Console.Error.WriteLine($"csr metrics: файлов {files.Count}, функций {functions}, {seconds:F1} с");
-            return 0;
+            return new FileResult
+            {
+                Text = run.Format == "md"
+                    ? MetricsMarkdownWriter.Write(report)
+                    : MetricsJsonWriter.Write(report, run.CommandLine.HasFlag("--all")),
+                Summary = $"файлов {run.Files.Count}, функций {report.FunctionCount}",
+            };
         }
 
         private static List<FileMetrics> Measure(
@@ -110,38 +103,6 @@ namespace CSR.Commands
             }
 
             return coverage;
-        }
-
-        private static MetricsOptions LoadOptions(CommandLine commandLine)
-        {
-            var start = ConfigFiles.GetStart(commandLine.Positional[0], Environment.CurrentDirectory);
-            var path = ConfigFiles.Find(commandLine.GetOption("--config"), "metrics.jsonc", start);
-            var options = path == null ? new MetricsOptions() : MetricsConfig.Parse(ReadConfig(path));
-
-            string? top = commandLine.GetOption("--top");
-            if (top == null)
-                return options;
-
-            if (!int.TryParse(top, out int count) || count < 0)
-                throw new UsageException($"--top: ожидается неотрицательное число, получено '{top}'");
-
-            options.Top = count;
-            return options;
-        }
-
-        private static ProjectOptions LoadProject(CommandLine commandLine)
-        {
-            var start = ConfigFiles.GetStart(commandLine.Positional[0], Environment.CurrentDirectory);
-            var path = ConfigFiles.Find(commandLine.GetOption("--project"), "project.jsonc", start);
-            return path == null ? new ProjectOptions() : ProjectConfig.Parse(ReadConfig(path));
-        }
-
-        private static string ReadConfig(string path)
-        {
-            if (!File.Exists(path))
-                throw new UsageException($"нет файла конфига: {path}");
-
-            return File.ReadAllText(path);
         }
     }
 }

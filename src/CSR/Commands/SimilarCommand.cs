@@ -1,6 +1,4 @@
 using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.Globalization;
 using CSR.Core.Checks;
 using CSR.Core.Config;
 using CSR.Core.Graph;
@@ -44,42 +42,32 @@ namespace CSR.Commands
             Коды возврата: 0 - успех (пары не считаются ошибкой), 2 - ошибка запуска
             """;
 
-        private static readonly HashSet<string> OptionNames =
-        [
-            "--config",
-            "--project",
-            "--diff",
-            "--top",
-            "--format",
-            "--out",
-            .. SimilarConfig.Table.OptionNames,
-        ];
-
-        private static readonly HashSet<string> FlagNames = ["--changed"];
+        private static readonly FileCommand Command = new()
+        {
+            Name = "similar",
+            Options = ["--diff", "--top", .. SimilarConfig.Table.OptionNames],
+            Flags = ["--changed"],
+            Analyze = Analyze,
+        };
 
         public static int Run(IEnumerable<string> args)
+            => FileCommands.Run(Command, args);
+
+        private static FileResult Analyze(FileRun run)
         {
-            var commandLine = CommandLine.Parse(args, OptionNames, FlagNames);
-            if (commandLine.Positional.Count == 0)
-                throw new UsageException("не заданы файлы или папки");
+            var config = run.Configs.Read("similar.jsonc");
+            var options = config == null ? new SimilarOptions() : SimilarConfig.Parse(config);
+            run.CommandLine.ReadOptions(SimilarConfig.Table, options);
+            int top = run.CommandLine.ReadCount("--top") ?? 0;
+            var diff = run.CommandLine.GetOption("--diff");
+            bool isChanged = run.CommandLine.HasFlag("--changed") || diff != null;
 
-            var format = commandLine.GetOption("--format") ?? "json";
-            if (format is not ("json" or "md"))
-                throw new UsageException($"неизвестный формат '{format}'");
-
-            var options = LoadOptions(commandLine);
-            var project = StyleCommand.LoadProject(commandLine);
-            int top = ReadInt(commandLine, "--top") ?? 0;
-            var diff = commandLine.GetOption("--diff");
-            bool isChanged = commandLine.HasFlag("--changed") || diff != null;
-
-            var stopwatch = Stopwatch.StartNew();
-            var files = SourceFiles.Collect(commandLine.Positional).Where(file => IsInScope(file, options)).ToList();
+            var files = run.Files.Where(file => IsInScope(file, options)).ToList();
             Func<SimilarUnit, bool>? isProbe = null;
             if (isChanged)
-                isProbe = GetChangedFilter(GitDiff.Collect(diff ?? "HEAD", commandLine.Positional[0]));
+                isProbe = GetChangedFilter(GitDiff.Collect(diff ?? "HEAD", run.CommandLine.Positional[0]));
 
-            var collected = Collect(files, options, project);
+            var collected = Collect(files, options, run.Project);
             var units = collected.Units;
             var result = SimilarSearch.Run(units, options, isProbe);
             var report = new SimilarReport
@@ -91,13 +79,12 @@ namespace CSR.Commands
                 Result = result,
                 Inventory = collected.Graph == null ? null : ExtensionHosts.Find(collected.Graph, SystemUnits.MinVariants),
             };
-            var text = format == "md" ? SimilarMarkdownWriter.Write(report, top) : SimilarJsonWriter.Write(report);
-            Output.Write(text, commandLine.GetOption("--out"));
-
-            var seconds = stopwatch.Elapsed.TotalSeconds;
-            Console.Error.WriteLine($"csr similar: файлов {files.Count}, единиц {units.Count}, пар {result.Pairs.Count}, "
-                + $"кластеров {result.Clusters.Count}, {seconds:F1} с");
-            return 0;
+            var counts = $"единиц {units.Count}, пар {result.Pairs.Count}, кластеров {result.Clusters.Count}";
+            return new FileResult
+            {
+                Text = run.Format == "md" ? SimilarMarkdownWriter.Write(report, top) : SimilarJsonWriter.Write(report),
+                Summary = $"файлов {files.Count}, {counts}",
+            };
         }
 
         // Единицы L1-L3 по деревьям файлов; системы L4 - по графу типов компиляции этих деревьев
@@ -136,28 +123,6 @@ namespace CSR.Commands
 
                 return false;
             };
-        }
-
-        private static SimilarOptions LoadOptions(CommandLine commandLine)
-        {
-            var start = ConfigFiles.GetStart(commandLine.Positional[0], Environment.CurrentDirectory);
-            var path = ConfigFiles.Find(commandLine.GetOption("--config"), "similar.jsonc", start);
-            var options = path == null ? new SimilarOptions() : SimilarConfig.Parse(StyleCommand.ReadConfig(path));
-
-            commandLine.ReadOptions(SimilarConfig.Table, options);
-            return options;
-        }
-
-        private static int? ReadInt(CommandLine commandLine, string name)
-        {
-            var text = commandLine.GetOption(name);
-            if (text == null)
-                return null;
-
-            if (!int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out int value) || value < 0)
-                throw new UsageException($"{name}: ожидается неотрицательное целое, задано '{text}'");
-
-            return value;
         }
     }
 

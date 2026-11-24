@@ -17,7 +17,7 @@ namespace CSR.Reports.Config
             .Add("dumpCommunities", OptionKinds.Count, (options, value) => options.DumpCommunities = value)
             .Add("infrastructureHosts", OptionKinds.Count, (options, value) => options.InfrastructureHosts = value)
             .Add("registryVariants", OptionKinds.Count, (options, value) => options.RegistryVariants = value)
-            .Add("top", OptionKinds.Positive, (options, value) => options.Top = value, "--top");
+            .Add("top", OptionKinds.Count, (options, value) => options.Top = value, "--top");
 
         public static StructureOptions Parse(string json)
         {

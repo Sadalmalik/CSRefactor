@@ -19,7 +19,7 @@ namespace CSR.Reports.Config
             {
                 if (property.Name == "top")
                 {
-                    options.Top = JsonConfig.ReadInt(property.Value, "top");
+                    options.Top = OptionKinds.Count.ReadJson(property.Value, "top");
                     continue;
                 }
 

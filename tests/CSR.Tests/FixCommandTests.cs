@@ -107,6 +107,27 @@ namespace CSR.Tests
             Assert.That(text, Does.Contain("/// <summary>"), "строка документации не изменена");
         }
 
+        // Готовый дифф и --scope file: только файлы диффа, все находки в них; отчет - в --out
+        [Test]
+        public void Fix_DiffFileScopeFileAndOut()
+        {
+            using var folder = new TempFolder();
+            folder.Write("Sample.cs", Dirty);
+            folder.Write("Other.cs", Dirty);
+            var config = folder.Write("style.jsonc", Config);
+            Cli.InitRepository(folder.Path);
+            var diff = folder.Write("changes.diff", "+++ b/Sample.cs\n@@ -1,0 +1,1 @@\n+public class Sample\n");
+            var output = Path.Combine(folder.Path, "fix.diff");
+
+            var result = Cli.Run("fix", folder.Path, "--config", config, "--diff", diff, "--scope", "file", "--out", output);
+
+            Assert.That(result.ExitCode, Is.Zero, result.Error);
+            Assert.That(result.Output, Is.Empty);
+            Assert.That(folder.Read("fix.diff"), Does.Contain("Sample.cs"));
+            Assert.That(folder.Read("fix.diff"), Does.Not.Contain("Other.cs"));
+            Assert.That(result.Error, Does.Contain("исправлено 3 в 1 файлах"));
+        }
+
         [Test]
         public void Fix_UsageErrors()
         {

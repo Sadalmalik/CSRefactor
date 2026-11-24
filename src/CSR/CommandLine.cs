@@ -68,10 +68,25 @@ namespace CSR
 
         // Опции таблицы ключей конфига поверх его значений; ошибка значения - ошибка запуска
         public void ReadOptions<T>(OptionTable<T> table, T target)
+            => ReadValues(() => table.ReadOptions(GetOption, target));
+
+        // Целое >= 0 по правилу конфигов (OptionKinds.Count); null - опция не задана
+        public int? ReadCount(string name)
+        {
+            var text = GetOption(name);
+            if (text == null)
+                return null;
+
+            int value = 0;
+            ReadValues(() => value = OptionKinds.Count.ParseText!(text, name));
+            return value;
+        }
+
+        private static void ReadValues(Action read)
         {
             try
             {
-                table.ReadOptions(GetOption, target);
+                read();
             }
             catch (ConfigException exception)
             {

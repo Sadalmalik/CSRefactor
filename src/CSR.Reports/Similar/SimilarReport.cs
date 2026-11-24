@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using CSR.Core.Config;
 using CSR.Core.Graph;
 using CSR.Core.Similar;
 
@@ -219,7 +220,7 @@ namespace CSR.Reports.Similar
 
         private static void WriteClusters(StringBuilder text, IReadOnlyList<SimilarCluster> clusters, int top)
         {
-            var shown = top > 0 ? clusters.Take(top).ToList() : clusters.ToList();
+            var shown = clusters.TakeTop(top).ToList();
             for (int i = 0; i < shown.Count; i++)
             {
                 var cluster = shown[i];
@@ -257,7 +258,7 @@ namespace CSR.Reports.Similar
                 .ToList();
             text.AppendLine();
             text.AppendLine($"## Системы вариантов: баз {points.Count}, хостов {inventory.Count}");
-            var shown = top > 0 ? points.Take(top).ToList() : points;
+            var shown = points.TakeTop(top).ToList();
             foreach (var point in shown)
             {
                 var first = point.First();
@@ -277,7 +278,7 @@ namespace CSR.Reports.Similar
 
         private static void WriteChanged(StringBuilder text, IReadOnlyList<SimilarPair> pairs, int top)
         {
-            var shown = top > 0 ? pairs.Take(top).ToList() : pairs.ToList();
+            var shown = pairs.TakeTop(top).ToList();
             foreach (var group in shown.GroupBy(pair => pair.Left))
             {
                 text.AppendLine();

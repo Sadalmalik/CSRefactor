@@ -1,11 +1,6 @@
-using System.Collections.Concurrent;
-using System.Diagnostics;
-using CSR.Core.Checks;
-using CSR.Core.Config;
 using CSR.Reports.Checks;
 using CSR.Reports.Config;
 using CSR.Reports.Style;
-using Microsoft.CodeAnalysis.CSharp;
 
 namespace CSR.Commands
 {
@@ -29,114 +24,27 @@ namespace CSR.Commands
             Коды возврата: 0 - нет находок уровня error, 1 - есть, 2 - ошибка запуска
             """;
 
-        private static readonly HashSet<string> OptionNames =
-            ["--config", "--project", "--diff", "--scope", "--format", "--out"];
+        private static readonly FileCommand Command = new()
+        {
+            Name = "style",
+            HasScope = true,
+            Analyze = Analyze,
+        };
 
         public static int Run(IEnumerable<string> args)
+            => FileCommands.Run(Command, args);
+
+        private static FileResult Analyze(FileRun run)
         {
-            var commandLine = CommandLine.Parse(args, OptionNames, new HashSet<string>());
-            if (commandLine.Positional.Count == 0)
-                throw new UsageException("не заданы файлы или папки");
-
-            var format = commandLine.GetOption("--format") ?? "json";
-            if (format is not ("json" or "md"))
-                throw new UsageException($"неизвестный формат '{format}'");
-
-            var options = LoadOptions(commandLine);
-            var project = LoadProject(commandLine);
-            var diff = commandLine.GetOption("--diff");
-            var scope = commandLine.GetOption("--scope") ?? (diff == null ? "file" : "changed-lines");
-            if (scope is not ("file" or "changed-lines"))
-                throw new UsageException($"неизвестный режим '{scope}'");
-
-            var files = SourceFiles.Collect(commandLine.Positional);
-            Dictionary<string, ChangedLines>? changed = null;
-            if (diff != null || scope == "changed-lines")
+            var options = run.Configs.LoadChecks("style.jsonc", StyleConfig.Apply);
+            var findings = run.Analyze(options);
+            var report = new CheckReport { FileCount = run.Files.Count, Scope = run.Scope, Findings = findings };
+            return new FileResult
             {
-                changed = GitDiff.Collect(diff ?? "HEAD", commandLine.Positional[0]);
-                files = files.Where(changed.ContainsKey).ToList();
-            }
-
-            var stopwatch = Stopwatch.StartNew();
-            var filter = scope == "changed-lines" ? changed : null;
-            var findings = Analyze(files, options, project, filter);
-            var report = new CheckReport { FileCount = files.Count, Scope = scope, Findings = findings };
-            var text = format == "md" ? StyleMarkdownWriter.Write(report) : StyleJsonWriter.Write(report);
-            Output.Write(text, commandLine.GetOption("--out"));
-
-            var seconds = stopwatch.Elapsed.TotalSeconds;
-            Console.Error.WriteLine($"csr style: файлов {files.Count}, находок {findings.Count}, {seconds:F1} с");
-            return report.HasErrors ? 1 : 0;
-        }
-
-        internal static List<Finding> Analyze(
-            List<string> files,
-            CheckOptions options,
-            ProjectOptions project,
-            Dictionary<string, ChangedLines>? filter)
-        {
-            var results = new ConcurrentBag<List<Finding>>();
-            Parallel.ForEach(files, file => results.Add(AnalyzeFile(file, options, project, filter)));
-            return results
-                .SelectMany(findings => findings)
-                .OrderBy(finding => finding.File, StringComparer.Ordinal)
-                .ThenBy(finding => finding.Line)
-                .ThenBy(finding => finding.Column)
-                .ToList();
-        }
-
-        private static List<Finding> AnalyzeFile(
-            string file,
-            CheckOptions options,
-            ProjectOptions project,
-            Dictionary<string, ChangedLines>? filter)
-        {
-            var source = File.ReadAllText(file);
-            var tree = CSharpSyntaxTree.ParseText(source, project.ParseOptions, SourceFiles.GetDisplayPath(file));
-            var findings = SyntaxAnalyzer.Analyze(tree, options, project);
-            if (filter == null)
-                return findings;
-
-            var lines = filter[file];
-            return findings.Where(lines.Intersects).ToList();
-        }
-
-        // Слои style.jsonc; устаревшая проверка в конфиге - предупреждение в stderr (style и fix)
-        internal static CheckOptions LoadOptions(CommandLine commandLine)
-        {
-            var start = ConfigFiles.GetStart(commandLine.Positional[0], Environment.CurrentDirectory);
-            var paths = ConfigFiles.GetLayers(commandLine.GetOptions("--config"), "style.jsonc", start);
-            if (paths.Count == 0)
-                throw new UsageException(ConfigFiles.GetMissingMessage("style.jsonc"));
-
-            var options = new CheckOptions();
-            foreach (var path in paths)
-                StyleConfig.Apply(ReadConfig(path), options);
-
-            foreach (var configuration in options.Checks)
-            {
-                var replacement = configuration.Check.Deprecated;
-                if (replacement != null)
-                    Console.Error.WriteLine(
-                        $"csr: проверка '{configuration.Check.Name}' устарела, удаляется в v0.4: {replacement}");
-            }
-
-            return options;
-        }
-
-        internal static ProjectOptions LoadProject(CommandLine commandLine)
-        {
-            var start = ConfigFiles.GetStart(commandLine.Positional[0], Environment.CurrentDirectory);
-            var path = ConfigFiles.Find(commandLine.GetOption("--project"), "project.jsonc", start);
-            return path == null ? new ProjectOptions() : ProjectConfig.Parse(ReadConfig(path));
-        }
-
-        internal static string ReadConfig(string path)
-        {
-            if (!File.Exists(path))
-                throw new UsageException($"нет файла конфига: {path}");
-
-            return File.ReadAllText(path);
+                Text = run.Format == "md" ? StyleMarkdownWriter.Write(report) : StyleJsonWriter.Write(report),
+                Summary = $"файлов {run.Files.Count}, находок {findings.Count}",
+                ExitCode = report.HasErrors ? 1 : 0,
+            };
         }
     }
 }

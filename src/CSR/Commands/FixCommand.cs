@@ -1,11 +1,10 @@
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using CSR.Core.Config;
 using CSR.Core.Fix;
 using CSR.Core.Checks;
+using CSR.Core.Config;
 using CSR.Reports.Config;
 using CSR.Reports.Diff;
 using CSR.Reports.Checks;
@@ -27,6 +26,7 @@ namespace CSR.Commands
               --apply                        записать файлы (без него ничего не пишется)
               --format diff | json           diff (по умолчанию): дифф в stdout, сводка в stderr;
                                              json: исправлено, дифф и оставшиеся находки (как у csr style)
+              --out <файл>                   записать дифф или json в файл вместо stdout
 
             Замены применяются проходами до устойчивого текста: за проход - непересекающиеся по строкам,
             затем файл разбирается заново. Оставшиеся находки - то, что правит агент.
@@ -39,52 +39,38 @@ namespace CSR.Commands
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
         };
 
-        private static readonly HashSet<string> OptionNames =
-            ["--config", "--project", "--diff", "--scope", "--format", "--checks"];
-        private static readonly HashSet<string> FlagNames = ["--apply", "--hints"];
+        private static readonly FileCommand Command = new()
+        {
+            Name = "fix",
+            Options = ["--checks"],
+            Flags = ["--apply", "--hints"],
+            Formats = ["diff", "json"],
+            HasScope = true,
+            Analyze = Analyze,
+        };
 
         public static int Run(IEnumerable<string> args)
+            => FileCommands.Run(Command, args);
+
+        private static FileResult Analyze(FileRun run)
         {
-            var commandLine = CommandLine.Parse(args, OptionNames, FlagNames);
-            if (commandLine.Positional.Count == 0)
-                throw new UsageException("не заданы файлы или папки");
-
-            var format = commandLine.GetOption("--format") ?? "diff";
-            if (format is not ("diff" or "json"))
-                throw new UsageException($"неизвестный формат '{format}'");
-
-            var options = StyleCommand.LoadOptions(commandLine);
-            var project = StyleCommand.LoadProject(commandLine);
-            var fix = CreateFixOptions(commandLine);
-            var diff = commandLine.GetOption("--diff");
-            var scope = commandLine.GetOption("--scope") ?? (diff == null ? "file" : "changed-lines");
-            if (scope is not ("file" or "changed-lines"))
-                throw new UsageException($"неизвестный режим '{scope}'");
-
-            var files = SourceFiles.Collect(commandLine.Positional);
-            Dictionary<string, ChangedLines>? changed = null;
-            if (scope == "changed-lines")
-            {
-                changed = GitDiff.Collect(diff ?? "HEAD", commandLine.Positional[0]);
-                files = files.Where(changed.ContainsKey).ToList();
-            }
-
-            var stopwatch = Stopwatch.StartNew();
-            var results = Fix(files, options, project, fix, changed);
-            var apply = commandLine.HasFlag("--apply");
+            var options = run.Configs.LoadChecks("style.jsonc", StyleConfig.Apply);
+            var fix = CreateFixOptions(run.CommandLine);
+            var results = Fix(run.Files, options, run.Project, fix, run.Changed);
+            var apply = run.CommandLine.HasFlag("--apply");
             if (apply)
                 Write(results);
 
             var remaining = results.SelectMany(result => result.Fix.Remaining).ToList();
-            var report = new CheckReport { FileCount = files.Count, Scope = scope, Findings = remaining };
+            var report = new CheckReport { FileCount = run.Files.Count, Scope = run.Scope, Findings = remaining };
             var patch = string.Concat(results.Select(result => result.Diff));
-            if (format == "json")
-                Console.Out.Write(WriteJson(results, patch, report, apply));
-            else
-                Console.Out.Write(patch);
-
-            Console.Error.Write(WriteSummary(results, report, apply, stopwatch.Elapsed));
-            return report.HasErrors ? 1 : 0;
+            return new FileResult
+            {
+                Text = run.Format == "json" ? WriteJson(results, patch, report, apply) : patch,
+                Summary = GetSummary(results, report, apply),
+                Details = GetDetails(results),
+                ExitCode = report.HasErrors ? 1 : 0,
+            };
         }
 
         private static List<FileFix> Fix(
@@ -152,17 +138,21 @@ namespace CSR.Commands
             return Encoding.UTF8.GetString(stream.ToArray()) + "\n";
         }
 
-        private static string WriteSummary(List<FileFix> results, CheckReport report, bool apply, TimeSpan time)
+        private static string GetSummary(List<FileFix> results, CheckReport report, bool apply)
         {
-            var groups = GroupApplied(results);
-            var fixedCount = groups.Sum(group => group.Count);
+            var fixedCount = GroupApplied(results).Sum(group => group.Count);
             var files = results.Count(result => result.IsChanged);
             var errors = report.Findings.Count(finding => finding.Severity == Severity.Error);
-            var text = new StringBuilder();
             var write = apply ? "записано" : "без записи (--apply - записать)";
-            text.Append($"csr fix: исправлено {fixedCount} в {files} файлах, {write}; ");
-            text.Append($"осталось находок {report.Findings.Count} (error {errors}), {time.TotalSeconds:F1} с\n");
-            foreach (var group in groups)
+            var remaining = $"осталось находок {report.Findings.Count} (error {errors})";
+            return $"исправлено {fixedCount} в {files} файлах, {write}; {remaining}";
+        }
+
+        // Группы исправлений и файлы, оставленные без исправлений
+        private static string GetDetails(List<FileFix> results)
+        {
+            var text = new StringBuilder();
+            foreach (var group in GroupApplied(results))
                 text.Append($"  {group.Check} ({group.Rule ?? "-"}): {group.Count}\n");
 
             foreach (var result in results.Where(item => item.Fix.Reverted))

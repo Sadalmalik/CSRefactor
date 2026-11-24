@@ -19,8 +19,6 @@ namespace CSR.Reports.Config
 
         public static readonly OptionKind<int> Count = Int(0, "неотрицательное целое");
 
-        public static readonly OptionKind<int> Positive = Int(1, "положительное целое");
-
         // Доля от 0 до 1; в командной строке - с точкой или запятой
         public static readonly OptionKind<double> Share = new()
         {

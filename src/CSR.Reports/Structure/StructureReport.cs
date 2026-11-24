@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using CSR.Core.Config;
 using CSR.Core.Graph;
 using CSR.Core.Structure;
 
@@ -69,7 +70,7 @@ namespace CSR.Reports.Structure
                 writer.WriteNumber("threshold", options.OwnershipDepth);
                 writer.WriteStartArray("chains");
                 foreach (var chain in result.Ownership.Where(chain => chain.Depth > options.OwnershipDepth)
-                    .Concat(result.Ownership.Where(chain => chain.Depth <= options.OwnershipDepth).Take(options.Top)))
+                    .Concat(result.Ownership.Where(chain => chain.Depth <= options.OwnershipDepth).TakeTop(options.Top)))
                     WriteChain(writer, chain, options);
                 writer.WriteEndArray();
                 writer.WriteEndObject();
@@ -80,12 +81,12 @@ namespace CSR.Reports.Structure
                 writer.WriteEndArray();
 
                 writer.WriteStartArray("inheritance");
-                foreach (var type in result.Types.OrderByDescending(type => type.InheritanceDepth).Take(options.Top))
+                foreach (var type in result.Types.OrderByDescending(type => type.InheritanceDepth).TakeTop(options.Top))
                     WriteType(writer, type, options);
                 writer.WriteEndArray();
 
                 writer.WriteStartArray("hubs");
-                foreach (var type in result.Types.OrderByDescending(type => type.Dependents).Take(options.Top))
+                foreach (var type in result.Types.OrderByDescending(type => type.Dependents).TakeTop(options.Top))
                     WriteType(writer, type, options);
                 writer.WriteEndArray();
 
@@ -257,7 +258,7 @@ namespace CSR.Reports.Structure
             text.AppendLine();
             text.AppendLine($"## Глубина владения (порог {options.OwnershipDepth})");
             text.AppendLine();
-            foreach (var chain in chains.Take(options.Top))
+            foreach (var chain in chains.TakeTop(options.Top))
             {
                 var mark = chain.Depth > options.OwnershipDepth ? " **глубже порога**" : "";
                 text.AppendLine(
@@ -271,7 +272,7 @@ namespace CSR.Reports.Structure
             text.AppendLine($"## Объекты-боги (WMC >= {options.GodWmc}, ATFD > {options.GodAtfd}, "
                 + $"TCC < {StructureReport.FormatShare(options.GodTcc)}): {gods.Count}");
             text.AppendLine();
-            foreach (var type in gods.Take(options.Top))
+            foreach (var type in gods.TakeTop(options.Top))
             {
                 var facts = type.Facts!;
                 text.AppendLine($"- `{StructureReport.FormatType(type.Node)}`: WMC {facts.Wmc}, ATFD {facts.Atfd}, "
@@ -284,7 +285,7 @@ namespace CSR.Reports.Structure
         {
             text.AppendLine();
             text.AppendLine($"## {title}: {cycles.Count}");
-            foreach (var cycle in cycles.Take(top))
+            foreach (var cycle in cycles.TakeTop(top))
             {
                 text.AppendLine();
                 var names = string.Join(", ", cycle.Packages.Take(8).Select(name => $"`{name}`"));
@@ -304,7 +305,7 @@ namespace CSR.Reports.Structure
             text.AppendLine();
             text.AppendLine($"## Свалки (папки): {dumps.Count}");
             text.AppendLine();
-            foreach (var package in dumps.Take(top))
+            foreach (var package in dumps.TakeTop(top))
             {
                 text.AppendLine($"- `{package.Name}`: типов {package.Types.Count}, сообществ {package.Communities}, "
                     + $"изолированных {StructureReport.FormatShare(package.IsolatedShare)}, "
@@ -323,7 +324,7 @@ namespace CSR.Reports.Structure
             text.AppendLine();
             text.AppendLine($"## {title}");
             text.AppendLine();
-            foreach (var type in types.Take(top))
+            foreach (var type in types.TakeTop(top))
                 text.AppendLine($"- `{StructureReport.FormatType(type.Node)}`: {describe(type)}");
         }
 
@@ -335,7 +336,7 @@ namespace CSR.Reports.Structure
             var ordered = packages.Where(package => package.Types.Count >= 5)
                 .OrderByDescending(package => package.Distance)
                 .ThenByDescending(package => package.Types.Count);
-            foreach (var package in ordered.Take(top))
+            foreach (var package in ordered.TakeTop(top))
             {
                 text.AppendLine($"- `{package.Name}`: D {StructureReport.FormatShare(package.Distance)}, "
                     + $"I {StructureReport.FormatShare(package.Instability)}, "

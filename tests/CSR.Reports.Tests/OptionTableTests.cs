@@ -38,7 +38,7 @@ namespace CSR.Reports.Tests
             Assert.That(exception!.Message, Does.StartWith(message));
         }
 
-        [TestCase("""{ "top": 0 }""", "top: ожидается положительное целое")]
+        [TestCase("""{ "top": -1 }""", "top: ожидается неотрицательное целое")]
         [TestCase("""{ "godTcc": 2 }""", "godTcc: ожидается число от 0 до 1")]
         public void Structure_InvalidValue_ConfigError(string json, string message)
         {

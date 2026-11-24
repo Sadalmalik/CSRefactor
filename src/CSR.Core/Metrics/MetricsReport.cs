@@ -1,3 +1,5 @@
+using CSR.Core.Config;
+
 namespace CSR.Core.Metrics
 {
     public class MetricSummary
@@ -52,7 +54,7 @@ namespace CSR.Core.Metrics
                 .OrderByDescending(function => function.Crap)
                 .ThenBy(function => function.File, StringComparer.Ordinal)
                 .ThenBy(function => function.Line)
-                .Take(options.Top)
+                .TakeTop(options.Top)
                 .ToList();
 
             return new MetricsReport { Files = files, Metrics = metrics, CrapTop = crapTop };
@@ -90,7 +92,7 @@ namespace CSR.Core.Metrics
                 .OrderByDescending(item => item.Values[metric.Key])
                 .ThenBy(item => item.File, StringComparer.Ordinal)
                 .ThenBy(item => item.Line)
-                .Take(options.Top)
+                .TakeTop(options.Top)
                 .ToList();
 
             return new MetricSummary

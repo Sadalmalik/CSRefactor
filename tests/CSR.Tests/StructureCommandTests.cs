@@ -42,6 +42,22 @@ namespace CSR.Tests
             Assert.That(result.Output, Does.Contain("Отметки: владение глубже 3 - 0, наследование глубже 4 - 0"));
         }
 
+        // --top: целое >= 0, 0 - все; текст ошибки - как у metrics и similar
+        [Test]
+        public void Top_ZeroAllAndNegativeError()
+        {
+            using var folder = new TempFolder();
+            folder.Write("Engine.cs", "public class Engine { }");
+
+            Assert.That(Cli.Run("structure", folder.Path, "--top", "0").ExitCode, Is.EqualTo(0));
+            foreach (var command in new[] { "structure", "metrics", "similar" })
+            {
+                var result = Cli.Run(command, folder.Path, "--top", "-1");
+                Assert.That(result.ExitCode, Is.EqualTo(2), command);
+                Assert.That(result.Error, Does.Contain("--top: ожидается неотрицательное целое, задано '-1'"), command);
+            }
+        }
+
         [Test]
         public void UnknownConfigKey_ExitTwo()
         {
