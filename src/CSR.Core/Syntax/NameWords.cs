@@ -91,8 +91,16 @@ namespace CSR.Core.Syntax
                 => string.Equals(candidate, word, StringComparison.OrdinalIgnoreCase)));
         }
 
-        // Имя в PascalCase из слов: MAX_POOL_SIZE -> MaxPoolSize, name -> Name
+        // Имя в PascalCase из слов, по частям через '.': MAX_POOL_SIZE -> MaxPoolSize, game.items -> Game.Items,
+        // @class -> Class
         public static string ToPascal(string name)
+            => string.Join(".", name.Split('.').Select(ToPascalPart));
+
+        // Имя в UPPER_CASE из слов: MaxPoolSize -> MAX_POOL_SIZE
+        public static string ToUpperSnake(string name)
+            => string.Join("_", Split(name).Select(word => word.ToUpperInvariant()));
+
+        private static string ToPascalPart(string name)
         {
             var words = Split(StripFieldPrefix(name));
             bool isUpper = !name.Any(char.IsLower);
@@ -105,10 +113,6 @@ namespace CSR.Core.Syntax
 
             return result.ToString();
         }
-
-        // Имя в UPPER_CASE из слов: MaxPoolSize -> MAX_POOL_SIZE
-        public static string ToUpperSnake(string name)
-            => string.Join("_", Split(name).Select(word => word.ToUpperInvariant()));
 
         // Начало слова: строчная -> заглавная (isOn), заглавная перед заглавной со строчной (UIVisible),
         // цифра -> буква не делит (Vector3Pool делится на заглавной P)

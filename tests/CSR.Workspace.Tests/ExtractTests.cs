@@ -61,6 +61,18 @@ namespace CSR.Workspace.Tests
                         int high = a + 1;
                         return high - low;
                     }
+
+                    public void Trace(int a)
+                    {
+                        if (a > 0)
+                        {
+                            var shown = a * 2;
+            #if DEBUG
+                            shown++;
+            #endif
+                            Console.WriteLine(shown);
+                        }
+                    }
                 }
             }
 
@@ -106,6 +118,28 @@ namespace CSR.Workspace.Tests
                 "        }",
                 "",
                 "        public void Log(int a)");
+            Assert.That(text, Does.Contain(expected));
+            Assert.That(plan.Compile!.NewErrors, Is.Empty);
+        }
+
+        // Строки блока if сдвигаются на уровень выше, директивы остаются в своей колонке
+        [Test]
+        public async Task Extract_DirectiveKeepsColumn()
+        {
+            var plan = await PlanAsync(60, 64, "Show");
+
+            Assert.That(plan.Refusal, Is.Null);
+            var text = plan.Changes.Single().After.ToString().Replace("\r\n", "\n");
+            var expected = string.Join(
+                "\n",
+                "        private static void Show(int a)",
+                "        {",
+                "            var shown = a * 2;",
+                "#if DEBUG",
+                "            shown++;",
+                "#endif",
+                "            Console.WriteLine(shown);",
+                "        }");
             Assert.That(text, Does.Contain(expected));
             Assert.That(plan.Compile!.NewErrors, Is.Empty);
         }

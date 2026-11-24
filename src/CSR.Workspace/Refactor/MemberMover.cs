@@ -485,16 +485,17 @@ namespace CSR.Workspace.Refactor
 
             private static void InsertUsings(DocumentEdit edit, CompilationUnitSyntax root, List<string> usings)
             {
-                var lineBreak = TextLayout.GetLineBreak(edit.Text, 0);
-                var block = string.Concat(usings.Select(item => item + lineBreak));
                 if (root.Usings.Count == 0)
                 {
-                    edit.Insert(0, block + lineBreak);
+                    var firstBreak = TextLayout.GetLineBreak(edit.Text, 0);
+                    edit.Insert(0, string.Concat(usings.Select(item => item + firstBreak)) + firstBreak);
                     return;
                 }
 
+                // Перевод строки - последнего using, после которого идет вставка
                 var last = edit.Text.Lines.GetLineFromPosition(root.Usings[^1].Span.End);
-                edit.Insert(last.EndIncludingLineBreak, block);
+                var lineBreak = TextLayout.GetLineBreak(edit.Text, last.LineNumber);
+                edit.Insert(last.EndIncludingLineBreak, string.Concat(usings.Select(item => item + lineBreak)));
             }
 
 #endregion

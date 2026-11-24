@@ -48,6 +48,25 @@ namespace CSR.Workspace.Tests
 
             """;
 
+        // Источник с членом, которому нужен using исходного файла
+        private const string Flags = """
+            using System.Text;
+
+            namespace Sample.Items
+            {
+                public static class Flags
+                {
+                    public static string Join(string text)
+                        => new StringBuilder(text).ToString();
+                }
+            }
+
+            """;
+
+        // Приемник с переводами LF, кроме первой строки (CRLF)
+        private const string Modes = "using System;\r\nusing System.Linq;\n\nnamespace Sample.Items;\n\n"
+            + "public static class Modes\n{\n    public static int Count()\n        => 1;\n}\n";
+
         private static readonly RefactorOptions Options = new() { SerializationAttributes = ["Sample.Storage.Saved"] };
 
         private SampleSolution m_Sample = null!;
@@ -58,6 +77,8 @@ namespace CSR.Workspace.Tests
         {
             m_Sample = SampleSolution.Create();
             File.WriteAllText(m_Sample.GetPath("Game/Shop.cs"), Shop);
+            File.WriteAllText(m_Sample.GetPath("Game/Flags.cs"), Flags.ReplaceLineEndings("\n"));
+            File.WriteAllText(m_Sample.GetPath("Game/Modes.cs"), Modes);
             m_Solution = await m_Sample.LoadAsync();
         }
 
@@ -106,6 +127,19 @@ namespace CSR.Workspace.Tests
                 + "            Console.WriteLine(Title);\n        }\n";
             Assert.That(inventory, Does.Contain(moved));
             Assert.That(GetText(plan, "Game/Shop.cs"), Does.Contain("=> item.Label(\"x\");"));
+            Assert.That(plan.Compile!.NewErrors, Is.Empty);
+        }
+
+        [Test]
+        public async Task LineBreak_FromInsertionLine()
+        {
+            var plan = await PlanAsync("Sample.Items.Flags.Join", "Sample.Items.Modes");
+
+            Assert.That(plan.Refusal, Is.Null);
+            var modes = plan.Changes.Single(change => change.File == "Game/Modes.cs").After.ToString();
+            Assert.That(modes, Does.Contain("using System.Linq;\nusing System.Text;\n"));
+            Assert.That(modes, Does.Contain("        => 1;\n\n    public static string Join(string text)\n"));
+            Assert.That(modes.Split("\r\n").Length - 1, Is.EqualTo(1));
             Assert.That(plan.Compile!.NewErrors, Is.Empty);
         }
 

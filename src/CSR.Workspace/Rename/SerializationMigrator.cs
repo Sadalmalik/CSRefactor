@@ -118,20 +118,23 @@ namespace CSR.Workspace.Rename
 
         private static TextChange CreateUsingInsert(CompilationUnitSyntax root, SourceText text)
         {
-            var newLine = TextLayout.GetLineBreak(text, 0);
             var statement = $"using {UnityNamespace};";
             var next = root.Usings.FirstOrDefault(item =>
                 item.StaticKeyword.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.None)
                 && item.Alias == null
                 && string.CompareOrdinal(item.Name?.ToString(), UnityNamespace) > 0);
+
+            // Перевод строки - соседнего using: перед которым или после которого идет вставка
             if (next != null)
             {
-                var start = text.Lines.GetLineFromPosition(next.SpanStart).Start;
-                return new TextChange(new TextSpan(start, 0), statement + newLine);
+                var nextLine = text.Lines.GetLineFromPosition(next.SpanStart);
+                var nextBreak = TextLayout.GetLineBreak(text, nextLine.LineNumber);
+                return new TextChange(new TextSpan(nextLine.Start, 0), statement + nextBreak);
             }
 
             var last = text.Lines.GetLineFromPosition(root.Usings.Last().Span.End);
-            return new TextChange(new TextSpan(last.EndIncludingLineBreak, 0), statement + newLine);
+            var lineBreak = TextLayout.GetLineBreak(text, last.LineNumber);
+            return new TextChange(new TextSpan(last.EndIncludingLineBreak, 0), statement + lineBreak);
         }
 
         private static async Task AddAttributeNameAsync(

@@ -17,6 +17,8 @@ namespace CSR.Core.Tests.Style
         [TestCase("MAX_POOL_SIZE", "MaxPoolSize")]
         [TestCase("m_count", "Count")]
         [TestCase("maxSize", "MaxSize")]
+        [TestCase("game.Items", "Game.Items")]
+        [TestCase("@class", "Class")]
         public void NameWords_ToPascal(string name, string expected)
             => Assert.That(NameWords.ToPascal(name), Is.EqualTo(expected));
 
