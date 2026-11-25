@@ -72,6 +72,99 @@ namespace CSR.Core.Tests.Style
             Assert.That(Run("expression-arrow", source, settings => settings.Set("properties", "any")), Is.Empty);
         }
 
+        [Test]
+        public void Arrow_PropertyFit_JoinedWhenFits()
+        {
+            const string source = """
+                public class Sample
+                {
+                    public int Value
+                        => m_Value;
+                    public int Next => m_Value + 1;
+                }
+                """;
+            var finding = Run("expression-arrow", source, settings => settings.Set("properties", "fit")).Single();
+            Assert.That((finding.Line, finding.EndLine), Is.EqualTo((3, 4)));
+            Assert.That(finding.Replacement, Is.EqualTo(new[] { "    public int Value => m_Value;" }));
+        }
+
+        [Test]
+        public void Arrow_PropertyFit_SplitWhenTooLong()
+        {
+            const string source = """
+                public class Sample
+                {
+                    public int Value => m_Value + 1;
+                    public int Next
+                        => m_Value + 2;
+                }
+                """;
+
+            // Строка 3 - 36 символов, Next одной строкой - 35: при max 34 первая переносится, вторая остается
+            var finding = Run(
+                "expression-arrow",
+                source,
+                settings =>
+                {
+                    settings.Set("properties", "fit");
+                    settings.Set("max", 34);
+                }).Single();
+            Assert.That(finding.Line, Is.EqualTo(3));
+            Assert.That(finding.Replacement, Is.EqualTo(new[] { "    public int Value", "        => m_Value + 1;" }));
+        }
+
+        [Test]
+        public void Arrow_PropertyFit_OnMaxBoundary()
+        {
+            const string source = """
+                public class Sample
+                {
+                    public int Value
+                        => m_Value + 1;
+                    public int Next => m_Value + 2;
+                }
+                """;
+
+            // Одной строкой: Value - 36 символов, Next - 35
+            Assert.That(GetFitLines(source, 36), Is.EqualTo(new[] { 3 }));
+            Assert.That(GetFitLines(source, 35), Is.Empty);
+            Assert.That(GetFitLines(source, 34), Is.EqualTo(new[] { 5 }));
+        }
+
+        [Test]
+        public void Arrow_SingleProperty_IgnoredOnlyWithParameter()
+        {
+            const string source = """
+                public class Sample
+                {
+                    private int m_Value;
+                    public int Value => m_Value;
+                    public void Reset() => m_Value = 0;
+                    public int First => 1;
+                    public int Second => 2;
+                }
+                """;
+            Assert.That(
+                Run("expression-arrow", source).Select(finding => finding.Line),
+                Is.EqualTo(new[] { 4, 6, 7 }));
+            Assert.That(
+                Run("expression-arrow", source, settings => settings.Set("ignoreSingle", true))
+                    .Select(finding => finding.Line),
+                Is.EqualTo(new[] { 6, 7 }));
+        }
+
+        private static List<int> GetFitLines(string source, int max)
+        {
+            return Run(
+                "expression-arrow",
+                source,
+                settings =>
+                {
+                    settings.Set("properties", "fit");
+                    settings.Set("max", max);
+                }).Select(finding => finding.Line).ToList();
+        }
+
 #endregion
 
 

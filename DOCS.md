@@ -65,7 +65,7 @@
 | [`explicit-private`](#explicit-private) | явный `private` у членов | да | `prefer`, `members` |
 | [`forbidden-modifier`](#forbidden-modifier) | запрещённые модификаторы | нет | `modifiers` |
 | [`custom-delegate`](#custom-delegate) | свой `delegate` вместо `Action` / `Func` | нет | — |
-| [`expression-arrow`](#expression-arrow) | место `=>` у члена с телом-выражением | да | `properties`, `methods`, `max` |
+| [`expression-arrow`](#expression-arrow) | место `=>` у члена с телом-выражением | да | `properties`, `methods`, `max`, `ignoreSingle` |
 | [`signature-wrap`](#signature-wrap) | сигнатура столбиком | да | `max`, `minParameters`, `initializerOnOwnLine` |
 | [`call-wrap`](#call-wrap) | длинный вызов столбиком | часть | `max` |
 | [`region-layout`](#region-layout) | пустые строки вокруг регионов | да | `inside`, `between`, `outside` |
@@ -4026,17 +4026,20 @@ public class Report
 
 #### `expression-arrow`
 
-Место `=>` у члена с телом-выражением. `=>` в конце строки — всегда находка. У свойства и индексатора (`properties: next-line`) — с новой строки, +4 к отступу члена. У метода, конструктора, оператора, локальной функции (`methods`): `fit` — в строке сигнатуры, если строка помещается в `max`, иначе на следующей; `next-line` — всегда с новой строки; `any` — любое.
+Место `=>` у члена с телом-выражением. `=>` в конце строки — всегда находка. У свойства и индексатора (`properties`): `next-line` — с новой строки, +4 к отступу члена; `fit` — в строке объявления, если строка помещается в `max`, иначе с новой строки; `any` — любое. При `properties: fit` находка и в обратную сторону: `=>` на строке после объявления, а свойство одной строкой помещается в `max`. У метода, конструктора, оператора, локальной функции (`methods`): `fit` — в строке сигнатуры, если строка помещается в `max`, иначе на следующей; `next-line` — всегда с новой строки; `any` — любое. Метод с `=>` на следующей строке при `methods: fit` находкой не считается.
 
-**Замена:** есть. Замена переносит `=>` и выражение на следующую строку с отступом +4, либо возвращает в строку сигнатуры.
+`ignoreSingle: true` — одиночное свойство не проверяется по `properties` (`=>` в конце строки остаётся находкой). Одиночное — свойство или индексатор с телом-выражением, у которого соседи не свойства и не индексаторы с телом-выражением. Соседи — ближайший член того же типа выше и ближайший ниже в порядке объявления, без учёта пустых строк, комментариев и `#region`; член первый или последний в типе — сосед с этой стороны отсутствует. Свойство с аксессорами (`{ get => …; }`) соседом-`=>`-свойством не считается.
+
+**Замена:** есть. Замена переносит `=>` и выражение на следующую строку с отступом +4, при `properties: fit` — собирает свойство в одну строку.
 
 **Параметры**
 
 | Параметр | Значения | По умолчанию | Описание |
 |---|---|---|---|
-| `properties` | `next-line` / `any` | `"next-line"` | свойства и индексаторы: next-line - '=>' с новой строки; any - любое |
-| `methods` | `fit` / `next-line` / `any` | `"fit"` | методы, конструкторы, операторы, локальные функции: fit - в строке сигнатуры, если помещается в max; next-line - всегда с новой строки; any - любое |
-| `max` | целое число | `120` | длина строки для methods: fit |
+| `properties` | `next-line` / `fit` / `any` | `"next-line"` | свойства и индексаторы: next-line - '=>' с новой строки; fit - в строке объявления, если помещается в max, иначе с новой строки, перенос, который помещается, собирается в одну строку; any - любое |
+| `methods` | `fit` / `next-line` / `any` | `"fit"` | методы, конструкторы, операторы, локальные функции: fit - в строке сигнатуры, если помещается в max, перенос не собирается; next-line - всегда с новой строки; any - любое |
+| `max` | целое число | `120` | длина строки для fit |
+| `ignoreSingle` | `true` / `false` | `false` | не проверять место '=>' у одиночного свойства: ближайшие члены типа выше и ниже - не '=>'-свойства |
 
 **Пример**
 
@@ -4137,6 +4140,66 @@ public class Report
 
     public int Twice()
         => m_Count * 2;
+}
+```
+
+**Вариант `properties: fit`, `ignoreSingle: true`**
+
+В примере `max` = 40. `Count` собирается в одну строку, `Total` в 40 не помещается и переносится. `Name` — одиночное свойство: сосед выше — метод `Reset()`, соседа ниже нет; не проверяется.
+
+Конфиг:
+
+```jsonc
+{ "checks": { "expression-arrow": { "severity": "warning", "properties": "fit", "max": 40, "ignoreSingle": true } } }
+```
+
+Было (`Demo.cs`):
+
+```csharp
+public class Report
+{
+    private int m_Count;
+
+    public int Count
+        => m_Count;
+    public int Total => m_Count + m_Count + m_Count;
+
+    public void Reset() => m_Count = 0;
+
+    public string Name
+        => "report";
+}
+```
+
+Находки (`--format md`):
+
+````markdown
+- 5-6: `expression-arrow` (warning) - '=>' свойства помещается в строку объявления
+  ```csharp
+      public int Count => m_Count;
+  ```
+- 7: `expression-arrow` (warning) - '=>' свойства - с новой строки
+  ```csharp
+      public int Total
+          => m_Count + m_Count + m_Count;
+  ```
+````
+
+Стало (`csr fix Demo.cs --config config.jsonc --apply`):
+
+```csharp
+public class Report
+{
+    private int m_Count;
+
+    public int Count => m_Count;
+    public int Total
+        => m_Count + m_Count + m_Count;
+
+    public void Reset() => m_Count = 0;
+
+    public string Name
+        => "report";
 }
 ```
 
