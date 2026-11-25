@@ -4,7 +4,8 @@ namespace CSR.Reports.Config
 {
     // structure.jsonc:
     // { "ownershipDepth": 3, "inheritanceDepth": 4, "godWmc": 47, "godAtfd": 5, "godTcc": 0.33,
-    //   "dumpSize": 30, "dumpCommunities": 8, "infrastructureHosts": 5, "registryVariants": 30, "top": 10 }
+    //   "dumpSize": 30, "dumpCommunities": 8, "infrastructureHosts": 5, "registryVariants": 30,
+    //   "minAssemblyLines": 0, "layerDepth": 0, "layers": { "Core": ["Core.*"] }, "top": 10 }
     public static class StructureConfig
     {
         public static readonly OptionTable<StructureOptions> Table = new OptionTable<StructureOptions>()
@@ -17,6 +18,9 @@ namespace CSR.Reports.Config
             .Add("dumpCommunities", OptionKinds.Count, (options, value) => options.DumpCommunities = value)
             .Add("infrastructureHosts", OptionKinds.Count, (options, value) => options.InfrastructureHosts = value)
             .Add("registryVariants", OptionKinds.Count, (options, value) => options.RegistryVariants = value)
+            .Add("minAssemblyLines", OptionKinds.Count, (options, value) => options.MinAssemblyLines = value)
+            .Add("layerDepth", OptionKinds.Count, (options, value) => options.LayerDepth = value)
+            .Add("layers", OptionKinds.StringLists, (options, value) => options.Layers = value)
             .Add("top", OptionKinds.Count, (options, value) => options.Top = value, "--top");
 
         public static StructureOptions Parse(string json)

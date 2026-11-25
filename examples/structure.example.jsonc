@@ -20,6 +20,18 @@
   "infrastructureHosts": 5,
   "registryVariants": 30,
 
+  // Сборка (ближайшая папка вверх с *.asmdef или *.csproj): меньше minAssemblyLines строк кода - отметка; 0 - выкл.
+  "minAssemblyLines": 0,
+
+  // Цепочка зависимостей между сборками одного слоя длиннее layerDepth - отметка; 0 - выкл.
+  "layerDepth": 0,
+
+  // Слои: имя слоя и маски имен его сборок (* - любые символы)
+  "layers": {
+    "Domain": ["Domain.*"],
+    "Presentation": ["Presentation.*", "Ui.*"]
+  },
+
   // Размер топов отчета
   "top": 10
 }

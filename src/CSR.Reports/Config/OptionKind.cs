@@ -38,6 +38,9 @@ namespace CSR.Reports.Config
 
         public static readonly OptionKind<List<string>> Strings = new() { ReadJson = JsonConfig.ReadStrings };
 
+        // Объект: имя -> массив строк
+        public static readonly OptionKind<Dictionary<string, List<string>>> StringLists = new() { ReadJson = ReadStringLists };
+
         // text - значение опции командной строки (в конфиге - null)
         private static ConfigException CreateError(string name, string expected, string? text = null)
         {
@@ -52,6 +55,15 @@ namespace CSR.Reports.Config
                 ReadJson = (element, path) => Require(ReadInt(element), value => value >= min, path, expected),
                 ParseText = (text, name) => Require(ParseInt(text), value => value >= min, name, expected, text),
             };
+        }
+
+        private static Dictionary<string, List<string>> ReadStringLists(JsonElement element, string path)
+        {
+            JsonConfig.RequireObject(element, path);
+            var result = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+            foreach (var property in element.EnumerateObject())
+                result[property.Name] = JsonConfig.ReadStrings(property.Value, $"{path}.{property.Name}");
+            return result;
         }
 
         // null - значение не того вида

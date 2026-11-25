@@ -32,6 +32,18 @@ namespace CSR.Reports.Structure
                 .OrderByDescending(package => package.Types.Count);
         }
 
+        public IEnumerable<AssemblyMetrics> GetSmallAssemblies()
+        {
+            return Result.Assemblies.Where(assembly => assembly.IsSmall(Options))
+                .OrderBy(assembly => assembly.Lines);
+        }
+
+        public IEnumerable<LayerChain> GetDeepLayers()
+            => Result.LayerChains.Where(chain => chain.IsDeep(Options));
+
+        public static string FormatLayerChain(LayerChain chain)
+            => string.Join(" -> ", chain.Steps.Select(step => string.Join(" + ", step)));
+
         public static string FormatShare(double value)
             => value.ToString("0.00", CultureInfo.InvariantCulture);
 
@@ -94,6 +106,8 @@ namespace CSR.Reports.Structure
                 WritePackages(writer, "namespaces", result.Namespaces, options);
                 WriteCycles(writer, "folderCycles", result.FolderCycles);
                 WriteCycles(writer, "namespaceCycles", result.NamespaceCycles);
+                WriteAssemblies(writer, result.Assemblies, options);
+                WriteLayers(writer, result.LayerChains, options);
                 writer.WriteEndObject();
             }
 
@@ -197,6 +211,60 @@ namespace CSR.Reports.Structure
             writer.WriteEndArray();
         }
 
+        private static void WriteAssemblies(
+            Utf8JsonWriter writer,
+            IReadOnlyList<AssemblyMetrics> assemblies,
+            StructureOptions options)
+        {
+            writer.WriteStartObject("assemblies");
+            writer.WriteNumber("minLines", options.MinAssemblyLines);
+            writer.WriteStartArray("items");
+            foreach (var assembly in assemblies)
+            {
+                writer.WriteStartObject();
+                writer.WriteString("name", assembly.Name);
+                writer.WriteNumber("lines", assembly.Lines);
+                writer.WriteNumber("types", assembly.Types);
+                writer.WriteStartArray("dependencies");
+                foreach (var dependency in assembly.Dependencies)
+                    writer.WriteStringValue(dependency);
+                writer.WriteEndArray();
+                writer.WriteBoolean("small", assembly.IsSmall(options));
+                writer.WriteEndObject();
+            }
+
+            writer.WriteEndArray();
+            writer.WriteEndObject();
+        }
+
+        private static void WriteLayers(Utf8JsonWriter writer, IReadOnlyList<LayerChain> chains, StructureOptions options)
+        {
+            writer.WriteStartObject("layers");
+            writer.WriteNumber("threshold", options.LayerDepth);
+            writer.WriteStartArray("items");
+            foreach (var chain in chains)
+            {
+                writer.WriteStartObject();
+                writer.WriteString("name", chain.Layer);
+                writer.WriteNumber("depth", chain.Depth);
+                writer.WriteBoolean("deep", chain.IsDeep(options));
+                writer.WriteStartArray("chain");
+                foreach (var step in chain.Steps)
+                {
+                    writer.WriteStartArray();
+                    foreach (var assembly in step)
+                        writer.WriteStringValue(assembly);
+                    writer.WriteEndArray();
+                }
+
+                writer.WriteEndArray();
+                writer.WriteEndObject();
+            }
+
+            writer.WriteEndArray();
+            writer.WriteEndObject();
+        }
+
         private static void WriteNode(Utf8JsonWriter writer, string name, TypeNode node)
         {
             writer.WriteStartObject(name);
@@ -230,13 +298,16 @@ namespace CSR.Reports.Structure
                 + $"наследование глубже {options.InheritanceDepth} - {report.GetDeepInheritance().Count()}, "
                 + $"объектов-богов - {gods.Count}, "
                 + $"свалок (папки) - {folderDumps.Count}, циклов папок - {result.FolderCycles.Count}, "
-                + $"циклов пространств - {result.NamespaceCycles.Count}.");
+                + $"циклов пространств - {result.NamespaceCycles.Count}"
+                + $"{FormatAssemblyMarks(report)}.");
 
             WriteOwnership(text, result.Ownership, options);
             WriteGods(text, gods, options);
             WriteCycles(text, "Циклы папок", result.FolderCycles, options.Top);
             WriteCycles(text, "Циклы пространств имен", result.NamespaceCycles, options.Top);
             WriteDumps(text, folderDumps, options.Top);
+            WriteAssemblies(text, report);
+            WriteLayers(text, report);
             WriteTypes(
                 text,
                 "Глубина наследования",
@@ -311,6 +382,56 @@ namespace CSR.Reports.Structure
                     + $"изолированных {StructureReport.FormatShare(package.IsolatedShare)}, "
                     + $"модулярность {StructureReport.FormatShare(package.Modularity)}, "
                     + $"внешних ребер {StructureReport.FormatShare(package.ExternalShare)}");
+            }
+        }
+
+        // Отметки сборок и слоев - только при заданном пороге
+        private static string FormatAssemblyMarks(StructureReport report)
+        {
+            var options = report.Options;
+            var marks = new StringBuilder();
+            if (options.MinAssemblyLines > 0)
+                marks.Append($", сборок меньше {options.MinAssemblyLines} строк - {report.GetSmallAssemblies().Count()}");
+            if (options.LayerDepth > 0)
+                marks.Append($", слоев глубже {options.LayerDepth} - {report.GetDeepLayers().Count()}");
+            return marks.ToString();
+        }
+
+        // Сборки по возрастанию размера; без сборок в цели - раздела нет
+        private static void WriteAssemblies(StringBuilder text, StructureReport report)
+        {
+            var result = report.Result;
+            var options = report.Options;
+            if (result.Assemblies.Count == 0)
+                return;
+
+            text.AppendLine();
+            var threshold = options.MinAssemblyLines > 0 ? $" (порог {options.MinAssemblyLines} строк)" : "";
+            text.AppendLine($"## Сборки{threshold}: {result.Assemblies.Count}");
+            text.AppendLine();
+            foreach (var assembly in result.Assemblies.OrderBy(assembly => assembly.Lines).TakeTop(options.Top))
+            {
+                var mark = assembly.IsSmall(options) ? " **меньше порога**" : "";
+                var dependencies = string.Join(", ", assembly.Dependencies.Select(name => $"`{name}`"));
+                text.AppendLine($"- `{assembly.Name}`{mark}: строк {assembly.Lines}, типов {assembly.Types}, "
+                    + $"зависит от {assembly.Dependencies.Count}{(dependencies.Length > 0 ? ": " : "")}{dependencies}");
+            }
+        }
+
+        private static void WriteLayers(StringBuilder text, StructureReport report)
+        {
+            var options = report.Options;
+            if (report.Result.LayerChains.Count == 0)
+                return;
+
+            text.AppendLine();
+            var threshold = options.LayerDepth > 0 ? $" (порог {options.LayerDepth})" : "";
+            text.AppendLine($"## Глубина зависимостей в слое{threshold}");
+            text.AppendLine();
+            foreach (var chain in report.Result.LayerChains)
+            {
+                var mark = chain.IsDeep(options) ? " **глубже порога**" : "";
+                text.AppendLine($"- `{chain.Layer}`: {chain.Depth}{mark}: {StructureReport.FormatLayerChain(chain)}");
             }
         }
 

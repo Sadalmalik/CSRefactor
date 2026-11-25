@@ -136,13 +136,62 @@ namespace CSR.Core.Tests.Structure
             Assert.That(checks.Distance, Is.EqualTo(0));
         }
 
+        // Сборка - первая папка пути; цикл D <-> E сжат в один шаг, X вне слоя
+        [Test]
+        public void Assemblies_LinesDependenciesAndLayerChain()
+        {
+            var options = new StructureOptions
+            {
+                MinAssemblyLines = 2,
+                LayerDepth = 2,
+                Layers = new Dictionary<string, List<string>> { ["Game"] = ["A", "B", "C", "D", "E"] },
+            };
+            var result = Analyze(
+                options,
+                path => path.Contains('/') ? path.Split('/')[0] : null,
+                In("A/A.cs", """
+                    public class A
+                    {
+                        private B m_B;
+                    }
+                    """),
+                In("B/B.cs", "public class B { private C m_C; }"),
+                In("C/C.cs", "public class C { }"),
+                In("D/D.cs", "public class D { private E m_E; }"),
+                In("E/E.cs", "public class E { private D m_D; private A m_A; }"),
+                In("X/X.cs", "public class X { private A m_A; }"),
+                In("Loose.cs", "public class Loose { private A m_A; }"));
+
+            Assert.That(
+                result.Assemblies.Select(assembly => assembly.Name),
+                Is.EqualTo(new[] { "A", "B", "C", "D", "E", "X" }));
+            var a = result.Assemblies[0];
+            Assert.That((a.Lines, a.Types), Is.EqualTo((4, 1)));
+            Assert.That(a.Dependencies, Is.EqualTo(new[] { "B" }));
+            Assert.That(result.Assemblies[4].Dependencies, Is.EqualTo(new[] { "A", "D" }));
+            Assert.That(result.Assemblies.Count(assembly => assembly.IsSmall(options)), Is.EqualTo(5));
+
+            var chain = result.LayerChains.Single();
+            Assert.That(chain.Layer, Is.EqualTo("Game"));
+            Assert.That(chain.Depth, Is.EqualTo(3));
+            Assert.That(chain.Steps, Is.EqualTo(new[] { new[] { "D", "E" }, ["A"], ["B"], ["C"] }));
+            Assert.That(chain.IsDeep(options), Is.True);
+            Assert.That(chain.IsDeep(new StructureOptions()), Is.False);
+        }
+
         private static StructureResult Analyze(StructureOptions options, params SourceFile[] files)
+            => Analyze(options, _ => null, files);
+
+        private static StructureResult Analyze(
+            StructureOptions options,
+            Func<string, string?> getAssembly,
+            params SourceFile[] files)
         {
             var trees = files.Select(file => CSharpSyntaxTree.ParseText(file.Text, path: file.Path)).ToList();
             var references = new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) };
             var compilation = CSharpCompilation.Create("test", trees, references);
             var graph = TypeGraphBuilder.Build([compilation], trees, path => path, CancellationToken.None);
-            return StructureAnalysis.Run(graph, [compilation], trees, options, CancellationToken.None);
+            return StructureAnalysis.Run(graph, [compilation], trees, getAssembly, options, CancellationToken.None);
         }
 
         private static SourceFile In(string path, string text)

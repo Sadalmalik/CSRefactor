@@ -5,7 +5,7 @@ using CSR.Reports.Structure;
 namespace CSR.Commands
 {
     // csr structure: структурные метрики на графе типов - глубина владения и наследования, объекты-боги, циклы и
-    // свалки папок и пространств имен, концентраторы. Ничего не пишет рядом с кодом
+    // свалки папок и пространств имен, концентраторы, размер сборок, глубина слоя. Ничего не пишет рядом с кодом
     public static class StructureCommand
     {
         public const string Usage = """
@@ -19,6 +19,7 @@ namespace CSR.Commands
               --out <файл>                 записать отчет в файл вместо stdout
 
             Граф типов строится на компиляции файлов цели без загрузки решения: типы сторонних библиотек не разрешены.
+            Сборка файла - ближайшая папка вверх с *.asmdef или *.csproj; размер сборки - строки кода ее файлов в цели.
             Коды возврата: 0 - успех (отметки ошибкой не считаются), 2 - ошибка запуска
             """;
 
@@ -43,6 +44,7 @@ namespace CSR.Commands
                 source.Graph,
                 [source.Compilation],
                 source.Trees,
+                new AssemblyFiles(source.Trees.Select(tree => tree.FilePath)).Get,
                 options,
                 CancellationToken.None);
             var report = new StructureReport { FileCount = run.Files.Count, Options = options, Result = result };

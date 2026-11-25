@@ -31,6 +31,15 @@ namespace CSR.Core.Structure
         // База вариантов с большим числом вариантов - реестр (части сущности, обработчики событий): не уровень
         public int RegistryVariants { get; set; } = 30;
 
+        // Сборка меньше MinAssemblyLines строк кода - отметка; 0 - без отметок
+        public int MinAssemblyLines { get; set; }
+
+        // Цепочка зависимостей между сборками одного слоя длиннее LayerDepth - отметка; 0 - без отметок
+        public int LayerDepth { get; set; }
+
+        // Слои: имя слоя и маски имен его сборок
+        public Dictionary<string, List<string>> Layers { get; set; } = new(StringComparer.Ordinal);
+
         // Размер топов отчета
         public int Top { get; set; } = 10;
     }
@@ -77,6 +86,10 @@ namespace CSR.Core.Structure
 
         public required IReadOnlyList<PackageCycle> NamespaceCycles { get; init; }
 
+        public required IReadOnlyList<AssemblyMetrics> Assemblies { get; init; }
+
+        public required IReadOnlyList<LayerChain> LayerChains { get; init; }
+
         public IEnumerable<TypeMetrics> GetGods(StructureOptions options)
         {
             return Types.Where(type => type.IsGod(options))
@@ -92,13 +105,15 @@ namespace CSR.Core.Structure
         }
     }
 
-    // Структурные метрики по графу типов: типы, владение, папки и пространства имен, циклы
+    // Структурные метрики по графу типов: типы, владение, папки и пространства имен, циклы, сборки и слои
     public static class StructureAnalysis
     {
+        // getAssembly - сборка файла по пути дерева или null (файл вне сборок)
         public static StructureResult Run(
             TypeGraph graph,
             IReadOnlyList<Compilation> compilations,
             IReadOnlyCollection<SyntaxTree> trees,
+            Func<string, string?> getAssembly,
             StructureOptions options,
             CancellationToken cancellation)
         {
@@ -117,6 +132,7 @@ namespace CSR.Core.Structure
                     Facts = facts.TryGetValue(node, out TypeFacts? fact) ? fact : null,
                 })
                 .ToList();
+            var assemblies = AssemblyMetrics.Build(graph, trees, getAssembly);
 
             return new StructureResult
             {
@@ -127,6 +143,8 @@ namespace CSR.Core.Structure
                 Namespaces = PackageMetrics.Build(graph, node => node.Namespace),
                 FolderCycles = PackageCycle.Find(graph, GetFolder),
                 NamespaceCycles = PackageCycle.Find(graph, node => node.Namespace),
+                Assemblies = assemblies,
+                LayerChains = LayerChain.Find(assemblies, options.Layers),
             };
         }
 
