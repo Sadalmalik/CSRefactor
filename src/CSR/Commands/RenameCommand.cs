@@ -60,7 +60,7 @@ namespace CSR.Commands
             Validate(commandLine);
             var format = commandLine.GetOption("--format") ?? "diff";
 
-            var options = LoadOptions(commandLine, context);
+            var options = context.CreateConfigs(commandLine).LoadRefactor();
             var settings = new RenameSettings
             {
                 Migrate = commandLine.HasFlag("--migrate"),
@@ -107,14 +107,6 @@ namespace CSR.Commands
                 return RenameStatus.Blocked;
 
             return RenameStatus.Applied;
-        }
-
-        // Явный --config (от папки вызова), иначе .csr/refactor.jsonc от папки решения, иначе config/ у csr.exe
-        internal static RefactorOptions LoadOptions(CommandLine commandLine, WorkspaceContext context)
-        {
-            var configs = new CommandConfigTool(commandLine, context.WorkingDirectory, context.Solution.Root, context.Error);
-            var text = configs.Read("refactor.jsonc");
-            return text == null ? new RefactorOptions() : RefactorConfig.Parse(text);
         }
     }
 }

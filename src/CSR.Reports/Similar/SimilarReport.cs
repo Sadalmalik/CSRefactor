@@ -5,6 +5,7 @@ using System.Text.Json;
 using CSR.Core.Config;
 using CSR.Core.Graph;
 using CSR.Core.Similar;
+using CSR.Core.Text;
 
 namespace CSR.Reports.Similar
 {
@@ -293,10 +294,7 @@ namespace CSR.Reports.Similar
         }
 
         private static string JoinShort(IReadOnlyList<string> values)
-        {
-            var shown = string.Join(", ", values.Take(ShownElements).Select(value => $"`{value}`"));
-            return values.Count > ShownElements ? $"{shown} и еще {values.Count - ShownElements}" : shown;
-        }
+            => FindingTextTools.JoinNames(values.Select(value => $"`{value}`").ToList(), ShownElements);
 
         private static string GetKindTitle(UnitKind kind)
         {

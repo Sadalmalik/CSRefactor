@@ -1,5 +1,5 @@
-using CSR.Core.Checks;
 using CSR.Core.Graph;
+using CSR.Core.Text;
 
 namespace CSR.Core.Similar
 {

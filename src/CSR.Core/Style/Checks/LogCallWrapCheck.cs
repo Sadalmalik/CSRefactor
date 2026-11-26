@@ -1,5 +1,6 @@
 using CSR.Core.Checks;
 using CSR.Core.Syntax;
+using CSR.Core.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
@@ -29,17 +30,17 @@ namespace CSR.Core.Style.Checks
         public override void Analyze(CheckContext context)
         {
             var maxLength = context.Settings.GetInt("maxLength");
-            var lines = context.Text.Lines;
+            var text = context.Text;
             foreach (var invocation in context.Root.DescendantNodes().OfType<InvocationExpressionSyntax>())
             {
-                var first = lines.GetLineFromPosition(invocation.SpanStart).LineNumber;
-                var last = lines.GetLineFromPosition(invocation.Span.End).LineNumber;
+                var first = TextLayout.GetLineNumber(text, invocation.SpanStart);
+                var last = TextLayout.GetLineNumber(text, invocation.Span.End);
                 if (!LoggerCallTool.IsLoggerCall(context, invocation))
                     continue;
 
                 if (first == last)
                 {
-                    var length = lines[first].Span.Length;
+                    var length = text.Lines[first].Span.Length;
                     var message = $"лог в строке длиннее {maxLength}: {length} - сократить текст";
                     if (maxLength > 0 && length > maxLength)
                         context.Report(invocation.Span, message);
@@ -48,10 +49,10 @@ namespace CSR.Core.Style.Checks
                 }
 
                 var arguments = invocation.ArgumentList;
-                var openLine = lines.GetLineFromPosition(arguments.OpenParenToken.SpanStart).LineNumber;
+                var openLine = TextLayout.GetLineNumber(text, arguments.OpenParenToken.SpanStart);
                 var argumentsLine = arguments.Arguments.Count == 0
                     ? last
-                    : lines.GetLineFromPosition(arguments.Arguments[0].SpanStart).LineNumber;
+                    : TextLayout.GetLineNumber(text, arguments.Arguments[0].SpanStart);
 
                 if (openLine != first || argumentsLine != first + 1)
                 {
@@ -84,8 +85,8 @@ namespace CSR.Core.Style.Checks
             while (token != arguments.CloseParenToken)
             {
                 var next = token.GetNextToken();
-                var line = Text.TextLayout.GetLineNumber(text, token.SpanStart);
-                bool isBreak = Text.TextLayout.GetLineNumber(text, next.SpanStart) > line;
+                var line = TextLayout.GetLineNumber(text, token.SpanStart);
+                bool isBreak = TextLayout.GetLineNumber(text, next.SpanStart) > line;
                 if (isBreak && !allowed.Contains(token))
                     return "вызов лога не в одну строку";
 
@@ -103,7 +104,7 @@ namespace CSR.Core.Style.Checks
         {
             var lastLine = text.Lines.GetLineFromPosition(parts[parts.Count - 1].Span.End);
             var tail = lastLine.End - parts[parts.Count - 1].Span.End;
-            return Text.TextLayout.GetColumn(text, parts[0].SpanStart) + SplitText.GetJoinedLength(parts) + tail;
+            return TextLayout.GetColumn(text, parts[0].SpanStart) + SplitText.GetJoinedLength(parts) + tail;
         }
     }
 }

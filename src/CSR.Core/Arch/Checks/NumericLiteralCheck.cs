@@ -1,6 +1,7 @@
 using System.Globalization;
 using CSR.Core.Checks;
 using CSR.Core.Syntax;
+using CSR.Core.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;

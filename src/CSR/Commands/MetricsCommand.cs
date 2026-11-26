@@ -33,7 +33,7 @@ namespace CSR.Commands
         };
 
         public static int Run(IEnumerable<string> args)
-            => FileCommandTool.Run(Command, args);
+            => Command.Run(args);
 
         private static FileResult Analyze(FileRun run)
         {

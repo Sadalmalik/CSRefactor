@@ -1,6 +1,7 @@
 using CSR.Core.Checks;
 using CSR.Core.Config;
 using CSR.Reports.Config;
+using CSR.Workspace.Refactor;
 
 namespace CSR.Commands
 {
@@ -45,6 +46,13 @@ namespace CSR.Commands
         {
             var text = Read("--project", "project.jsonc");
             return text == null ? new ProjectOptions() : ProjectConfig.Parse(text);
+        }
+
+        // refactor.jsonc (--config): явный, проектный, иначе по умолчанию; нет ни одного - настройки по умолчанию
+        public RefactorOptions LoadRefactor()
+        {
+            var text = Read("refactor.jsonc");
+            return text == null ? new RefactorOptions() : RefactorConfig.Parse(text);
         }
 
         // Одиночный конфиг команды (--config): текст или null - нет ни явного, ни найденного

@@ -5,6 +5,7 @@ using System.Text.Json;
 using CSR.Core.Config;
 using CSR.Core.Graph;
 using CSR.Core.Structure;
+using CSR.Core.Text;
 
 namespace CSR.Reports.Structure
 {
@@ -359,9 +360,8 @@ namespace CSR.Reports.Structure
             foreach (var cycle in cycles.TakeTop(top))
             {
                 text.AppendLine();
-                var names = string.Join(", ", cycle.Packages.Take(8).Select(name => $"`{name}`"));
-                var more = cycle.Packages.Count > 8 ? $" и еще {cycle.Packages.Count - 8}" : "";
-                text.AppendLine($"- пакетов {cycle.Packages.Count}: {names}{more}");
+                var names = FindingTextTools.JoinNames(cycle.Packages.Select(name => $"`{name}`").ToList());
+                text.AppendLine($"- пакетов {cycle.Packages.Count}: {names}");
                 foreach (var link in cycle.Links.Take(ShownLinks))
                 {
                     var reverse = link.Reverse > 0 ? $" (обратно {link.Reverse})" : "";

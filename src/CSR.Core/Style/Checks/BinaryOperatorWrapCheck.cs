@@ -33,16 +33,16 @@ namespace CSR.Core.Style.Checks
         {
             bool preferLeading = context.Settings.GetString("prefer") == "leading";
             var operators = context.Settings.GetStrings("operators");
-            var lines = context.Text.Lines;
+            var text = context.Text;
             foreach (var binary in context.Root.DescendantNodes().OfType<BinaryExpressionSyntax>())
             {
                 var token = binary.OperatorToken;
                 if (!operators.Contains(token.Text))
                     continue;
 
-                var leftLine = lines.GetLineFromPosition(binary.Left.Span.End).LineNumber;
-                var operatorLine = lines.GetLineFromPosition(token.SpanStart).LineNumber;
-                var rightLine = lines.GetLineFromPosition(binary.Right.SpanStart).LineNumber;
+                var leftLine = TextLayout.GetLineNumber(text, binary.Left.Span.End);
+                var operatorLine = TextLayout.GetLineNumber(text, token.SpanStart);
+                var rightLine = TextLayout.GetLineNumber(text, binary.Right.SpanStart);
                 if (preferLeading && leftLine == operatorLine && operatorLine < rightLine)
                 {
                     var message = $"'{token.Text}' в конце строки - перенести в начало следующей";

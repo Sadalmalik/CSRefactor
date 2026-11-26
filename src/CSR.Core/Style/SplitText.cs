@@ -1,3 +1,4 @@
+using CSR.Core.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -22,9 +23,9 @@ namespace CSR.Core.Style
 
             for (var i = 0; i < operators.Count; i++)
             {
-                var operatorLine = Text.TextLayout.GetLineNumber(text, operators[i].SpanStart);
-                bool isLineEnd = Text.TextLayout.GetLineNumber(text, parts[i].Span.End) == operatorLine
-                    && Text.TextLayout.GetLineNumber(text, parts[i + 1].SpanStart) > operatorLine;
+                var operatorLine = TextLayout.GetLineNumber(text, operators[i].SpanStart);
+                bool isLineEnd = TextLayout.GetLineNumber(text, parts[i].Span.End) == operatorLine
+                    && TextLayout.GetLineNumber(text, parts[i + 1].SpanStart) > operatorLine;
                 if (!isLineEnd)
                     return null;
             }

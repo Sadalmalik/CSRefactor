@@ -29,6 +29,7 @@ namespace CSR.Workspace.Refactor
             var subject = SymbolText.Qualified(member);
             var targetName = SymbolText.Qualified(target);
             var solution = loaded.Current;
+            target = await GetInMemberCompilationAsync(solution, member, target, cancellation);
             var refusal = GetRefusal(member, target, options);
             if (refusal != null)
                 return RefactorPlan.Refuse(Command, subject, targetName, refusal);
@@ -51,6 +52,22 @@ namespace CSR.Workspace.Refactor
                 Notes = move.Notes,
                 Solution = after,
             };
+        }
+
+        // Тип-приемник из компиляции члена: в проекте с несколькими платформами член и приемник могут прийти
+        // из компиляций разных платформ, и сравнение символов не находит совпадений
+        private static async Task<INamedTypeSymbol> GetInMemberCompilationAsync(
+            Solution solution,
+            ISymbol member,
+            INamedTypeSymbol target,
+            CancellationToken cancellation)
+        {
+            var tree = member.DeclaringSyntaxReferences.FirstOrDefault()?.SyntaxTree;
+            if (tree == null || solution.GetDocument(tree) is not { } document)
+                return target;
+
+            var compilation = (await document.Project.GetCompilationAsync(cancellation))!;
+            return SymbolFinder.FindSimilarSymbols(target, compilation).FirstOrDefault() ?? target;
         }
 
         private static string? GetRefusal(ISymbol member, INamedTypeSymbol target, RefactorOptions options)
@@ -110,7 +127,7 @@ namespace CSR.Workspace.Refactor
             private readonly ISymbol m_Member;
             private readonly INamedTypeSymbol m_Target;
             private readonly INamedTypeSymbol m_Source;
-            private readonly Dictionary<DocumentId, DocumentEdit> m_Edits = new();
+            private readonly Dictionary<string, DocumentEdit> m_Edits = new(StringComparer.OrdinalIgnoreCase);
             private MemberDeclarationSyntax m_Declaration = null!;
             private TypeDeclarationSyntax m_TargetDeclaration = null!;
             private SemanticModel m_SourceModel = null!;
@@ -177,15 +194,16 @@ namespace CSR.Workspace.Refactor
                 var sourceEdit = await GetEditAsync(sourceDocument, cancellation);
                 sourceEdit.RemoveLines(SourceLines.GetNodeLines(sourceEdit.Text, m_Declaration));
                 targetEdit.Insert(insertion, BuildMemberText(targetModel, insertion, targetEdit.Text));
-                EditUsings(targetEdit, sourceEdit, sourceDocument.Id == targetDocument.Id);
+                if (sourceEdit != targetEdit)
+                    EditUsings(targetEdit, sourceEdit);
 
-                // Связанные документы (тот же файл в проекте другой платформы) получают тот же текст
+                // Текст файла - во все его документы (копии файла в проектах других платформ)
                 var after = m_Solution;
-                foreach (var (id, edit) in m_Edits)
+                foreach (var (path, edit) in m_Edits)
                 {
                     var text = edit.Apply();
-                    foreach (var linked in m_Solution.GetDocument(id)!.GetLinkedDocumentIds().Prepend(id))
-                        after = after.WithDocumentText(linked, text);
+                    foreach (var id in m_Solution.GetDocumentIdsWithFilePath(path))
+                        after = after.WithDocumentText(id, text);
                 }
 
                 return after;
@@ -297,7 +315,8 @@ namespace CSR.Workspace.Refactor
                     return;
                 }
 
-                // Тип-приемник из компиляции документа: в проекте другой платформы это другой символ
+                // Тип-приемник из компиляции документа: в проекте другой платформы это другой символ. Не найден - проект
+                // документа не видит приемник: квалификатор не скомпилируется, это покажет проверка компиляцией
                 var targetType = SymbolFinder.FindSimilarSymbols(m_Target, model.Compilation).FirstOrDefault() ?? m_Target;
                 var target = targetType.ToMinimalDisplayString(model, name.SpanStart);
                 switch (name.Parent)
@@ -450,25 +469,23 @@ namespace CSR.Workspace.Refactor
 
 #region Директивы using
 
-            // В файл приемника - директивы исходного файла, нужные члену; из исходного - ставшие лишними
-            private void EditUsings(DocumentEdit targetEdit, DocumentEdit sourceEdit, bool isSameDocument)
+            // Перенос в другой файл: в файл приемника - директивы исходного файла, нужные члену; из исходного -
+            // ставшие лишними. В том же файле директивы не меняются
+            private void EditUsings(DocumentEdit targetEdit, DocumentEdit sourceEdit)
             {
                 var sourceRoot = (CompilationUnitSyntax)m_Declaration.SyntaxTree.GetRoot();
                 var moved = UsingAnalysis.Collect(m_SourceModel, [m_Declaration]);
-                if (!isSameDocument)
-                {
-                    var targetRoot = (CompilationUnitSyntax)m_TargetDeclaration.SyntaxTree.GetRoot();
-                    var present = targetRoot.Usings.Select(item => item.ToString()).ToHashSet();
-                    var missing = sourceRoot.Usings
-                        .Where(item => item.GlobalKeyword == default)
-                        .Where(item => UsingAnalysis.IsNeeded(m_SourceModel, item, moved))
-                        .Where(item => !IsTargetNamespace(item))
-                        .Select(item => item.ToString())
-                        .Where(item => !present.Contains(item))
-                        .ToList();
-                    if (missing.Count > 0)
-                        InsertUsings(targetEdit, targetRoot, missing);
-                }
+                var targetRoot = (CompilationUnitSyntax)m_TargetDeclaration.SyntaxTree.GetRoot();
+                var present = targetRoot.Usings.Select(item => item.ToString()).ToHashSet();
+                var missing = sourceRoot.Usings
+                    .Where(item => item.GlobalKeyword == default)
+                    .Where(item => UsingAnalysis.IsNeeded(m_SourceModel, item, moved))
+                    .Where(item => !IsTargetNamespace(item))
+                    .Select(item => item.ToString())
+                    .Where(item => !present.Contains(item))
+                    .ToList();
+                if (missing.Count > 0)
+                    InsertUsings(targetEdit, targetRoot, missing);
 
                 var rest = sourceRoot.Members.Concat<SyntaxNode>(sourceRoot.AttributeLists);
                 var remaining = UsingAnalysis.Collect(m_SourceModel, rest, m_Declaration);
@@ -511,15 +528,14 @@ namespace CSR.Workspace.Refactor
 
 #endregion
 
-            // Одна правка на файл: связанные документы (копии файла в проектах других платформ) делят правку
+            // Одна правка на файл: копии файла в проектах других платформ делят правку
             private async Task<DocumentEdit> GetEditAsync(Document document, CancellationToken cancellation)
             {
-                var id = document.GetLinkedDocumentIds().Prepend(document.Id).FirstOrDefault(m_Edits.ContainsKey);
-                if (id != null)
-                    return m_Edits[id];
+                if (m_Edits.TryGetValue(document.FilePath!, out DocumentEdit? edit))
+                    return edit;
 
-                var edit = new DocumentEdit(await document.GetTextAsync(cancellation));
-                m_Edits[document.Id] = edit;
+                edit = new DocumentEdit(await document.GetTextAsync(cancellation));
+                m_Edits[document.FilePath!] = edit;
                 return edit;
             }
 

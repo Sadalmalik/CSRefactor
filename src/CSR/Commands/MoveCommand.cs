@@ -84,7 +84,7 @@ namespace CSR.Commands
             if (targets[0] is not INamedTypeSymbol target)
                 throw new UsageException($"move: --to {to} - не тип");
 
-            var options = RenameCommand.LoadOptions(commandLine, context);
+            var options = context.CreateConfigs(commandLine).LoadRefactor();
             var plan = await MemberMover.PlanAsync(context.Solution, symbols[0], target, options, verify, cancellation);
             return RefactorOutput.Finish(context, plan, commandLine, format);
         }

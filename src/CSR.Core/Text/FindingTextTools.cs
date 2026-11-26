@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis;
 
-namespace CSR.Core.Checks
+namespace CSR.Core.Text
 {
     // Текст сообщений находок: перечисление имен, узел в одну строку
     public static class FindingTextTools

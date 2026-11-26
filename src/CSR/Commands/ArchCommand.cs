@@ -57,7 +57,7 @@ namespace CSR.Commands
             if (commandLine.GetOption("--solution") != null || commandLine.GetOptions("--projects").Count > 0)
                 return WorkspaceCommandTools.Run("arch", arguments, OptionNames, FlagNames, ValidateSolutionMode);
 
-            return FileCommandTool.Run(FileModeCommand, arguments);
+            return FileModeCommand.Run(arguments);
         }
 
         private static FileResult AnalyzeFiles(FileRun run)

@@ -48,7 +48,7 @@ namespace CSR.Workspace.Tests
 
             """;
 
-        // Источник с членом, которому нужен using исходного файла
+        // Источник с членом, которому нужен using исходного файла; Marks - приемник в том же файле
         private const string Flags = """
             using System.Text;
 
@@ -58,6 +58,10 @@ namespace CSR.Workspace.Tests
                 {
                     public static string Join(string text)
                         => new StringBuilder(text).ToString();
+                }
+
+                public static class Marks
+                {
                 }
             }
 
@@ -140,6 +144,19 @@ namespace CSR.Workspace.Tests
             Assert.That(modes, Does.Contain("using System.Linq;\nusing System.Text;\n"));
             Assert.That(modes, Does.Contain("        => 1;\n\n    public static string Join(string text)\n"));
             Assert.That(modes.Split("\r\n").Length - 1, Is.EqualTo(1));
+            Assert.That(plan.Compile!.NewErrors, Is.Empty);
+        }
+
+        // Приемник в том же файле: using, нужный только члену, остается
+        [Test]
+        public async Task SameFile_UsingsKept()
+        {
+            var plan = await PlanAsync("Sample.Items.Flags.Join", "Sample.Items.Marks");
+
+            Assert.That(plan.Refusal, Is.Null);
+            var flags = GetText(plan, "Game/Flags.cs");
+            Assert.That(flags, Does.StartWith("using System.Text;\n"));
+            Assert.That(flags, Does.Contain("public static class Marks\n    {\n        public static string Join("));
             Assert.That(plan.Compile!.NewErrors, Is.Empty);
         }
 

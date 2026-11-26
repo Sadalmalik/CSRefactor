@@ -190,5 +190,9 @@ namespace CSR.Commands
         public TextWriter Output { get; }
 
         public TextWriter Error { get; }
+
+        // Конфиги команды: пути - от папки вызова, проектный слой - от папки решения
+        public CommandConfigTool CreateConfigs(CommandLine commandLine)
+            => new(commandLine, WorkingDirectory, Solution.Root, Error);
     }
 }
