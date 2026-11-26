@@ -2,7 +2,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace CSR.Core.Text
 {
-    // Геометрия строк для правок, которые вставляют и переносят текст: отступ, перевод строки, сдвиг отступа
+    // Геометрия строк: номер, текст, длина и колонка позиции, отступ, перевод строки, сдвиг отступа
     public static class TextLayout
     {
         // Отступ строки, в которой стоит позиция
@@ -46,5 +46,23 @@ namespace CSR.Core.Text
 
             return content.StartsWith(from, StringComparison.Ordinal) ? to + content.Substring(from.Length) : content;
         }
+
+        public static int GetLineNumber(SourceText text, int position)
+            => text.Lines.GetLineFromPosition(position).LineNumber;
+
+        public static string GetLine(SourceText text, int lineNumber)
+            => text.Lines[lineNumber].ToString();
+
+        // Длина строки, в которой стоит позиция
+        public static int GetLineLength(SourceText text, int position)
+            => text.Lines.GetLineFromPosition(position).Span.Length;
+
+        // Колонка позиции с 0
+        public static int GetColumn(SourceText text, int position)
+            => position - text.Lines.GetLineFromPosition(position).Start;
+
+        // Узел или токен в одной строке
+        public static bool IsSingleLine(SourceText text, TextSpan span)
+            => GetLineNumber(text, span.Start) == GetLineNumber(text, span.End);
     }
 }

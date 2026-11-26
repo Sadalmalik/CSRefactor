@@ -7,20 +7,6 @@ namespace CSR.Core.Style
     // Строки исходного текста для проверок, которые переносят и склеивают строки
     public static class TextLines
     {
-        public static int GetLineNumber(SourceText text, int position)
-            => text.Lines.GetLineFromPosition(position).LineNumber;
-
-        public static string GetLine(SourceText text, int lineNumber)
-            => text.Lines[lineNumber].ToString();
-
-        // Длина строки, в которой стоит позиция
-        public static int GetLineLength(SourceText text, int position)
-            => text.Lines.GetLineFromPosition(position).Span.Length;
-
-        // Колонка позиции с 0
-        public static int GetColumn(SourceText text, int position)
-            => position - text.Lines.GetLineFromPosition(position).Start;
-
         // В узле есть комментарий или директива: перенос строк мог бы их сломать или потерять
         public static bool HasCommentOrDirective(SyntaxNode node)
         {
@@ -55,9 +41,5 @@ namespace CSR.Core.Style
             var normal = TextLayout.Deeper(TextLayout.GetIndent(text, owner.SpanStart)).Length;
             return Math.Max(0, indent - normal);
         }
-
-        // Узел или токен в одной строке
-        public static bool IsSingleLine(SourceText text, TextSpan span)
-            => GetLineNumber(text, span.Start) == GetLineNumber(text, span.End);
     }
 }

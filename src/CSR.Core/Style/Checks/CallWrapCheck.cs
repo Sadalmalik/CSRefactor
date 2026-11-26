@@ -36,8 +36,8 @@ namespace CSR.Core.Style.Checks
                 .Where(list => list.Arguments.Count > 0 && IsChecked(context, list))
                 .ToList();
             var text = context.Text;
-            var oneLine = lists.Where(list => TextLines.IsSingleLine(text, list.Span)).ToList();
-            foreach (var group in oneLine.GroupBy(list => TextLines.GetLineNumber(text, list.SpanStart)))
+            var oneLine = lists.Where(list => TextLayout.IsSingleLine(text, list.Span)).ToList();
+            foreach (var group in oneLine.GroupBy(list => TextLayout.GetLineNumber(text, list.SpanStart)))
             {
                 var line = text.Lines[group.Key];
                 // длину портит выровненный отступ продолжения, а не вызов: с нормальным отступом (+4) строка
@@ -48,7 +48,7 @@ namespace CSR.Core.Style.Checks
 
                 var candidate = group
                     .Where(list => !group.Any(other => other != list && other.Span.Contains(list.Span)))
-                    .Where(list => TextLines.GetColumn(text, list.OpenParenToken.Span.End) - excess < max)
+                    .Where(list => TextLayout.GetColumn(text, list.OpenParenToken.Span.End) - excess < max)
                     .OrderByDescending(list => list.Span.Length)
                     .FirstOrDefault();
                 if (candidate != null)
@@ -57,9 +57,9 @@ namespace CSR.Core.Style.Checks
 
             foreach (var list in lists.Except(oneLine))
             {
-                var openLine = TextLines.GetLineNumber(text, list.OpenParenToken.SpanStart);
-                var allSingle = list.Arguments.All(argument => TextLines.IsSingleLine(text, argument.Span));
-                if (allSingle && TextLines.GetLineNumber(text, list.Arguments[0].SpanStart) == openLine)
+                var openLine = TextLayout.GetLineNumber(text, list.OpenParenToken.SpanStart);
+                var allSingle = list.Arguments.All(argument => TextLayout.IsSingleLine(text, argument.Span));
+                if (allSingle && TextLayout.GetLineNumber(text, list.Arguments[0].SpanStart) == openLine)
                     Report(context, list, "перенос посреди списка аргументов - после '(', аргумент на строку");
             }
         }
@@ -147,9 +147,9 @@ namespace CSR.Core.Style.Checks
                 return false;
 
             var text = context.Text;
-            var arrowLine = TextLines.GetLineNumber(text, arrow.ArrowToken.SpanStart);
-            return arrowLine == TextLines.GetLineNumber(text, list.SpanStart)
-                && arrowLine == TextLines.GetLineNumber(text, arrow.ArrowToken.GetPreviousToken().SpanStart);
+            var arrowLine = TextLayout.GetLineNumber(text, arrow.ArrowToken.SpanStart);
+            return arrowLine == TextLayout.GetLineNumber(text, list.SpanStart)
+                && arrowLine == TextLayout.GetLineNumber(text, arrow.ArrowToken.GetPreviousToken().SpanStart);
         }
 
         private static bool IsNameof(InvocationExpressionSyntax invocation)

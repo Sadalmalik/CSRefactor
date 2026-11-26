@@ -38,7 +38,7 @@ namespace CSR.Core.Style.Checks
                 if (!isRegion && !directive.IsKind(SyntaxKind.EndRegionDirectiveTrivia))
                     continue;
 
-                var line = TextLines.GetLineNumber(text, directive.SpanStart);
+                var line = TextLayout.GetLineNumber(text, directive.SpanStart);
                 var previous = FindNonBlank(text, line, -1);
                 var next = FindNonBlank(text, line, 1);
                 if (isRegion)
@@ -70,7 +70,7 @@ namespace CSR.Core.Style.Checks
             if (previous < 0 || IsDirective(text, previous))
                 return null;
 
-            return TextLines.GetLine(text, previous).Trim() == "{" ? 0 : settings.GetInt("outside");
+            return TextLayout.GetLine(text, previous).Trim() == "{" ? 0 : settings.GetInt("outside");
         }
 
         // После #endregion: '}' - вплотную, #region - between, другая директива - нет проверки
@@ -79,7 +79,7 @@ namespace CSR.Core.Style.Checks
             if (next < 0)
                 return null;
 
-            var value = TextLines.GetLine(text, next).Trim();
+            var value = TextLayout.GetLine(text, next).Trim();
             if (value.StartsWith("}", StringComparison.Ordinal))
                 return 0;
 
@@ -105,9 +105,9 @@ namespace CSR.Core.Style.Checks
                 return;
 
             var text = context.Text;
-            var lines = new List<string> { TextLines.GetLine(text, first) };
+            var lines = new List<string> { TextLayout.GetLine(text, first) };
             lines.AddRange(Enumerable.Repeat("", want.Value));
-            lines.Add(TextLines.GetLine(text, last));
+            lines.Add(TextLayout.GetLine(text, last));
             var span = TextSpan.FromBounds(text.Lines[first].Start, text.Lines[last].End);
             context.Report(span, $"{place}: пустых строк {gap}, нужно {want}", context.ReplaceLines(first, last, lines));
         }
@@ -124,6 +124,6 @@ namespace CSR.Core.Style.Checks
         }
 
         private static bool IsDirective(SourceText text, int line)
-            => line >= 0 && TextLines.GetLine(text, line).TrimStart().StartsWith("#", StringComparison.Ordinal);
+            => line >= 0 && TextLayout.GetLine(text, line).TrimStart().StartsWith("#", StringComparison.Ordinal);
     }
 }

@@ -37,13 +37,13 @@ namespace CSR.Core.Style.Checks
                 if (conditional.Parent is ConditionalExpressionSyntax || TextLines.HasCommentOrDirective(conditional))
                     continue;
 
-                if (!TextLines.IsSingleLine(text, conditional.Span))
+                if (!TextLayout.IsSingleLine(text, conditional.Span))
                 {
                     CheckTrailing(context, conditional);
                     continue;
                 }
 
-                bool isLong = TextLines.GetLineLength(text, conditional.SpanStart) > max;
+                bool isLong = TextLayout.GetLineLength(text, conditional.SpanStart) > max;
                 bool isNested = nested && HasNestedBranch(conditional);
                 if (!isLong && !isNested)
                     continue;
@@ -61,8 +61,8 @@ namespace CSR.Core.Style.Checks
         {
             foreach (var token in new[] { conditional.QuestionToken, conditional.ColonToken })
             {
-                var nextLine = TextLines.GetLineNumber(context.Text, token.GetNextToken().SpanStart);
-                if (nextLine > TextLines.GetLineNumber(context.Text, token.SpanStart))
+                var nextLine = TextLayout.GetLineNumber(context.Text, token.GetNextToken().SpanStart);
+                if (nextLine > TextLayout.GetLineNumber(context.Text, token.SpanStart))
                     context.Report(token.Span, $"'{token.Text}' в конце строки - в начало строки ветви");
             }
         }

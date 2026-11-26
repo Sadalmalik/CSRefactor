@@ -73,8 +73,8 @@ namespace CSR.Core.Style.Checks
         {
             var text = context.Text;
             if (condition is not BinaryExpressionSyntax binary || !IsLogical(binary)
-                || !TextLines.IsSingleLine(text, condition.Span)
-                || TextLines.GetLineLength(text, condition.SpanStart) <= max)
+                || !TextLayout.IsSingleLine(text, condition.Span)
+                || TextLayout.GetLineLength(text, condition.SpanStart) <= max)
                 return;
 
             var operands = new List<ExpressionSyntax>();
@@ -148,7 +148,7 @@ namespace CSR.Core.Style.Checks
         private static void CheckArguments(CheckContext context, SyntaxNode statement, ExpressionSyntax condition)
         {
             var text = context.Text;
-            if (TextLines.IsSingleLine(text, condition.Span))
+            if (TextLayout.IsSingleLine(text, condition.Span))
                 return;
 
             var body = TextLayout.Deeper(TextLayout.GetIndent(text, statement.SpanStart));

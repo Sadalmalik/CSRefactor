@@ -59,14 +59,14 @@ namespace CSR.Core.Style.Checks
         private static string? GetProblem(SourceText text, ParameterListSyntax list, int max, int minParameters)
         {
             var parameters = list.Parameters;
-            if (parameters.Any(parameter => !TextLines.IsSingleLine(text, parameter.Span)))
+            if (parameters.Any(parameter => !TextLayout.IsSingleLine(text, parameter.Span)))
                 return null;
 
-            var openLine = TextLines.GetLineNumber(text, list.OpenParenToken.SpanStart);
-            var closeLine = TextLines.GetLineNumber(text, list.CloseParenToken.SpanStart);
+            var openLine = TextLayout.GetLineNumber(text, list.OpenParenToken.SpanStart);
+            var closeLine = TextLayout.GetLineNumber(text, list.CloseParenToken.SpanStart);
             if (openLine == closeLine)
             {
-                if (TextLines.GetColumn(text, list.CloseParenToken.Span.End) > max)
+                if (TextLayout.GetColumn(text, list.CloseParenToken.Span.End) > max)
                     return "сигнатура длиннее порога - столбиком";
 
                 return minParameters > 0 && parameters.Count >= minParameters
@@ -74,15 +74,15 @@ namespace CSR.Core.Style.Checks
                     : null;
             }
 
-            if (TextLines.GetLineNumber(text, parameters[0].SpanStart) == openLine)
+            if (TextLayout.GetLineNumber(text, parameters[0].SpanStart) == openLine)
                 return "перенос посреди списка параметров - после '(', параметр на строку";
 
-            var lastLine = TextLines.GetLineNumber(text, parameters.Last().SpanStart);
+            var lastLine = TextLayout.GetLineNumber(text, parameters.Last().SpanStart);
             if (closeLine != lastLine)
                 return "')' на отдельной строке";
 
             // меньше minParameters параметров в несколько строк - любая форма
-            var lines = parameters.Select(parameter => TextLines.GetLineNumber(text, parameter.SpanStart));
+            var lines = parameters.Select(parameter => TextLayout.GetLineNumber(text, parameter.SpanStart));
             bool crowded = lines.Distinct().Count() != parameters.Count;
             bool many = minParameters > 0 && parameters.Count >= minParameters;
             return crowded && many ? "два параметра в одной строке" : null;
@@ -103,9 +103,9 @@ namespace CSR.Core.Style.Checks
                 _ => Enumerable.Empty<SyntaxNode>(),
             });
 
-            var closeLine = TextLines.GetLineNumber(text, list.CloseParenToken.SpanStart);
+            var closeLine = TextLayout.GetLineNumber(text, list.CloseParenToken.SpanStart);
             return nodes
-                .Where(node => TextLines.GetLineNumber(text, node.SpanStart) == closeLine)
+                .Where(node => TextLayout.GetLineNumber(text, node.SpanStart) == closeLine)
                 .Select(node => node.SpanStart)
                 .ToList();
         }
@@ -113,9 +113,9 @@ namespace CSR.Core.Style.Checks
         // Параметры уже столбиком: первый - на строке после '(', каждый - в одну строку
         private static bool IsColumn(SourceText text, ParameterListSyntax list)
         {
-            var openLine = TextLines.GetLineNumber(text, list.OpenParenToken.SpanStart);
-            return TextLines.GetLineNumber(text, list.Parameters[0].SpanStart) > openLine
-                && list.Parameters.All(parameter => TextLines.IsSingleLine(text, parameter.Span));
+            var openLine = TextLayout.GetLineNumber(text, list.OpenParenToken.SpanStart);
+            return TextLayout.GetLineNumber(text, list.Parameters[0].SpanStart) > openLine
+                && list.Parameters.All(parameter => TextLayout.IsSingleLine(text, parameter.Span));
         }
 
         private static void Report(

@@ -69,7 +69,7 @@ namespace CSR.Core.Style.Checks
                 return null;
 
             var before = text.ToString(TextSpan.FromBounds(operatorLine.Start, token.SpanStart)).TrimEnd();
-            var next = TextLines.GetLine(text, rightLine);
+            var next = TextLayout.GetLine(text, rightLine);
             var indent = TextLayout.GetIndent(text, text.Lines[rightLine].Start);
             return context.ReplaceLines(operatorLine.LineNumber, rightLine, [before, $"{indent}{token.Text} {next.TrimStart()}"]);
         }
@@ -82,7 +82,7 @@ namespace CSR.Core.Style.Checks
             if (leftLine != operatorLine.LineNumber - 1 || HasComment(token))
                 return null;
 
-            var previous = TextLines.GetLine(text, leftLine).TrimEnd();
+            var previous = TextLayout.GetLine(text, leftLine).TrimEnd();
             var rest = text.ToString(TextSpan.FromBounds(token.Span.End, operatorLine.End)).TrimStart();
             var indent = TextLayout.GetIndent(text, token.SpanStart);
             return context.ReplaceLines(leftLine, operatorLine.LineNumber, [$"{previous} {token.Text}", indent + rest]);

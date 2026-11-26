@@ -22,9 +22,9 @@ namespace CSR.Core.Style
 
             for (var i = 0; i < operators.Count; i++)
             {
-                var operatorLine = TextLines.GetLineNumber(text, operators[i].SpanStart);
-                bool isLineEnd = TextLines.GetLineNumber(text, parts[i].Span.End) == operatorLine
-                    && TextLines.GetLineNumber(text, parts[i + 1].SpanStart) > operatorLine;
+                var operatorLine = Text.TextLayout.GetLineNumber(text, operators[i].SpanStart);
+                bool isLineEnd = Text.TextLayout.GetLineNumber(text, parts[i].Span.End) == operatorLine
+                    && Text.TextLayout.GetLineNumber(text, parts[i + 1].SpanStart) > operatorLine;
                 if (!isLineEnd)
                     return null;
             }

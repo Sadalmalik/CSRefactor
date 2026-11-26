@@ -65,10 +65,10 @@ namespace CSR.Core.Style.Checks
 
                 var arrow = clause.ArrowToken;
                 var text = context.Text;
-                var arrowLine = TextLines.GetLineNumber(text, arrow.SpanStart);
+                var arrowLine = TextLayout.GetLineNumber(text, arrow.SpanStart);
                 var start = SyntaxParts.GetDeclarationStart(clause.Parent!);
                 var indent = TextLayout.Deeper(TextLayout.GetIndent(text, start));
-                if (TextLines.GetLineNumber(text, clause.Expression.SpanStart) > arrowLine)
+                if (TextLayout.GetLineNumber(text, clause.Expression.SpanStart) > arrowLine)
                 {
                     ReportTrailing(context, clause, indent);
                     continue;
@@ -78,14 +78,14 @@ namespace CSR.Core.Style.Checks
                 if (rule == "any" || isProperty && ignoreSingle && IsSingle(clause.Parent!))
                     continue;
 
-                if (TextLines.GetLineNumber(text, arrow.GetPreviousToken().SpanStart) != arrowLine)
+                if (TextLayout.GetLineNumber(text, arrow.GetPreviousToken().SpanStart) != arrowLine)
                 {
                     if (isProperty && rule == "fit")
                         ReportJoin(context, clause, max);
                     continue;
                 }
 
-                if (rule == "next-line" || TextLines.GetLineLength(text, arrow.SpanStart) > max)
+                if (rule == "next-line" || TextLayout.GetLineLength(text, arrow.SpanStart) > max)
                     ReportSplit(context, arrow, indent, isProperty);
             }
         }

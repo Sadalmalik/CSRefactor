@@ -62,20 +62,20 @@ namespace CSR.Core.Style.Checks
             bool trailingComma)
         {
             var expressions = initializer.Expressions;
-            if (expressions.Any(expression => !TextLines.IsSingleLine(text, expression.Span)))
+            if (expressions.Any(expression => !TextLayout.IsSingleLine(text, expression.Span)))
                 return null;
 
-            if (TextLines.IsSingleLine(text, initializer.Span))
+            if (TextLayout.IsSingleLine(text, initializer.Span))
             {
-                var length = TextLines.GetLineLength(text, initializer.SpanStart);
+                var length = TextLayout.GetLineLength(text, initializer.SpanStart);
                 return length > max ? "инициализатор длиннее порога - столбиком" : null;
             }
 
-            var newLine = TextLines.GetLineNumber(text, initializer.Parent!.SpanStart);
-            if (TextLines.GetLineNumber(text, initializer.OpenBraceToken.SpanStart) == newLine)
+            var newLine = TextLayout.GetLineNumber(text, initializer.Parent!.SpanStart);
+            if (TextLayout.GetLineNumber(text, initializer.OpenBraceToken.SpanStart) == newLine)
                 return "'{' в строке с 'new' - на следующую строку";
 
-            var lines = expressions.Select(expression => TextLines.GetLineNumber(text, expression.SpanStart));
+            var lines = expressions.Select(expression => TextLayout.GetLineNumber(text, expression.SpanStart));
             if (lines.Distinct().Count() != expressions.Count)
                 return "два элемента в одной строке - элемент на строку";
 

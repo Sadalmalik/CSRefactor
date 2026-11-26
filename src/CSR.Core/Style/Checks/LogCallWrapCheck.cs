@@ -84,8 +84,8 @@ namespace CSR.Core.Style.Checks
             while (token != arguments.CloseParenToken)
             {
                 var next = token.GetNextToken();
-                var line = TextLines.GetLineNumber(text, token.SpanStart);
-                bool isBreak = TextLines.GetLineNumber(text, next.SpanStart) > line;
+                var line = Text.TextLayout.GetLineNumber(text, token.SpanStart);
+                bool isBreak = Text.TextLayout.GetLineNumber(text, next.SpanStart) > line;
                 if (isBreak && !allowed.Contains(token))
                     return "вызов лога не в одну строку";
 
@@ -103,7 +103,7 @@ namespace CSR.Core.Style.Checks
         {
             var lastLine = text.Lines.GetLineFromPosition(parts[parts.Count - 1].Span.End);
             var tail = lastLine.End - parts[parts.Count - 1].Span.End;
-            return TextLines.GetColumn(text, parts[0].SpanStart) + SplitText.GetJoinedLength(parts) + tail;
+            return Text.TextLayout.GetColumn(text, parts[0].SpanStart) + SplitText.GetJoinedLength(parts) + tail;
         }
     }
 }
