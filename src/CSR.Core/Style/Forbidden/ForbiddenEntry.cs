@@ -46,7 +46,7 @@ namespace CSR.Core.Style.Forbidden
         public static ForbiddenEntry Parse(Record record)
         {
             record.RequireKnown(Fields);
-            var kind = record.GetChoice("kind", ForbiddenKinds.Call, ForbiddenKinds.Type);
+            var kind = record.GetChoice("kind", ForbiddenKind.Call, ForbiddenKind.Type);
             if (kind == null)
                 throw new FormatException("kind: нужно call или type");
 

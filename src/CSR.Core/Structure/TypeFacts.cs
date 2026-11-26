@@ -79,7 +79,7 @@ namespace CSR.Core.Structure
             {
                 part.Wmc += CyclomaticComplexity.Calculate(function);
                 var fields = new HashSet<string>();
-                foreach (var name in Functions.OwnNodes(function).OfType<SimpleNameSyntax>())
+                foreach (var name in FunctionTools.OwnNodes(function).OfType<SimpleNameSyntax>())
                 {
                     var target = model.GetSymbolInfo(name, cancellation).Symbol;
                     if (target is not (IFieldSymbol { IsConst: false } or IPropertySymbol) || target.IsStatic)
@@ -103,7 +103,7 @@ namespace CSR.Core.Structure
         private static IEnumerable<SyntaxNode> GetFunctions(TypeDeclarationSyntax declaration)
         {
             return declaration.DescendantNodes(node => node == declaration || node is not BaseTypeDeclarationSyntax)
-                .Where(Functions.IsFunction);
+                .Where(FunctionTools.IsFunction);
         }
 
         // Доля пар методов с общим полем; меньше двух методов - 1

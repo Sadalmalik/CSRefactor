@@ -34,9 +34,9 @@ namespace CSR.Core.Style.Naming.Requirements
         public string? Check(NameSymbol symbol)
         {
             var words = symbol.Name.Split('.')
-                .SelectMany(part => NameWords.GetWords(part))
+                .SelectMany(part => NameWordTools.GetWords(part))
                 .ToList();
-            var word = NameWords.FindWord(words, m_Forbidden) ?? FindPrefixed(words);
+            var word = NameWordTools.FindWord(words, m_Forbidden) ?? FindPrefixed(words);
             if (word == null)
                 return null;
 

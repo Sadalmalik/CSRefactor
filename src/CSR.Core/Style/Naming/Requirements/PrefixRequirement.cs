@@ -69,10 +69,10 @@ namespace CSR.Core.Style.Naming.Requirements
             if (prefix.Length == 0)
             {
                 var found = FindFieldPrefix(name);
-                return found == null ? null : $"'{name}': {symbol.Label} без префикса '{found}' - '{NameWords.ToPascal(name)}'";
+                return found == null ? null : $"'{name}': {symbol.Label} без префикса '{found}' - '{NameWordTools.ToPascal(name)}'";
             }
 
-            var expected = prefix + NameWords.ToPascal(name);
+            var expected = prefix + NameWordTools.ToPascal(name);
             if (!name.StartsWith(prefix, StringComparison.Ordinal) || name.Length == prefix.Length)
                 return $"'{name}': {symbol.Label} с префиксом '{prefix}' - '{expected}'";
 
@@ -91,7 +91,7 @@ namespace CSR.Core.Style.Naming.Requirements
             if (known != null)
                 return known;
 
-            int length = name.Length - NameWords.StripFieldPrefix(name).Length;
+            int length = name.Length - NameWordTools.StripFieldPrefix(name).Length;
             return length > 0 ? name.Substring(0, length) : null;
         }
 

@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace CSR.Core.Syntax
 {
     // Имена типов по синтаксису: правая часть, простое имя, текст, интерфейс, числовой тип, имя атрибута
-    public static class TypeNames
+    public static class TypeNameTools
     {
         // Правая часть имени без пространства имен и пробелов: System.Collections.ArrayList -> ArrayList,
         // List< int > -> List<int>, int[] -> int[]

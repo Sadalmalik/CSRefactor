@@ -213,8 +213,8 @@ namespace CSR.Workspace.Tests
         [Test]
         public void CacheKey_IgnoresCase()
         {
-            Assert.That(CachePaths.GetKey(@"C:\Code\App.sln"), Is.EqualTo(CachePaths.GetKey(@"c:\code\app.sln")));
-            Assert.That(CachePaths.GetKey(@"C:\Code\App.sln"), Is.Not.EqualTo(CachePaths.GetKey(@"C:\Code\Other.sln")));
+            Assert.That(CachePathTool.GetKey(@"C:\Code\App.sln"), Is.EqualTo(CachePathTool.GetKey(@"c:\code\app.sln")));
+            Assert.That(CachePathTool.GetKey(@"C:\Code\App.sln"), Is.Not.EqualTo(CachePathTool.GetKey(@"C:\Code\Other.sln")));
         }
 
 #endregion

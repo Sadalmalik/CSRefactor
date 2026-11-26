@@ -42,7 +42,7 @@ namespace CSR.Commands
         private static readonly HashSet<string> FlagNames = ["--no-server", "--apply", "--force", "--no-verify"];
 
         public static int Run(IEnumerable<string> args)
-            => WorkspaceCommands.Run("move", args, OptionNames, FlagNames, Validate);
+            => WorkspaceCommandTools.Run("move", args, OptionNames, FlagNames, Validate);
 
         private static void Validate(CommandLine commandLine)
         {
@@ -50,7 +50,7 @@ namespace CSR.Commands
                 throw new UsageException("move: ожидается один символ");
 
             RefactorOutput.GetFormat(commandLine);
-            WorkspaceCommands.ValidateSymbol(commandLine.Positional[0]);
+            WorkspaceCommandTools.ValidateSymbol(commandLine.Positional[0]);
         }
 
         public static async Task<int> ExecuteAsync(

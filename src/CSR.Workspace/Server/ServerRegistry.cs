@@ -20,7 +20,7 @@ namespace CSR.Workspace.Server
     {
         public static void Register(ServerEntry entry)
         {
-            Directory.CreateDirectory(CachePaths.Servers);
+            Directory.CreateDirectory(CachePathTool.Servers);
             File.WriteAllText(GetPath(entry.Solution), JsonSerializer.Serialize(entry));
         }
 
@@ -39,10 +39,10 @@ namespace CSR.Workspace.Server
         public static List<ServerEntry> List()
         {
             var entries = new List<ServerEntry>();
-            if (!Directory.Exists(CachePaths.Servers))
+            if (!Directory.Exists(CachePathTool.Servers))
                 return entries;
 
-            foreach (var file in Directory.EnumerateFiles(CachePaths.Servers, "*.json"))
+            foreach (var file in Directory.EnumerateFiles(CachePathTool.Servers, "*.json"))
             {
                 var entry = Read(file);
                 if (entry != null && IsAlive(entry.ProcessId))
@@ -58,7 +58,7 @@ namespace CSR.Workspace.Server
             => Path.ChangeExtension(GetPath(solution), ".log");
 
         private static string GetPath(string solution)
-            => Path.Combine(CachePaths.Servers, CachePaths.GetKey(solution) + ".json");
+            => Path.Combine(CachePathTool.Servers, CachePathTool.GetKey(solution) + ".json");
 
         private static ServerEntry? Read(string file)
         {

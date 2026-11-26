@@ -78,7 +78,7 @@ namespace CSR
                 return null;
 
             int value = 0;
-            ReadValues(() => value = OptionKinds.Count.ParseText!(text, name));
+            ReadValues(() => value = OptionKind.Count.ParseText!(text, name));
             return value;
         }
 

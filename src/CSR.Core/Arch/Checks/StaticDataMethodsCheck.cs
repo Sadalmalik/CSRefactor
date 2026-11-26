@@ -145,7 +145,7 @@ namespace CSR.Core.Arch.Checks
             if (type is PredefinedTypeSyntax or NullableTypeSyntax { ElementType: PredefinedTypeSyntax })
                 return null;
 
-            var text = TypeNames.GetTypeText(type);
+            var text = TypeNameTools.GetTypeText(type);
             var typeParameters = method.TypeParameterList?.Parameters;
             if (typeParameters != null && typeParameters.Value.Any(parameter => parameter.Identifier.Text == text))
                 return null;

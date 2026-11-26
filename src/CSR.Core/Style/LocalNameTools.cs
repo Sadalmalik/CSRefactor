@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace CSR.Core.Style
 {
     // Локальные имена по синтаксису: параметры, переменные, foreach, out var и шаблоны, catch
-    public static class LocalNames
+    public static class LocalNameTools
     {
         public static HashSet<string> GetDeclared(SyntaxNode node)
         {

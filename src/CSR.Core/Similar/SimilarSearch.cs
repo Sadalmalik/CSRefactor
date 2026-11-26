@@ -61,7 +61,7 @@ namespace CSR.Core.Similar
             return new SimilarResult { Pairs = pairs, Clusters = BuildClusters(pairs) };
         }
 
-        // Пары типов: по оценке и по общему ядру (TypeCores); у каждой пары - число членов одной формы
+        // Пары типов: по оценке и по общему ядру (TypeCoreTool); у каждой пары - число членов одной формы
         private static List<SimilarPair> AddCores(
             IReadOnlyList<SimilarUnit> units,
             IEnumerable<SimilarPair> scored,
@@ -84,7 +84,7 @@ namespace CSR.Core.Similar
             }
 
             var types = units.OfType<TypeUnit>().ToList();
-            foreach (var core in TypeCores.Find(types, options.MinCoreMembers, isProbe))
+            foreach (var core in TypeCoreTool.Find(types, options.MinCoreMembers, isProbe))
             {
                 if (byLeft.TryGetValue(core.Left, out HashSet<SimilarUnit>? rights) && rights.Contains(core.Right))
                     continue;
@@ -104,11 +104,11 @@ namespace CSR.Core.Similar
         private static SimilarPair WithCore(SimilarPair pair, TypeUnit left, TypeUnit right)
             => new() { Left = left, Right = right, Score = pair.Score, SharedMembers = CountCore(left, right) };
 
-        // Члены ядра: сопоставлены с оценкой 1 и не короче TypeCores.CoreNodes
+        // Члены ядра: сопоставлены с оценкой 1 и не короче TypeCoreTool.CoreNodes
         private static int CountCore(TypeUnit left, TypeUnit right)
         {
             return TypeComparer.Match(left, right)
-                .Count(match => match.Score >= 1 && match.Left.NodeCount >= TypeCores.CoreNodes);
+                .Count(match => match.Score >= 1 && match.Left.NodeCount >= TypeCoreTool.CoreNodes);
         }
 
         // С отбором слева - проверяемая единица (измененный код), справа - похожая на нее

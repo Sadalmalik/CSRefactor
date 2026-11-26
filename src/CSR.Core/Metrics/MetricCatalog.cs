@@ -1,6 +1,6 @@
 namespace CSR.Core.Metrics
 {
-    public static class MetricKeys
+    public static class MetricKey
     {
         public const string Cyclomatic = "cyclomatic";
         public const string Cognitive = "cognitive";
@@ -34,19 +34,19 @@ namespace CSR.Core.Metrics
     {
         public static readonly IReadOnlyList<MetricDefinition> All =
         [
-            Function(MetricKeys.Cyclomatic, "Цикломатическая сложность", 10),
-            Function(MetricKeys.Cognitive, "Когнитивная сложность", 15),
-            Function(MetricKeys.Lines, "Строк", 60),
-            Function(MetricKeys.CodeLines, "Строк кода", null),
-            Function(MetricKeys.Nesting, "Вложенность", 3),
-            Function(MetricKeys.Parameters, "Параметров", 5),
-            Type(MetricKeys.Lines, "Строк", null),
-            Type(MetricKeys.CodeLines, "Строк кода", null),
-            Type(MetricKeys.Members, "Членов", null),
-            Type(MetricKeys.Regions, "Регионов", null),
-            File(MetricKeys.Lines, "Строк", 400),
-            File(MetricKeys.CodeLines, "Строк кода", 316),
-            File(MetricKeys.Types, "Типов", null),
+            Function(MetricKey.Cyclomatic, "Цикломатическая сложность", 10),
+            Function(MetricKey.Cognitive, "Когнитивная сложность", 15),
+            Function(MetricKey.Lines, "Строк", 60),
+            Function(MetricKey.CodeLines, "Строк кода", null),
+            Function(MetricKey.Nesting, "Вложенность", 3),
+            Function(MetricKey.Parameters, "Параметров", 5),
+            Type(MetricKey.Lines, "Строк", null),
+            Type(MetricKey.CodeLines, "Строк кода", null),
+            Type(MetricKey.Members, "Членов", null),
+            Type(MetricKey.Regions, "Регионов", null),
+            File(MetricKey.Lines, "Строк", 400),
+            File(MetricKey.CodeLines, "Строк кода", 316),
+            File(MetricKey.Types, "Типов", null),
         ];
 
         public static string GetLevelKey(MetricLevel level)

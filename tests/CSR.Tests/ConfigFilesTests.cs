@@ -22,10 +22,10 @@ namespace CSR.Tests
             var project = folder.Write("repo/.csr/style.jsonc", "{}");
             var start = Directory.CreateDirectory(Path.Combine(folder.Path, "repo", "src", "Code")).FullName;
 
-            var layers = ConfigFiles.GetLayers([], "style.jsonc", start, Path.GetDirectoryName(defaults)!);
+            var layers = ConfigFileTools.GetLayers([], "style.jsonc", start, Path.GetDirectoryName(defaults)!);
             Assert.That(layers, Is.EqualTo(new[] { defaults, project }));
 
-            var explicitLayers = ConfigFiles.GetLayers(
+            var explicitLayers = ConfigFileTools.GetLayers(
                 ["my.jsonc"],
                 "style.jsonc",
                 start,
@@ -40,11 +40,11 @@ namespace CSR.Tests
             var defaults = folder.Write("install/config/project.jsonc", "{}");
             var directory = Path.GetDirectoryName(defaults)!;
             var start = Directory.CreateDirectory(Path.Combine(folder.Path, "repo", "src")).FullName;
-            Assert.That(ConfigFiles.Find(null, "project.jsonc", start, directory), Is.EqualTo(defaults));
+            Assert.That(ConfigFileTools.Find(null, "project.jsonc", start, directory), Is.EqualTo(defaults));
 
             var project = folder.Write("repo/.csr/project.jsonc", "{}");
-            Assert.That(ConfigFiles.Find(null, "project.jsonc", start, directory), Is.EqualTo(project));
-            Assert.That(ConfigFiles.Find("my.jsonc", "project.jsonc", start, directory), Is.EqualTo("my.jsonc"));
+            Assert.That(ConfigFileTools.Find(null, "project.jsonc", start, directory), Is.EqualTo(project));
+            Assert.That(ConfigFileTools.Find("my.jsonc", "project.jsonc", start, directory), Is.EqualTo("my.jsonc"));
         }
 
         [Test]
@@ -54,7 +54,7 @@ namespace CSR.Tests
             folder.Write(".csr/style.jsonc", "{}");
             var start = Directory.CreateDirectory(Path.Combine(folder.Path, "repo", "src")).FullName;
             var empty = Path.Combine(folder.Path, "none");
-            Assert.That(ConfigFiles.GetLayers([], "style.jsonc", start, empty), Is.Empty, ".csr выше .git не берется");
+            Assert.That(ConfigFileTools.GetLayers([], "style.jsonc", start, empty), Is.Empty, ".csr выше .git не берется");
         }
 
         [Test]

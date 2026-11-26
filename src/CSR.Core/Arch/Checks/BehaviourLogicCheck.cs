@@ -82,7 +82,7 @@ namespace CSR.Core.Arch.Checks
             var baseTypes = NameMask.Get(context.Settings.GetStrings("baseTypes"));
             foreach (var type in context.Root.DescendantNodes().OfType<ClassDeclarationSyntax>())
             {
-                if (SyntaxParts.HasBaseType(type, baseTypes))
+                if (SyntaxTools.HasBaseType(type, baseTypes))
                     CheckBehaviour(context, type);
                 else if (!IsPartWithoutBase(type))
                     CheckLookups(context, type);
@@ -96,7 +96,7 @@ namespace CSR.Core.Arch.Checks
             var own = type.Members
                 .OfType<MethodDeclarationSyntax>()
                 .Where(method => !messages.IsMatch(method.Identifier.Text))
-                .Where(method => !SyntaxParts.HasAttribute(method, ignoredAttributes))
+                .Where(method => !SyntaxTools.HasAttribute(method, ignoredAttributes))
                 .Select(method => method.Identifier.Text)
                 .ToList();
 
@@ -116,7 +116,7 @@ namespace CSR.Core.Arch.Checks
             var lookups = context.Settings.GetStrings("lookupMethods");
             foreach (var invocation in type.DescendantNodes().OfType<InvocationExpressionSyntax>())
             {
-                if (SyntaxParts.GetEnclosingType(invocation) != type)
+                if (SyntaxTools.GetEnclosingType(invocation) != type)
                     continue;
 
                 var name = GetMethodName(invocation.Expression);

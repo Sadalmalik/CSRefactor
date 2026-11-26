@@ -39,7 +39,7 @@ namespace CSR.Workspace.Refactor
                 return RefactorPlan.Refuse(Command, subject, targetName, refusal);
 
             var after = await move.BuildAsync(cancellation);
-            var changes = await FileChanges.CollectAsync(solution, after, loaded.Root, cancellation);
+            var changes = await FileChangeTools.CollectAsync(solution, after, loaded.Root, cancellation);
             var compile = verify ? await CompileCheck.RunAsync(solution, after, loaded.Root, cancellation) : null;
             return new RefactorPlan
             {

@@ -115,7 +115,7 @@ namespace CSR.Workspace.Refactor
                 foreach (var diagnostic in group.OrderBy(item => known.Contains(GetKey(item))).Take(excess))
                 {
                     var location = diagnostic.Location.IsInSource
-                        ? SourceLocations.Create(diagnostic.Location, root)
+                        ? SourceLocationTools.Create(diagnostic.Location, root)
                         : null;
                     yield return new CodeLocation
                     {

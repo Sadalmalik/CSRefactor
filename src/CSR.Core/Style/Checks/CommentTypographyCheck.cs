@@ -46,7 +46,7 @@ namespace CSR.Core.Style.Checks
             var replacements = context.Settings.GetMap("replace");
             foreach (var trivia in context.Root.DescendantTrivia())
             {
-                if (SyntaxParts.IsComment(trivia))
+                if (SyntaxTools.IsComment(trivia))
                     Check(context, trivia.Span, replacements, null);
             }
 
@@ -148,7 +148,7 @@ namespace CSR.Core.Style.Checks
             foreach (var ancestor in token.Parent!.Ancestors())
             {
                 if (ancestor is AttributeSyntax attribute)
-                    return attributes.Contains(TypeNames.GetAttributeName(attribute.Name));
+                    return attributes.Contains(TypeNameTools.GetAttributeName(attribute.Name));
 
                 bool isLog = ancestor is InvocationExpressionSyntax invocation
                     && LoggerCallTool.IsLoggerCall(context, invocation);

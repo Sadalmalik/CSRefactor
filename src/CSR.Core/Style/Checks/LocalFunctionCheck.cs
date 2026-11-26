@@ -27,7 +27,7 @@ namespace CSR.Core.Style.Checks
             foreach (var function in context.Root.DescendantNodes().OfType<LocalFunctionStatementSyntax>())
             {
                 var message = $"локальная функция '{function.Identifier.Text}'";
-                context.Report(function.Identifier.Span, ForbiddenNames.WithUse(message, use));
+                context.Report(function.Identifier.Span, ForbiddenNameTool.WithUse(message, use));
             }
         }
     }

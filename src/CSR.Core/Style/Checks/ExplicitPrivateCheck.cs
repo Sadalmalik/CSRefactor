@@ -57,7 +57,7 @@ namespace CSR.Core.Style.Checks
 
                 if (preferExplicit && !member.Modifiers.Any(IsAccessModifier))
                 {
-                    var start = SyntaxParts.GetDeclarationStart(member);
+                    var start = SyntaxTools.GetDeclarationStart(member);
                     var span = new TextSpan(start, 0);
                     // находка - на строке начала объявления (без атрибутов): замена - только эта строка
                     context.Report(span, "нет явного 'private'", context.ReplaceInLines(span, "private "));

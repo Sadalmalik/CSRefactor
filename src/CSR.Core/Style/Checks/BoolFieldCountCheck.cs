@@ -35,7 +35,7 @@ namespace CSR.Core.Style.Checks
             int minFields = context.Settings.GetInt("minFields");
             foreach (var type in context.Root.DescendantNodes().OfType<ClassDeclarationSyntax>())
             {
-                if (!baseTypes.IsEmpty && !SyntaxParts.HasBaseType(type, baseTypes))
+                if (!baseTypes.IsEmpty && !SyntaxTools.HasBaseType(type, baseTypes))
                     continue;
 
                 var names = type.Members
@@ -59,7 +59,7 @@ namespace CSR.Core.Style.Checks
 
             var type = field.Declaration.Type;
             return type is PredefinedTypeSyntax predefined && predefined.Keyword.IsKind(SyntaxKind.BoolKeyword)
-                || TypeNames.GetRightName(type) == "Boolean";
+                || TypeNameTools.GetRightName(type) == "Boolean";
         }
     }
 }

@@ -25,7 +25,7 @@ namespace CSR.Commands
         private static readonly HashSet<string> FlagNames = ["--no-server"];
 
         public static int Run(IEnumerable<string> args)
-            => WorkspaceCommands.Run("refs", args, OptionNames, FlagNames, Validate);
+            => WorkspaceCommandTools.Run("refs", args, OptionNames, FlagNames, Validate);
 
         private static void Validate(CommandLine commandLine)
         {
@@ -36,7 +36,7 @@ namespace CSR.Commands
             if (format is not ("json" or "text"))
                 throw new UsageException($"неизвестный формат '{format}'");
 
-            WorkspaceCommands.ValidateSymbol(commandLine.Positional[0]);
+            WorkspaceCommandTools.ValidateSymbol(commandLine.Positional[0]);
         }
 
         public static async Task<int> ExecuteAsync(

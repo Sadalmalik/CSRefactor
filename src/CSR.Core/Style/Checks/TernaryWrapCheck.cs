@@ -34,7 +34,7 @@ namespace CSR.Core.Style.Checks
             var text = context.Text;
             foreach (var conditional in context.Root.DescendantNodes().OfType<ConditionalExpressionSyntax>())
             {
-                if (conditional.Parent is ConditionalExpressionSyntax || TextLines.HasCommentOrDirective(conditional))
+                if (conditional.Parent is ConditionalExpressionSyntax || LineWrapTools.HasCommentOrDirective(conditional))
                     continue;
 
                 if (!TextLayout.IsSingleLine(text, conditional.Span))

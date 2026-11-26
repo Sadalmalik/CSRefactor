@@ -39,7 +39,7 @@ namespace CSR.Core.Style.Checks
                     continue;
 
                 var start = FirstNonSpace(context.Text, line);
-                if (ignoreComments && SyntaxParts.IsComment(context.Root.FindTrivia(start)))
+                if (ignoreComments && SyntaxTools.IsComment(context.Root.FindTrivia(start)))
                     continue;
 
                 if (ignoreStrings && IsString(context.Root.FindToken(start)))

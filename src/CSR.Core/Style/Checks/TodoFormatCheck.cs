@@ -41,7 +41,7 @@ namespace CSR.Core.Style.Checks
         {
             bool forbidMetadata = context.Settings.GetBool("forbidMetadata");
             bool requireCyrillic = context.Settings.GetBool("requireCyrillic");
-            foreach (var comment in Comments.GetLineComments(context.Root, context.Text))
+            foreach (var comment in CommentTools.GetLineComments(context.Root, context.Text))
             {
                 var match = Marker.Match(comment.Content);
                 if (!match.Success)

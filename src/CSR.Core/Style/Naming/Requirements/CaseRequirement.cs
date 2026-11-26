@@ -19,10 +19,10 @@ namespace CSR.Core.Style.Naming.Requirements
         {
             var name = symbol.Name;
             if (!m_IsUpper && !IsPascal(name))
-                return $"'{name}': {symbol.Label} в PascalCase - '{NameWords.ToPascal(name)}'";
+                return $"'{name}': {symbol.Label} в PascalCase - '{NameWordTools.ToPascal(name)}'";
 
             if (m_IsUpper && name.Any(char.IsLower))
-                return $"'{name}': {symbol.Label} в UPPER_CASE - '{NameWords.ToUpperSnake(name)}'";
+                return $"'{name}': {symbol.Label} в UPPER_CASE - '{NameWordTools.ToUpperSnake(name)}'";
 
             return null;
         }

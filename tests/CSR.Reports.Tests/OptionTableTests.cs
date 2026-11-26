@@ -66,7 +66,7 @@ namespace CSR.Reports.Tests
         public void Section_KeysInSameOptions()
         {
             var limits = new OptionTable<SimilarOptions>()
-                .Add("lines", OptionKinds.Count, (options, value) => options.MinLines = value);
+                .Add("lines", OptionKind.Count, (options, value) => options.MinLines = value);
             var table = new OptionTable<SimilarOptions>()
                 .AddSection("limits", limits, options => options);
             var target = new SimilarOptions();

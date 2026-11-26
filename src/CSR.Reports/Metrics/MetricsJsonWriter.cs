@@ -37,7 +37,7 @@ namespace CSR.Reports.Metrics
                         writer.WriteStartObject();
                         writer.WriteNumber("value", function.Crap!.Value);
                         writer.WriteNumber("coverage", function.Coverage!.Value);
-                        writer.WriteNumber("complexity", function.Values[MetricKeys.Cyclomatic]);
+                        writer.WriteNumber("complexity", function.Values[MetricKey.Cyclomatic]);
                         WriteLocation(writer, function);
                         writer.WriteEndObject();
                     }

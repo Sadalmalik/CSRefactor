@@ -16,7 +16,7 @@ namespace CSR.Core.Similar
     }
 
     // Единицы L4 по графу типов: хост - тип, который держит полем или коллекцией точку расширения (абстрактный класс,
-    // интерфейс) с не меньше MinVariants вариантами (ExtensionHosts). Признаки системы - устройство образца
+    // интерфейс) с не меньше MinVariants вариантами (ExtensionHostTool). Признаки системы - устройство образца
     // "хост -> база вариантов -> варианты -> результат":
     // - хост и база - обезличенная метка (вид, abstract, sealed, обобщенность), поле или коллекция, число вариантов
     //   (ступени: 2-3, 4-9, 10 и больше);
@@ -28,7 +28,7 @@ namespace CSR.Core.Similar
     // Хеши Вейсфейлера - Лемана по окрестности оказались слишком точными: любая разница в соседях давала новую метку.
     // Точка расширения с больше чем MaxHosts хостами - инфраструктура (вычислители, действия, условия, которые держат
     // полем сотни типов): в инвентаре она есть, в сравнение не идет - иначе ее хосты совпадают друг с другом целиком
-    public static class SystemUnits
+    public static class SystemUnitTool
     {
         public const int MinVariants = 2;
 
@@ -43,7 +43,7 @@ namespace CSR.Core.Similar
         public static List<SimilarUnit> Collect(TypeGraph graph, SimilarOptions options)
         {
             var units = new List<SimilarUnit>();
-            var hosts = ExtensionHosts.Find(graph, MinVariants);
+            var hosts = ExtensionHostTool.Find(graph, MinVariants);
             var hostCounts = hosts.GroupBy(entry => entry.ExtensionPoint).ToDictionary(
                 group => group.Key,
                 group => group.Count());

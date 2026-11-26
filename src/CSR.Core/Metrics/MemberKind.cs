@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace CSR.Core.Metrics
 {
     // Члены типа по видам. Поля и события-поля считаются по переменным: int a, b; - два поля
-    public static class TypeMembers
+    public static class MemberKind
     {
         public const string Constants = "constants";
         public const string Fields = "fields";

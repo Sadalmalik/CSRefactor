@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.Text;
 namespace CSR.Core.Style
 {
     // Строки исходного текста для проверок, которые переносят и склеивают строки
-    public static class TextLines
+    public static class LineWrapTools
     {
         // В узле есть комментарий или директива: перенос строк мог бы их сломать или потерять
         public static bool HasCommentOrDirective(SyntaxNode node)

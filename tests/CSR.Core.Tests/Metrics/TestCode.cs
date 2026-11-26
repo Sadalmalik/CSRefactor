@@ -43,6 +43,6 @@ namespace CSR.Core.Tests.Metrics
         }
 
         public static SyntaxNode SingleFunction(string source)
-            => CSharpSyntaxTree.ParseText(source).GetRoot().DescendantNodes().First(Functions.IsFunction);
+            => CSharpSyntaxTree.ParseText(source).GetRoot().DescendantNodes().First(FunctionTools.IsFunction);
     }
 }

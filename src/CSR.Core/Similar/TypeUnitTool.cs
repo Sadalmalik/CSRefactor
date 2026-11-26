@@ -11,7 +11,7 @@ namespace CSR.Core.Similar
     // - сигнатуры остальных членов: вид, модификаторы, тип и число параметров (method private static bool(1)).
     // Тела членов и инициализаторы полей - формы L1 для сопоставления. Вложенные типы - отдельные единицы.
     // Тип без поведения (нет члена с телом, кроме конструктора) - данные: их сравнивает набор полей L2
-    public static class TypeUnits
+    public static class TypeUnitTool
     {
         private static readonly List<string> ModifierOrder =
         [
@@ -77,7 +77,7 @@ namespace CSR.Core.Similar
 
                     // инициализатор поля - тоже код: набор параметров проверки, таблица значений
                     if (field.Declaration.Variables.Any(variable => variable.Initializer != null))
-                        members.Add(MemberUnits.CreateMember(tree, field));
+                        members.Add(MemberUnitTool.CreateMember(tree, field));
                     continue;
                 }
 
@@ -85,8 +85,8 @@ namespace CSR.Core.Similar
                 if (member.Modifiers.Any(SyntaxKind.OverrideKeyword))
                     overrides.Add("override " + GetOverrideName(member));
 
-                if (MemberUnits.IsUnitNode(member))
-                    members.Add(MemberUnits.CreateMember(tree, member));
+                if (MemberUnitTool.IsUnitNode(member))
+                    members.Add(MemberUnitTool.CreateMember(tree, member));
             }
 
             var profile = new TypeProfile
@@ -104,9 +104,9 @@ namespace CSR.Core.Similar
             {
                 Kind = UnitKind.Type,
                 File = tree.FilePath,
-                Member = MemberUnits.GetMemberName(type),
-                StartLine = MemberUnits.GetLine(tree, type.SpanStart),
-                EndLine = MemberUnits.GetLine(tree, type.Span.End),
+                Member = MemberUnitTool.GetMemberName(type),
+                StartLine = MemberUnitTool.GetLine(tree, type.SpanStart),
+                EndLine = MemberUnitTool.GetLine(tree, type.Span.End),
                 NodeCount = fields.Count + signatures.Count,
                 Fingerprints = all,
                 SpanStart = type.SpanStart,
@@ -121,7 +121,7 @@ namespace CSR.Core.Similar
         private static bool HasBehaviour(TypeDeclarationSyntax type)
         {
             return type.Members.Any(member => member is not (ConstructorDeclarationSyntax or BaseFieldDeclarationSyntax)
-                && MemberUnits.IsUnitNode(member));
+                && MemberUnitTool.IsUnitNode(member));
         }
 
         private static string GetSignature(MemberDeclarationSyntax member)

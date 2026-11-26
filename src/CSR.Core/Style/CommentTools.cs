@@ -21,7 +21,7 @@ namespace CSR.Core.Style
             => Trivia.Span;
     }
 
-    public static class Comments
+    public static class CommentTools
     {
         public static List<LineComment> GetLineComments(SyntaxNode root, SourceText text)
         {

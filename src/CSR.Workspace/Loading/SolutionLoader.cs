@@ -26,7 +26,7 @@ namespace CSR.Workspace.Loading
             var isSolution = SolutionFile.IsSolution(fullPath);
             var projects = isSolution ? SolutionFile.ReadProjects(fullPath) : [fullPath];
             var isolated = projects.Any(SolutionFile.IsLegacyProject);
-            var cache = CachePaths.ForSolution(fullPath);
+            var cache = CachePathTool.ForSolution(fullPath);
             var workspace = MSBuildWorkspace.Create(isolated ? GetIsolatedProperties(cache) : []);
             var warnings = new List<string>();
             workspace.RegisterWorkspaceFailedHandler(failure =>

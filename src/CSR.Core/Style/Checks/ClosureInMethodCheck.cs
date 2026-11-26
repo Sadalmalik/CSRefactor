@@ -41,8 +41,8 @@ namespace CSR.Core.Style.Checks
                 if (!methods.IsMatch(method.Identifier.Text))
                     continue;
 
-                var declared = LocalNames.GetDeclared(method);
-                declared.ExceptWith(LocalNames.GetConstants(method));
+                var declared = LocalNameTools.GetDeclared(method);
+                declared.ExceptWith(LocalNameTools.GetConstants(method));
                 foreach (var lambda in method.DescendantNodes().OfType<AnonymousFunctionExpressionSyntax>())
                 {
                     if (lambda.Modifiers.Any(SyntaxKind.StaticKeyword) || IsNested(lambda, method))
@@ -72,8 +72,8 @@ namespace CSR.Core.Style.Checks
             HashSet<string> declared,
             bool captureThis)
         {
-            var own = LocalNames.GetDeclared(lambda);
-            var captured = LocalNames.GetUsed(lambda)
+            var own = LocalNameTools.GetDeclared(lambda);
+            var captured = LocalNameTools.GetUsed(lambda)
                 .Where(name => declared.Contains(name) && !own.Contains(name))
                 .Distinct()
                 .ToList();

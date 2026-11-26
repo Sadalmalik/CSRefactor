@@ -45,8 +45,8 @@ namespace CSR.Core.Style.Naming
                 return selector;
 
             record.RequireKnown(Fields);
-            selector.m_Kinds = record.GetStrings("kinds", NameSymbols.Kinds);
-            selector.m_Access = record.GetStrings("access", NameSymbols.Access);
+            selector.m_Kinds = record.GetStrings("kinds", NameSymbolTool.Kinds);
+            selector.m_Access = record.GetStrings("access", NameSymbolTool.Access);
             selector.m_Modifiers = record.GetStrings("modifiers", ModifierWords);
             selector.m_Types = NameMask.Get(record.GetStrings("types"));
             selector.m_Attributes = NameMask.Get(record.GetStrings("attributes"));

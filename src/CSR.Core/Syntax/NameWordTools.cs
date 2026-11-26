@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 namespace CSR.Core.Syntax
 {
     // Разбор имени на слова: части через '_' и другие не буквы и не цифры, границы регистра; цифры - часть слова
-    public static class NameWords
+    public static class NameWordTools
     {
         private static readonly Regex FieldPrefix = new("^(?:[a-z]{1,2}_|_+)", RegexOptions.CultureInvariant);
 

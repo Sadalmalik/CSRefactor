@@ -26,7 +26,7 @@ namespace CSR.Core.Style.Checks
 
         public override void Analyze(CheckContext context)
         {
-            var comments = Comments.GetLineComments(context.Root, context.Text);
+            var comments = CommentTools.GetLineComments(context.Root, context.Text);
             var run = new List<LineComment>();
             foreach (var comment in comments)
             {
@@ -75,7 +75,7 @@ namespace CSR.Core.Style.Checks
             if (!IsCode(content) && !IsCode("_ " + content))
                 return;
 
-            var span = Comments.GetTrailingSpan(comment, context.Text);
+            var span = CommentTools.GetTrailingSpan(comment, context.Text);
             context.Report(comment.Span, "закомментированный код в конце строки", context.ReplaceInLines(span, ""));
         }
 

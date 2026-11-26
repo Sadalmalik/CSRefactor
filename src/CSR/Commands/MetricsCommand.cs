@@ -33,7 +33,7 @@ namespace CSR.Commands
         };
 
         public static int Run(IEnumerable<string> args)
-            => FileCommands.Run(Command, args);
+            => FileCommandTool.Run(Command, args);
 
         private static FileResult Analyze(FileRun run)
         {
@@ -72,7 +72,7 @@ namespace CSR.Commands
             Dictionary<string, FileCoverage>? coverage)
         {
             var source = File.ReadAllText(file);
-            var metrics = MetricsCalculator.Calculate(source, SourceFiles.GetDisplayPath(file), parseOptions);
+            var metrics = MetricsCalculator.Calculate(source, SourceFileTools.GetDisplayPath(file), parseOptions);
             if (coverage == null)
                 return metrics;
 

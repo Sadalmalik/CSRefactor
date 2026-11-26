@@ -62,7 +62,7 @@ namespace CSR.Core.Style.Checks
                     continue;
 
                 var use = context.Settings.GetString("use");
-                context.Report(problem.Value.Span, ForbiddenNames.WithUse(problem.Value.Message, use));
+                context.Report(problem.Value.Span, ForbiddenNameTool.WithUse(problem.Value.Message, use));
             }
         }
 
@@ -79,7 +79,7 @@ namespace CSR.Core.Style.Checks
             if (!field.Modifiers.Any(SyntaxKind.ReadOnlyKeyword))
                 return new Problem(variable.Identifier.Span, $"статическое изменяемое поле '{names}'");
 
-            var type = TypeNames.GetRightName(field.Declaration.Type);
+            var type = TypeNameTools.GetRightName(field.Declaration.Type);
             if (!IsMutableType(context, type))
                 return null;
 
@@ -106,7 +106,7 @@ namespace CSR.Core.Style.Checks
             if (hasSetter)
                 return new Problem(property.Identifier.Span, $"статическое свойство '{name}' с set");
 
-            var type = TypeNames.GetRightName(property.Type);
+            var type = TypeNameTools.GetRightName(property.Type);
             if (!IsMutableType(context, type))
                 return null;
 
@@ -124,7 +124,7 @@ namespace CSR.Core.Style.Checks
             if (!context.Settings.GetBool("singleton"))
                 return false;
 
-            return TypeNames.GetSimpleTypeName(type) == owner.Identifier.Text;
+            return TypeNameTools.GetSimpleTypeName(type) == owner.Identifier.Text;
         }
 
         private static bool IsIgnored(CheckContext context, MemberDeclarationSyntax member, TypeDeclarationSyntax owner)
@@ -133,7 +133,7 @@ namespace CSR.Core.Style.Checks
             var attributeNames = member.AttributeLists
                 .Concat(owner.AttributeLists)
                 .SelectMany(list => list.Attributes)
-                .Select(attribute => TypeNames.GetAttributeName(attribute.Name));
+                .Select(attribute => TypeNameTools.GetAttributeName(attribute.Name));
             if (attributeNames.Any(attributes.IsMatch))
                 return true;
 

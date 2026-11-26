@@ -8,6 +8,6 @@ namespace CSR.Core.Style
     public static class LoggerCallTool
     {
         public static bool IsLoggerCall(CheckContext context, InvocationExpressionSyntax invocation)
-            => context.Project.IsLoggerMethod(Invocations.GetTargetText(invocation));
+            => context.Project.IsLoggerMethod(InvocationTools.GetTargetText(invocation));
     }
 }

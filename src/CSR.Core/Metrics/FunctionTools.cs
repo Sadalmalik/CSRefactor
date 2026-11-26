@@ -6,7 +6,7 @@ namespace CSR.Core.Metrics
     // Функция для метрик: метод, конструктор, деструктор, оператор, аксессор, локальная функция,
     // свойство и индексатор с телом-выражением (int X => ...) - как аксессор get
     // Лямбды и анонимные методы входят в объемлющую функцию, локальные функции считаются отдельно
-    public static class Functions
+    public static class FunctionTools
     {
         public static bool IsFunction(SyntaxNode node)
         {

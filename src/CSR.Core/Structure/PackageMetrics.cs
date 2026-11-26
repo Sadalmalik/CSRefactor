@@ -56,7 +56,7 @@ namespace CSR.Core.Structure
                     .ToList();
                 var incoming = pair.Value.SelectMany(node => node.In).Where(edge => !members.Contains(edge.From));
                 var linked = inside.Concat(GetSiblingEdges(pair.Value)).ToList();
-                var communities = LabelCommunities.Find(pair.Value, linked);
+                var communities = LabelCommunityTool.Find(pair.Value, linked);
                 var touched = new HashSet<TypeNode>(linked.SelectMany(edge => new[] { edge.From, edge.To }));
                 result.Add(new PackageMetrics
                 {
@@ -67,7 +67,7 @@ namespace CSR.Core.Structure
                     InternalEdges = inside.Count,
                     ExternalEdges = outside.Count,
                     Communities = communities.Count,
-                    Modularity = LabelCommunities.GetModularity(communities, linked),
+                    Modularity = LabelCommunityTool.GetModularity(communities, linked),
                     IsolatedShare = pair.Value.Count(node => !touched.Contains(node)) / (double)pair.Value.Count,
                 });
             }

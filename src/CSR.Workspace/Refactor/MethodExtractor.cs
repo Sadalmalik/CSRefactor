@@ -34,7 +34,7 @@ namespace CSR.Workspace.Refactor
 
             var document = loaded.FindDocuments(path).FirstOrDefault()
                 ?? throw new SymbolException($"файл {path} не входит в решение");
-            var subject = $"{SourceLocations.GetRelativePath(loaded.Root, path)}:{startLine}-{endLine}";
+            var subject = $"{SourceLocationTools.GetRelativePath(loaded.Root, path)}:{startLine}-{endLine}";
             var text = await document.GetTextAsync(cancellation);
             if (startLine < 1 || endLine < startLine || endLine > text.Lines.Count)
                 throw new SymbolException($"строки {startLine}-{endLine} вне файла (строк {text.Lines.Count})");
@@ -49,7 +49,7 @@ namespace CSR.Workspace.Refactor
             var changed = text.WithChanges(selection.BuildChanges(name));
             var solution = loaded.Current;
             var after = solution.WithDocumentText(document.Id, changed);
-            var changes = await FileChanges.CollectAsync(solution, after, loaded.Root, cancellation);
+            var changes = await FileChangeTools.CollectAsync(solution, after, loaded.Root, cancellation);
             var compile = verify ? await CompileCheck.RunAsync(solution, after, loaded.Root, cancellation) : null;
             return new RefactorPlan
             {

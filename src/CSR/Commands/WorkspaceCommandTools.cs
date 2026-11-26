@@ -9,7 +9,7 @@ namespace CSR.Commands
 {
     // Команды над загруженным решением (refs, rename, move, extract, arch): через живой csr serve этого решения, иначе загрузка
     // решения в процессе. Одна и та же обработка - в CLI и на сервере (Execute)
-    public static class WorkspaceCommands
+    public static class WorkspaceCommandTools
     {
         private const string ServeHint = "csr serve держит решение загруженным";
 

@@ -55,9 +55,9 @@ namespace CSR.Commands
             var arguments = args.ToList();
             var commandLine = CommandLine.Parse(arguments, OptionNames, FlagNames);
             if (commandLine.GetOption("--solution") != null || commandLine.GetOptions("--projects").Count > 0)
-                return WorkspaceCommands.Run("arch", arguments, OptionNames, FlagNames, ValidateSolutionMode);
+                return WorkspaceCommandTools.Run("arch", arguments, OptionNames, FlagNames, ValidateSolutionMode);
 
-            return FileCommands.Run(FileModeCommand, arguments);
+            return FileCommandTool.Run(FileModeCommand, arguments);
         }
 
         private static FileResult AnalyzeFiles(FileRun run)
@@ -83,7 +83,7 @@ namespace CSR.Commands
             ValidateSolutionMode(commandLine);
             var format = GetFormat(commandLine);
             var directory = context.WorkingDirectory;
-            var configs = new CommandConfigs(commandLine, directory, context.Solution.Root, context.Error);
+            var configs = new CommandConfigTool(commandLine, directory, context.Solution.Root, context.Error);
             var options = configs.LoadChecks("arch.jsonc", ArchConfig.Apply);
             var project = configs.LoadProject();
 

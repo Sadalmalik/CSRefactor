@@ -5,7 +5,7 @@ namespace CSR.Workspace.Loading
 {
     // Кэш CSR вне кода проекта: теневые копии решений, obj, реестр серверов.
     // Корень - переменная CSR_CACHE или %LOCALAPPDATA%\csr
-    public static class CachePaths
+    public static class CachePathTool
     {
         public static string Root
         {

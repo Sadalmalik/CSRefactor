@@ -37,7 +37,7 @@ namespace CSR.Commands
             ["--no-server", "--apply", "--migrate", "--force", "--no-verify", "--no-strings"];
 
         public static int Run(IEnumerable<string> args)
-            => WorkspaceCommands.Run("rename", args, OptionNames, FlagNames, Validate);
+            => WorkspaceCommandTools.Run("rename", args, OptionNames, FlagNames, Validate);
 
         private static void Validate(CommandLine commandLine)
         {
@@ -48,7 +48,7 @@ namespace CSR.Commands
             if (format is not ("diff" or "json"))
                 throw new UsageException($"неизвестный формат '{format}'");
 
-            WorkspaceCommands.ValidateSymbol(commandLine.Positional[0]);
+            WorkspaceCommandTools.ValidateSymbol(commandLine.Positional[0]);
         }
 
         public static async Task<int> ExecuteAsync(
@@ -112,7 +112,7 @@ namespace CSR.Commands
         // Явный --config (от папки вызова), иначе .csr/refactor.jsonc от папки решения, иначе config/ у csr.exe
         internal static RefactorOptions LoadOptions(CommandLine commandLine, WorkspaceContext context)
         {
-            var configs = new CommandConfigs(commandLine, context.WorkingDirectory, context.Solution.Root, context.Error);
+            var configs = new CommandConfigTool(commandLine, context.WorkingDirectory, context.Solution.Root, context.Error);
             var text = configs.Read("refactor.jsonc");
             return text == null ? new RefactorOptions() : RefactorConfig.Parse(text);
         }

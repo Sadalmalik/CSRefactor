@@ -50,7 +50,7 @@ namespace CSR.Reports.Metrics
             {
                 var crap = function.Crap!.Value.ToString("0.####", CultureInfo.InvariantCulture);
                 var coverage = function.Coverage!.Value.ToString("0.##", CultureInfo.InvariantCulture);
-                var complexity = function.Values[MetricKeys.Cyclomatic];
+                var complexity = function.Values[MetricKey.Cyclomatic];
                 var place = $"{Escape(function.File)}:{function.Line}";
                 builder.AppendLine($"| {crap} | {coverage} | {complexity} | `{Escape(function.Name)}` | `{place}` |");
             }

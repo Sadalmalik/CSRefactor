@@ -5,14 +5,14 @@ using CSR.Reports.Config;
 namespace CSR.Commands
 {
     // Конфиги команды: пути - от папки вызова, проектный слой - от start, предупреждения - в error
-    public class CommandConfigs
+    public class CommandConfigTool
     {
         private readonly CommandLine m_CommandLine;
         private readonly string m_Directory;
         private readonly string m_Start;
         private readonly TextWriter m_Error;
 
-        public CommandConfigs(CommandLine commandLine, string directory, string start, TextWriter error)
+        public CommandConfigTool(CommandLine commandLine, string directory, string start, TextWriter error)
         {
             m_CommandLine = commandLine;
             m_Directory = directory;
@@ -23,9 +23,9 @@ namespace CSR.Commands
         // Слои конфига проверок (style.jsonc, arch.jsonc); устаревшая проверка - предупреждение
         public CheckOptions LoadChecks(string fileName, Action<string, CheckOptions> apply)
         {
-            var paths = ConfigFiles.GetLayers(m_CommandLine.GetOptions("--config"), fileName, m_Start);
+            var paths = ConfigFileTools.GetLayers(m_CommandLine.GetOptions("--config"), fileName, m_Start);
             if (paths.Count == 0)
-                throw new UsageException(ConfigFiles.GetMissingMessage(fileName));
+                throw new UsageException(ConfigFileTools.GetMissingMessage(fileName));
 
             var options = new CheckOptions();
             foreach (var path in paths)
@@ -53,7 +53,7 @@ namespace CSR.Commands
 
         private string? Read(string option, string fileName)
         {
-            var path = ConfigFiles.Find(m_CommandLine.GetOption(option), fileName, m_Start);
+            var path = ConfigFileTools.Find(m_CommandLine.GetOption(option), fileName, m_Start);
             return path == null ? null : ReadFile(path);
         }
 

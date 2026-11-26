@@ -21,7 +21,7 @@ namespace CSR.Core.Structure
             => Steps.Count;
     }
 
-    // Глубина вложенности владения: тип держит базу вариантов (полем или коллекцией, инвентарь ExtensionHosts) -
+    // Глубина вложенности владения: тип держит базу вариантов (полем или коллекцией, инвентарь ExtensionHostTool) -
     // уровень 1; вариант этой базы или наследник варианта держит свою базу вариантов - уровень 2; и так далее.
     // Пример: агент движения -> движения -> составное движение и его наследник-цепочка -> состояния.
     // Не уровни:
@@ -37,7 +37,7 @@ namespace CSR.Core.Structure
     {
         public static List<OwnershipChain> Find(TypeGraph graph, int minVariants, int maxHosts, int maxVariants)
         {
-            var entries = ExtensionHosts.Find(graph, minVariants);
+            var entries = ExtensionHostTool.Find(graph, minVariants);
             var infrastructure = new HashSet<TypeNode>(entries.GroupBy(entry => entry.ExtensionPoint)
                 .Where(group => group.Count() > maxHosts || group.First().Variants.Count > maxVariants)
                 .Select(group => group.Key));
@@ -95,7 +95,7 @@ namespace CSR.Core.Structure
         private static IEnumerable<TypeNode> GetParts(TypeNode point, HashSet<TypeNode> infrastructure)
         {
             var seen = new HashSet<TypeNode>();
-            var variants = ExtensionHosts.GetVariants(point);
+            var variants = ExtensionHostTool.GetVariants(point);
             if (point.Kind == TypeNodeKind.Interface)
                 variants = variants.Where(variant => !variant.GetOut(EdgeKind.Inherits).Any()).ToList();
 

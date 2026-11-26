@@ -18,7 +18,7 @@ namespace CSR.Core.Graph
 
     // Инвентарь систем вариантов по графу типов: каждый хост каждой точки расширения с не меньше minVariants
     // вариантами (прямые наследники и реализации)
-    public static class ExtensionHosts
+    public static class ExtensionHostTool
     {
         public static List<ExtensionHost> Find(TypeGraph graph, int minVariants)
         {

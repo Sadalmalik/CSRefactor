@@ -36,7 +36,7 @@ namespace CSR.Commands
 
             var solution = commandLine.Positional.Count > 0
                 ? Path.GetFullPath(commandLine.Positional[0])
-                : WorkspaceCommands.FindSolution(commandLine, Environment.CurrentDirectory);
+                : WorkspaceCommandTools.FindSolution(commandLine, Environment.CurrentDirectory);
             if (!File.Exists(solution))
                 throw new UsageException($"нет файла решения: {solution}");
 
@@ -71,14 +71,14 @@ namespace CSR.Commands
             }
 
             var writer = Console.Error;
-            var loaded = WorkspaceCommands.Load(solution);
+            var loaded = WorkspaceCommandTools.Load(solution);
             using var cancellation = new CancellationTokenSource();
             Console.CancelKeyPress += (_, e) =>
             {
                 e.Cancel = true;
                 cancellation.Cancel();
             };
-            var server = new WorkspaceServer(loaded, WorkspaceCommands.ExecuteAsync, idle, writer);
+            var server = new WorkspaceServer(loaded, WorkspaceCommandTools.ExecuteAsync, idle, writer);
             server.RunAsync(cancellation.Token).GetAwaiter().GetResult();
             return 0;
         }

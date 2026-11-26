@@ -12,7 +12,7 @@ namespace CSR.Commands
 
         public required string Format { get; init; }
 
-        public required CommandConfigs Configs { get; init; }
+        public required CommandConfigTool Configs { get; init; }
 
         public required ProjectOptions Project { get; init; }
 
@@ -40,7 +40,7 @@ namespace CSR.Commands
         private List<Finding> AnalyzeFile(string file, CheckOptions options)
         {
             var source = File.ReadAllText(file);
-            var tree = CSharpSyntaxTree.ParseText(source, Project.ParseOptions, SourceFiles.GetDisplayPath(file));
+            var tree = CSharpSyntaxTree.ParseText(source, Project.ParseOptions, SourceFileTools.GetDisplayPath(file));
             var findings = SyntaxAnalyzer.Analyze(tree, options, Project);
             if (Changed == null)
                 return findings;

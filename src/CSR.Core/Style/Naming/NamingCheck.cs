@@ -36,7 +36,7 @@ namespace CSR.Core.Style.Naming
                 ? null
                 : new HashSet<string>(rules.SelectMany(rule => rule.Symbols.Kinds));
             var taken = new HashSet<string>();
-            foreach (var symbol in NameSymbols.Collect(context.Root, kinds))
+            foreach (var symbol in NameSymbolTool.Collect(context.Root, kinds))
             {
                 taken.Clear();
                 foreach (var rule in rules)

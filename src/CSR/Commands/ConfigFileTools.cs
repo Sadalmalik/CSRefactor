@@ -4,7 +4,7 @@ namespace CSR.Commands
     // рядом с csr.exe) и проектный (.csr в папке цели или выше, до корня репозитория включительно).
     // Конфиги проверок (style, arch) накладываются: по умолчанию, затем проектный. Одиночные (project, metrics,
     // refactor) не накладываются: проектный, иначе по умолчанию
-    public static class ConfigFiles
+    public static class ConfigFileTools
     {
         public const string ProjectFolder = ".csr";
 

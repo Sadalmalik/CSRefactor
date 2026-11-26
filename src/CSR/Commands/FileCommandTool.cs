@@ -4,7 +4,7 @@ using CSR.Core.Config;
 
 namespace CSR.Commands
 {
-    public static class FileCommands
+    public static class FileCommandTool
     {
         private static readonly string[] CommonOptions = ["--config", "--project", "--format", "--out"];
         private static readonly string[] ScopeOptions = ["--diff", "--scope"];
@@ -40,10 +40,10 @@ namespace CSR.Commands
                 throw new UsageException($"неизвестный режим '{scope}'");
 
             var directory = Environment.CurrentDirectory;
-            var start = ConfigFiles.GetStart(commandLine.Positional[0], directory);
-            var configs = new CommandConfigs(commandLine, directory, start, Console.Error);
+            var start = ConfigFileTools.GetStart(commandLine.Positional[0], directory);
+            var configs = new CommandConfigTool(commandLine, directory, start, Console.Error);
             var project = configs.LoadProject();
-            var files = SourceFiles.Collect(commandLine.Positional);
+            var files = SourceFileTools.Collect(commandLine.Positional);
             Dictionary<string, ChangedLines>? changed = null;
             if (diff != null || scope == "changed-lines")
             {

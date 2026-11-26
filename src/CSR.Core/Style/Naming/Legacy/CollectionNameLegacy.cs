@@ -8,7 +8,7 @@ namespace CSR.Core.Style.Naming.Legacy
         public static readonly CheckAlias Check = new(
             "collection-name",
             "коллекция с именем в единственном числе (устарела: naming)",
-            LegacyRules.Replacement,
+            LegacyRuleTools.Replacement,
             [
                 CheckParameter.Strings("members", "виды: field, property, parameter, local", "field", "property"),
                 CheckParameter.Strings(
@@ -59,7 +59,7 @@ namespace CSR.Core.Style.Naming.Legacy
                     "People"),
                 CheckParameter.Strings("singularEndings", "окончания на 's' в единственном числе", "ss", "us", "is"),
             ],
-            settings => LegacyRules.Analyze(Translate(settings)));
+            settings => LegacyRuleTools.Analyze(Translate(settings)));
 
         private static IReadOnlyList<NamingRule> Translate(CheckSettings settings)
         {
@@ -69,9 +69,9 @@ namespace CSR.Core.Style.Naming.Legacy
 
             var fields = new Dictionary<string, object>
             {
-                ["symbols"] = LegacyRules.Symbols(new()
+                ["symbols"] = LegacyRuleTools.Symbols(new()
                 {
-                    ["kinds"] = LegacyRules.KnownKinds(settings.GetStrings("members")),
+                    ["kinds"] = LegacyRuleTools.KnownKinds(settings.GetStrings("members")),
                     ["types"] = types,
                 }),
                 ["number"] = "plural",
@@ -79,7 +79,7 @@ namespace CSR.Core.Style.Naming.Legacy
                 ["singularEndings"] = settings.GetStrings("singularEndings"),
                 ["subject"] = "коллекция",
             };
-            return [LegacyRules.Rule(fields)];
+            return [LegacyRuleTools.Rule(fields)];
         }
     }
 }

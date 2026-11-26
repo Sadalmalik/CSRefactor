@@ -22,30 +22,30 @@ namespace CSR.Reports.Config
         private static readonly OptionKind<Dictionary<string, string>> Synonyms = new() { ReadJson = ReadSynonyms };
 
         private static readonly OptionTable<TypeWeights> Weights = new OptionTable<TypeWeights>()
-            .Add("bases", OptionKinds.Weight, (weights, value) => weights.Bases = value)
-            .Add("overrides", OptionKinds.Weight, (weights, value) => weights.Overrides = value)
-            .Add("fields", OptionKinds.Weight, (weights, value) => weights.Fields = value)
-            .Add("signatures", OptionKinds.Weight, (weights, value) => weights.Signatures = value)
-            .Add("bodies", OptionKinds.Weight, (weights, value) => weights.Bodies = value);
+            .Add("bases", OptionKind.Weight, (weights, value) => weights.Bases = value)
+            .Add("overrides", OptionKind.Weight, (weights, value) => weights.Overrides = value)
+            .Add("fields", OptionKind.Weight, (weights, value) => weights.Fields = value)
+            .Add("signatures", OptionKind.Weight, (weights, value) => weights.Signatures = value)
+            .Add("bodies", OptionKind.Weight, (weights, value) => weights.Bodies = value);
 
         public static readonly OptionTable<SimilarOptions> Table = new OptionTable<SimilarOptions>()
             .Add("kinds", Kinds, (options, value) => options.Kinds = value, "--kinds")
-            .Add("threshold", OptionKinds.Share, (options, value) => options.Threshold = value, "--threshold")
-            .Add("minLines", OptionKinds.Count, (options, value) => options.MinLines = value, "--min-lines")
-            .Add("minNodes", OptionKinds.Count, (options, value) => options.MinNodes = value, "--min-nodes")
-            .Add("minShapes", OptionKinds.Count, (options, value) => options.MinShapes = value, "--min-shapes")
-            .Add("fragmentStatements", OptionKinds.Count, (options, value) => options.FragmentStatements = value, "--fragments")
-            .Add("setThreshold", OptionKinds.Share, (options, value) => options.SetThreshold = value, "--set-threshold")
-            .Add("minShared", OptionKinds.Count, (options, value) => options.MinShared = value, "--min-shared")
+            .Add("threshold", OptionKind.Share, (options, value) => options.Threshold = value, "--threshold")
+            .Add("minLines", OptionKind.Count, (options, value) => options.MinLines = value, "--min-lines")
+            .Add("minNodes", OptionKind.Count, (options, value) => options.MinNodes = value, "--min-nodes")
+            .Add("minShapes", OptionKind.Count, (options, value) => options.MinShapes = value, "--min-shapes")
+            .Add("fragmentStatements", OptionKind.Count, (options, value) => options.FragmentStatements = value, "--fragments")
+            .Add("setThreshold", OptionKind.Share, (options, value) => options.SetThreshold = value, "--set-threshold")
+            .Add("minShared", OptionKind.Count, (options, value) => options.MinShared = value, "--min-shared")
             .Add("synonyms", Synonyms, (options, value) => options.Synonyms = value)
-            .Add("typeThreshold", OptionKinds.Share, (options, value) => options.TypeThreshold = value, "--type-threshold")
-            .Add("minTypeMembers", OptionKinds.Count, (options, value) => options.MinTypeMembers = value)
-            .Add("minCoreMembers", OptionKinds.Count, (options, value) => options.MinCoreMembers = value)
+            .Add("typeThreshold", OptionKind.Share, (options, value) => options.TypeThreshold = value, "--type-threshold")
+            .Add("minTypeMembers", OptionKind.Count, (options, value) => options.MinTypeMembers = value)
+            .Add("minCoreMembers", OptionKind.Count, (options, value) => options.MinCoreMembers = value)
             .AddSection("weights", Weights, options => options.Weights)
-            .Add("systemThreshold", OptionKinds.Share, (options, value) => options.SystemThreshold = value, "--system-threshold")
-            .Add("minSystemTypes", OptionKinds.Count, (options, value) => options.MinSystemTypes = value)
-            .Add("paths", OptionKinds.Strings, (options, value) => options.Paths = value)
-            .Add("excludePaths", OptionKinds.Strings, (options, value) => options.ExcludePaths = value);
+            .Add("systemThreshold", OptionKind.Share, (options, value) => options.SystemThreshold = value, "--system-threshold")
+            .Add("minSystemTypes", OptionKind.Count, (options, value) => options.MinSystemTypes = value)
+            .Add("paths", OptionKind.Strings, (options, value) => options.Paths = value)
+            .Add("excludePaths", OptionKind.Strings, (options, value) => options.ExcludePaths = value);
 
         public static SimilarOptions Parse(string json)
         {
@@ -59,10 +59,10 @@ namespace CSR.Reports.Config
             var kinds = new HashSet<UnitKind>();
             foreach (var key in keys)
             {
-                var kind = UnitKinds.Find(key);
+                var kind = UnitKindTool.Find(key);
                 if (kind == null)
                     throw new ConfigException(
-                        $"{name}: неизвестный вид '{key}'; допустимо {string.Join(", ", UnitKinds.AllKeys)}");
+                        $"{name}: неизвестный вид '{key}'; допустимо {string.Join(", ", UnitKindTool.AllKeys)}");
 
                 kinds.Add(kind.Value);
             }

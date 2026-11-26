@@ -8,27 +8,27 @@ namespace CSR.Core.Style.Naming.Legacy
         public static readonly CheckAlias Check = new(
             "event-name",
             "имя события и delegate (устарела: naming)",
-            LegacyRules.Replacement,
+            LegacyRuleTools.Replacement,
             [
                 CheckParameter.Strings("allowed", "маски допустимых имен события; пусто - любое имя", "On*"),
                 CheckParameter.Strings("forbidden", "маски запрещенных имен события", "OnWill*", "OnDid*"),
                 CheckParameter.Strings("delegatePrefixes", "запрещенные префиксы имени delegate (перед заглавной буквой)", "On"),
             ],
-            settings => LegacyRules.Analyze(Translate(settings)));
+            settings => LegacyRuleTools.Analyze(Translate(settings)));
 
         private static IReadOnlyList<NamingRule> Translate(CheckSettings settings)
         {
             return
             [
-                LegacyRules.Rule(new()
+                LegacyRuleTools.Rule(new()
                 {
-                    ["symbols"] = LegacyRules.Symbols(new() { ["kinds"] = new[] { "event" } }),
+                    ["symbols"] = LegacyRuleTools.Symbols(new() { ["kinds"] = new[] { "event" } }),
                     ["allowed"] = settings.GetStrings("allowed"),
                     ["forbidden"] = settings.GetStrings("forbidden"),
                 }),
-                LegacyRules.Rule(new()
+                LegacyRuleTools.Rule(new()
                 {
-                    ["symbols"] = LegacyRules.Symbols(new() { ["kinds"] = new[] { "delegate" } }),
+                    ["symbols"] = LegacyRuleTools.Symbols(new() { ["kinds"] = new[] { "delegate" } }),
                     ["forbiddenPrefixes"] = settings.GetStrings("delegatePrefixes"),
                 }),
             ];

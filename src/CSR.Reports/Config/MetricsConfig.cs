@@ -19,7 +19,7 @@ namespace CSR.Reports.Config
             {
                 if (property.Name == "top")
                 {
-                    options.Top = OptionKinds.Count.ReadJson(property.Value, "top");
+                    options.Top = OptionKind.Count.ReadJson(property.Value, "top");
                     continue;
                 }
 
@@ -62,7 +62,7 @@ namespace CSR.Reports.Config
                     case "threshold":
                         int? threshold = property.Value.ValueKind == JsonValueKind.Null
                             ? null
-                            : OptionKinds.Integer.ReadJson(property.Value, path);
+                            : OptionKind.Integer.ReadJson(property.Value, path);
                         options.SetThreshold(metric, threshold);
                         break;
                     default:

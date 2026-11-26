@@ -21,7 +21,7 @@ namespace CSR.Core.Style.Forbidden
     }
 
     // Виды записей forbidden: какой синтаксис сравнивается с маской и как начинается сообщение
-    public static class ForbiddenKinds
+    public static class ForbiddenKind
     {
         public const string Call = "call";
         public const string Type = "type";
@@ -57,7 +57,7 @@ namespace CSR.Core.Style.Forbidden
                     continue;
 
                 if (SyntaxFacts.IsInTypeOnlyContext(type))
-                    yield return new ForbiddenUse(type.Span, TypeNames.GetRightName(type));
+                    yield return new ForbiddenUse(type.Span, TypeNameTools.GetRightName(type));
             }
         }
 

@@ -42,7 +42,7 @@ namespace CSR.Workspace.Refactor
             var targetPath = target == null
                 ? Path.Combine(Path.GetDirectoryName(source)!, type.Name + ".cs")
                 : Path.GetFullPath(Path.Combine(workingDirectory, target));
-            var targetFile = SourceLocations.GetRelativePath(loaded.Root, targetPath);
+            var targetFile = SourceLocationTools.GetRelativePath(loaded.Root, targetPath);
             refusal = GetTargetRefusal(loaded, document, source, targetPath);
             if (refusal != null)
                 return RefactorPlan.Refuse(Command, subject, targetFile, refusal);
@@ -65,7 +65,7 @@ namespace CSR.Workspace.Refactor
                 var sourceText = RemoveType(text, root, declaration, others, model);
                 after = solution.WithDocumentText(document.Id, sourceText);
                 after = AddDocument(after, document.Project, targetPath, newText, text.Encoding);
-                changes = await FileChanges.CollectAsync(solution, after, loaded.Root, cancellation);
+                changes = await FileChangeTools.CollectAsync(solution, after, loaded.Root, cancellation);
                 if (SerializationGuard.DerivesFrom(type, UnityObject))
                     notes.Add("Unity: новый файл получит свой .meta при импорте - ссылки ассетов на скрипт проверить");
             }
@@ -153,8 +153,8 @@ namespace CSR.Workspace.Refactor
 
         private static FileChange CreateMove(string root, string from, string to, SourceText text)
         {
-            var file = SourceLocations.GetRelativePath(root, to);
-            var oldFile = SourceLocations.GetRelativePath(root, from);
+            var file = SourceLocationTools.GetRelativePath(root, to);
+            var oldFile = SourceLocationTools.GetRelativePath(root, from);
             return new FileChange
             {
                 Kind = FileChangeKind.Renamed,

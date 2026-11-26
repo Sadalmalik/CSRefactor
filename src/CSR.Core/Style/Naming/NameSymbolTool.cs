@@ -8,7 +8,7 @@ namespace CSR.Core.Style.Naming
     // Объявленные имена файла одним проходом. Имена, заданные базой (override, явная реализация интерфейса, их
     // параметры), не собираются: менять их нельзя. Виды: namespace, class, struct, record, interface, enum, delegate,
     // typeParameter, field, event, property, parameter, local
-    public static class NameSymbols
+    public static class NameSymbolTool
     {
         public static readonly IReadOnlyList<string> Kinds =
         [
@@ -174,7 +174,7 @@ namespace CSR.Core.Style.Naming
                 Access = GetAccess(type, modifiers),
                 Modifiers = GetModifiers(modifiers),
                 Attributes = GetAttributes(attributes),
-                Bases = bases?.Types.Select(item => TypeNames.GetSimpleTypeName(item.Type)).ToList() ?? [],
+                Bases = bases?.Types.Select(item => TypeNameTools.GetSimpleTypeName(item.Type)).ToList() ?? [],
             };
         }
 
@@ -240,7 +240,7 @@ namespace CSR.Core.Style.Naming
                 return null;
 
             var element = type is NullableTypeSyntax nullable ? nullable.ElementType : type;
-            return TypeNames.GetRightName(element);
+            return TypeNameTools.GetRightName(element);
         }
 
         // Доступ: protected internal и private protected - protected, file - internal. Без модификатора - по месту:
@@ -287,7 +287,7 @@ namespace CSR.Core.Style.Naming
             return lists
                 .Where(list => list.Target == null)
                 .SelectMany(list => list.Attributes)
-                .Select(attribute => TypeNames.GetAttributeName(attribute.Name))
+                .Select(attribute => TypeNameTools.GetAttributeName(attribute.Name))
                 .ToList();
         }
 

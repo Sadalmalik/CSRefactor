@@ -93,7 +93,7 @@ namespace CSR.Core.Structure
                 assembly => assembly.Dependencies.Where(inLayer.Contains).ToList());
 
             // Сжатие циклов: компоненты Тарьяна выходят в обратном топологическом порядке - зависимости раньше
-            var components = StrongComponents.Find(names, outgoing);
+            var components = StrongComponentTool.Find(names, outgoing);
             var componentOf = new Dictionary<string, int>(StringComparer.Ordinal);
             for (int i = 0; i < components.Count; i++)
             {

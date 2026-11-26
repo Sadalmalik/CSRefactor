@@ -12,22 +12,22 @@ namespace CSR.Reports.Config
         private const string LoggerMechanism = "logger";
 
         private static readonly OptionTable<LoggerSection> Logger = new OptionTable<LoggerSection>()
-            .Add("methods", OptionKinds.Strings, (logger, value) => logger.Methods = value)
-            .Add("bypass", OptionKinds.Strings, (logger, value) => logger.Bypass = value);
+            .Add("methods", OptionKind.Strings, (logger, value) => logger.Methods = value)
+            .Add("bypass", OptionKind.Strings, (logger, value) => logger.Bypass = value);
 
         private static readonly OptionTable<MechanismSection> Mechanism = new OptionTable<MechanismSection>()
-            .Add("use", OptionKinds.Text, (mechanism, value) => mechanism.Use = value)
-            .Add("types", OptionKinds.Strings, (mechanism, value) => mechanism.Types = value)
-            .Add("fields", OptionKinds.Strings, (mechanism, value) => mechanism.Fields = value)
-            .Add("methods", OptionKinds.Strings, (mechanism, value) => mechanism.Methods = value)
-            .Add("calls", OptionKinds.Strings, (mechanism, value) => mechanism.Calls = value)
-            .Add("creates", OptionKinds.Strings, (mechanism, value) => mechanism.Creates = value)
-            .Add("excludePaths", OptionKinds.Strings, (mechanism, value) => mechanism.ExcludePaths = value);
+            .Add("use", OptionKind.Text, (mechanism, value) => mechanism.Use = value)
+            .Add("types", OptionKind.Strings, (mechanism, value) => mechanism.Types = value)
+            .Add("fields", OptionKind.Strings, (mechanism, value) => mechanism.Fields = value)
+            .Add("methods", OptionKind.Strings, (mechanism, value) => mechanism.Methods = value)
+            .Add("calls", OptionKind.Strings, (mechanism, value) => mechanism.Calls = value)
+            .Add("creates", OptionKind.Strings, (mechanism, value) => mechanism.Creates = value)
+            .Add("excludePaths", OptionKind.Strings, (mechanism, value) => mechanism.ExcludePaths = value);
 
         private static readonly OptionKind<List<ProjectMechanism>> Mechanisms = new() { ReadJson = ReadMechanisms };
 
         private static readonly OptionTable<ProjectSection> Table = new OptionTable<ProjectSection>()
-            .Add("preprocessorSymbols", OptionKinds.Strings, (project, value) => project.Symbols = value)
+            .Add("preprocessorSymbols", OptionKind.Strings, (project, value) => project.Symbols = value)
             .AddSection("logger", Logger, project => project.Logger)
             .Add("mechanisms", Mechanisms, (project, value) => project.Mechanisms.AddRange(value));
 

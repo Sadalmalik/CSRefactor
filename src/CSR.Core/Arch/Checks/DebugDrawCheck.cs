@@ -57,7 +57,7 @@ namespace CSR.Core.Arch.Checks
             var drawMethods = NameMask.Get(context.Settings.GetStrings("drawMethods"));
             foreach (var invocation in context.Root.DescendantNodes().OfType<InvocationExpressionSyntax>())
             {
-                if (drawMethods.IsMatch(Invocations.GetTargetText(invocation)))
+                if (drawMethods.IsMatch(InvocationTools.GetTargetText(invocation)))
                     CheckDraw(context, invocation);
             }
 
@@ -67,7 +67,7 @@ namespace CSR.Core.Arch.Checks
 
         private static void CheckDraw(CheckContext context, InvocationExpressionSyntax invocation)
         {
-            var member = SyntaxParts.GetEnclosingMemberName(invocation);
+            var member = SyntaxTools.GetEnclosingMemberName(invocation);
             if (member != null && NameMask.Get(context.Settings.GetStrings("debugMethods")).IsMatch(member))
                 return;
 
@@ -82,7 +82,7 @@ namespace CSR.Core.Arch.Checks
                 return;
 
             var where = member == null ? "" : $" в '{member}'";
-            var message = $"{Invocations.GetTargetText(invocation)} {string.Join(" и ", reasons)}{where}";
+            var message = $"{InvocationTools.GetTargetText(invocation)} {string.Join(" и ", reasons)}{where}";
             context.Report(invocation.Span, message);
         }
 
@@ -143,7 +143,7 @@ namespace CSR.Core.Arch.Checks
             {
                 foreach (var identifier in GetBoolMembers(member))
                 {
-                    var name = string.Concat(NameWords.GetWords(identifier.Text));
+                    var name = string.Concat(NameWordTools.GetWords(identifier.Text));
                     var message = $"флаг отладки '{identifier.Text}' полем '{type.Identifier.Text}'";
                     if (flags.IsMatch(name))
                         context.Report(identifier.Span, message);

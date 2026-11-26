@@ -47,7 +47,7 @@ namespace CSR.Core.Style.Checks
 
                 foreach (var argument in arguments.Arguments)
                 {
-                    if (Invocations.IsStringLike(argument.Expression))
+                    if (InvocationTools.IsStringLike(argument.Expression))
                         CheckMessage(context, argument.Expression);
                 }
             }

@@ -37,7 +37,7 @@ namespace CSR.Commands
         // Файлы на диск, снимок решения - после правки
         private static void Apply(LoadedSolution loaded, RefactorPlan plan)
         {
-            FileChanges.Apply(plan.Changes);
+            FileChangeTools.Apply(plan.Changes);
             if (plan.Solution != null)
                 loaded.Update(plan.Solution);
         }

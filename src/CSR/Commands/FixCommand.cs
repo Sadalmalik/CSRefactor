@@ -50,7 +50,7 @@ namespace CSR.Commands
         };
 
         public static int Run(IEnumerable<string> args)
-            => FileCommands.Run(Command, args);
+            => FileCommandTool.Run(Command, args);
 
         private static FileResult Analyze(FileRun run)
         {
@@ -84,7 +84,7 @@ namespace CSR.Commands
             Parallel.ForEach(files, file =>
             {
                 var source = File.ReadAllText(file);
-                var display = SourceFiles.GetDisplayPath(file);
+                var display = SourceFileTools.GetDisplayPath(file);
                 var lines = changed?[file];
                 var result = SyntaxFixer.Fix(source, display, options, project, fix, lines);
                 var diff = LineDiff.Build(display.Replace('\\', '/'), source, result.Text);
@@ -123,12 +123,12 @@ namespace CSR.Commands
                 writer.WriteEndArray();
                 writer.WriteStartArray("files");
                 foreach (var result in results.Where(item => item.IsChanged))
-                    writer.WriteStringValue(SourceFiles.GetDisplayPath(result.Path).Replace('\\', '/'));
+                    writer.WriteStringValue(SourceFileTools.GetDisplayPath(result.Path).Replace('\\', '/'));
                 writer.WriteEndArray();
                 writer.WriteString("diff", patch);
                 writer.WriteStartArray("reverted");
                 foreach (var result in results.Where(item => item.Fix.Reverted))
-                    writer.WriteStringValue(SourceFiles.GetDisplayPath(result.Path).Replace('\\', '/'));
+                    writer.WriteStringValue(SourceFileTools.GetDisplayPath(result.Path).Replace('\\', '/'));
                 writer.WriteEndArray();
                 writer.WritePropertyName("remaining");
                 writer.WriteRawValue(StyleJsonWriter.Write(report));
@@ -157,7 +157,7 @@ namespace CSR.Commands
 
             foreach (var result in results.Where(item => item.Fix.Reverted))
             {
-                var file = SourceFiles.GetDisplayPath(result.Path);
+                var file = SourceFileTools.GetDisplayPath(result.Path);
                 text.Append($"  не исправлен (замены дают синтаксические ошибки - ошибка проверки): {file}\n");
             }
 

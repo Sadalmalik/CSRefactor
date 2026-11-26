@@ -1,7 +1,7 @@
 namespace CSR.Core.Similar
 {
     // Ключи видов единиц в конфиге, командной строке и отчете
-    public static class UnitKinds
+    public static class UnitKindTool
     {
         private static readonly Dictionary<UnitKind, string> Keys = new()
         {

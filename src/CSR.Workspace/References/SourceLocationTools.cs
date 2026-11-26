@@ -2,7 +2,7 @@ using Microsoft.CodeAnalysis;
 
 namespace CSR.Workspace.References
 {
-    public static class SourceLocations
+    public static class SourceLocationTools
     {
         private const int MaxTextLength = 200;
 

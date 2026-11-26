@@ -10,7 +10,7 @@ namespace CSR.Core.Similar
     // локальной функции; override и явные реализации интерфейса не берутся (набор задан базой). Набор полей -
     // поля экземпляра (без const и static), автосвойства экземпляра и параметры основного конструктора типа.
     // Элемент - тип как написан (без пробелов) и имя без префикса поля в нижнем регистре, после синонимов
-    public static class SetUnits
+    public static class SetUnitTool
     {
         private static readonly Regex Spaces = new(@"\s+", RegexOptions.CultureInvariant);
 
@@ -39,7 +39,7 @@ namespace CSR.Core.Similar
         // Элемент набора: Vector3 position
         public static string GetElement(TypeSyntax type, string name, SimilarOptions options)
         {
-            var normalized = NameWords.StripFieldPrefix(name).ToLowerInvariant();
+            var normalized = NameWordTools.StripFieldPrefix(name).ToLowerInvariant();
             if (options.Synonyms.TryGetValue(normalized, out string? synonym))
                 normalized = synonym;
 
@@ -105,9 +105,9 @@ namespace CSR.Core.Similar
             {
                 Kind = kind,
                 File = tree.FilePath,
-                Member = MemberUnits.GetMemberName(owner),
-                StartLine = MemberUnits.GetLine(tree, owner.SpanStart),
-                EndLine = MemberUnits.GetLine(tree, place.Span.End),
+                Member = MemberUnitTool.GetMemberName(owner),
+                StartLine = MemberUnitTool.GetLine(tree, owner.SpanStart),
+                EndLine = MemberUnitTool.GetLine(tree, place.Span.End),
                 NodeCount = distinct.Count,
                 Fingerprints = fingerprints,
                 SpanStart = place.SpanStart,

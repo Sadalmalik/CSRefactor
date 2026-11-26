@@ -22,7 +22,7 @@ namespace CSR.Reports.Metrics
                 builder.Append("  {")
                     .Append(":name ").Append(EdnString(function.Member)).Append(", ")
                     .Append(":namespace ").Append(EdnString(GetNamespace(function))).Append(", ")
-                    .Append(":complexity ").Append(function.Values[MetricKeys.Cyclomatic]).Append(", ")
+                    .Append(":complexity ").Append(function.Values[MetricKey.Cyclomatic]).Append(", ")
                     .Append(":coverage ").Append(EdnNumber(function.Coverage)).Append(", ")
                     .Append(":crap ").Append(EdnNumber(function.Crap))
                     .Append('}');
@@ -36,7 +36,7 @@ namespace CSR.Reports.Metrics
         {
             return functions
                 .OrderBy(function => function.Crap == null ? 1 : 0)
-                .ThenByDescending(function => function.Crap ?? function.Values[MetricKeys.Cyclomatic])
+                .ThenByDescending(function => function.Crap ?? function.Values[MetricKey.Cyclomatic])
                 .ThenBy(GetNamespace, StringComparer.Ordinal)
                 .ThenBy(function => function.Member, StringComparer.Ordinal)
                 .ThenBy(function => function.File, StringComparer.Ordinal);

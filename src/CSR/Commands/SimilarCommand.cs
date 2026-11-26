@@ -51,7 +51,7 @@ namespace CSR.Commands
         };
 
         public static int Run(IEnumerable<string> args)
-            => FileCommands.Run(Command, args);
+            => FileCommandTool.Run(Command, args);
 
         private static FileResult Analyze(FileRun run)
         {
@@ -77,7 +77,7 @@ namespace CSR.Commands
                 Options = options,
                 IsChanged = isChanged,
                 Result = result,
-                Inventory = collected.Graph == null ? null : ExtensionHosts.Find(collected.Graph, SystemUnits.MinVariants),
+                Inventory = collected.Graph == null ? null : ExtensionHostTool.Find(collected.Graph, SystemUnitTool.MinVariants),
             };
             var counts = $"единиц {units.Count}, пар {result.Pairs.Count}, кластеров {result.Clusters.Count}";
             return new FileResult
@@ -92,24 +92,24 @@ namespace CSR.Commands
         {
             var trees = SourceGraph.Parse(files, project);
             var results = new ConcurrentBag<List<SimilarUnit>>();
-            Parallel.ForEach(trees, tree => results.Add(SimilarUnits.Collect(tree, options)));
+            Parallel.ForEach(trees, tree => results.Add(SimilarUnitTool.Collect(tree, options)));
 
             var units = results.SelectMany(list => list).ToList();
             if (!options.Kinds.Contains(UnitKind.System))
                 return new CollectedUnits(units, null);
 
             var graph = SourceGraph.Build(trees).Graph;
-            units.AddRange(SystemUnits.Collect(graph, options));
+            units.AddRange(SystemUnitTool.Collect(graph, options));
             return new CollectedUnits(units, graph);
         }
 
         private static bool IsInScope(string file, SimilarOptions options)
-            => FileScope.IsInScope(options.Paths, options.ExcludePaths, SourceFiles.GetDisplayPath(file));
+            => FileScope.IsInScope(options.Paths, options.ExcludePaths, SourceFileTools.GetDisplayPath(file));
 
         // Единица изменена, если задета хотя бы одна ее строка
         private static Func<SimilarUnit, bool> GetChangedFilter(Dictionary<string, ChangedLines> changed)
         {
-            var byDisplayPath = changed.ToDictionary(pair => SourceFiles.GetDisplayPath(pair.Key), pair => pair.Value);
+            var byDisplayPath = changed.ToDictionary(pair => SourceFileTools.GetDisplayPath(pair.Key), pair => pair.Value);
             return unit =>
             {
                 if (!byDisplayPath.TryGetValue(unit.File, out ChangedLines? lines))

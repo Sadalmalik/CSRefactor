@@ -82,7 +82,7 @@ namespace CSR.Core.Arch.Checks
 
             var attributes = NameMask.Get(context.Settings.GetStrings("ignoreAttributes"));
             if (contract.GetAttributes().Any(attribute => attribute.AttributeClass != null
-                && attributes.IsMatch(TypeNames.TrimAttributeSuffix(attribute.AttributeClass.Name))))
+                && attributes.IsMatch(TypeNameTools.TrimAttributeSuffix(attribute.AttributeClass.Name))))
                 return true;
 
             var contracts = NameMask.Get(context.Settings.GetStrings("contractMasks"), true);

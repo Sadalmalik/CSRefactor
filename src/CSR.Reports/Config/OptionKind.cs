@@ -12,7 +12,7 @@ namespace CSR.Reports.Config
         public Func<string, string, TValue>? ParseText { get; init; }
     }
 
-    public static class OptionKinds
+    public static class OptionKind
     {
         private const string ShareText = "число от 0 до 1";
 

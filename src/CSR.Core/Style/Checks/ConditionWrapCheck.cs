@@ -40,7 +40,7 @@ namespace CSR.Core.Style.Checks
             foreach (var node in context.Root.DescendantNodes())
             {
                 var condition = GetCondition(node);
-                if (condition == null || TextLines.HasCommentOrDirective(condition))
+                if (condition == null || LineWrapTools.HasCommentOrDirective(condition))
                     continue;
 
                 CheckChain(context, node, condition, max);

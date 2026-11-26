@@ -44,7 +44,7 @@ namespace CSR.Core.Style.Checks
 
             var baseTypes = NameMask.Get(context.Settings.GetStrings("baseTypes"));
             bool hasDerived = baseTypes.IsEmpty
-                || types.Any(item => item.Type is TypeDeclarationSyntax type && SyntaxParts.HasBaseType(type, baseTypes));
+                || types.Any(item => item.Type is TypeDeclarationSyntax type && SyntaxTools.HasBaseType(type, baseTypes));
             if (!hasDerived)
                 return;
 

@@ -211,7 +211,7 @@ namespace CSR.Core.Tests.Similar
                     public Settings(int count) { Count = count; }
                 }
                 """;
-            var units = TypeUnits.Collect(CSharpSyntaxTree.ParseText(data, path: "Settings.cs"), new SimilarOptions());
+            var units = TypeUnitTool.Collect(CSharpSyntaxTree.ParseText(data, path: "Settings.cs"), new SimilarOptions());
             Assert.That(units, Is.Empty);
         }
 
@@ -224,7 +224,7 @@ namespace CSR.Core.Tests.Similar
         {
             var units = sources
                 .Select((source, index) => CSharpSyntaxTree.ParseText(source, path: $"File{index}.cs"))
-                .SelectMany(tree => SimilarUnits.Collect(tree, options))
+                .SelectMany(tree => SimilarUnitTool.Collect(tree, options))
                 .ToList();
             return SimilarSearch.Run(units, options);
         }

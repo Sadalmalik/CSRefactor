@@ -46,7 +46,7 @@ namespace CSR.Core.Structure
                 outgoing[link.From].Add(link.To);
 
             var cycles = new List<PackageCycle>();
-            foreach (var component in StrongComponents.Find(packages, outgoing).Where(component => component.Count > 1))
+            foreach (var component in StrongComponentTool.Find(packages, outgoing).Where(component => component.Count > 1))
             {
                 var members = new HashSet<string>(component);
                 var inside = links.Where(link => members.Contains(link.From) && members.Contains(link.To)).ToList();
@@ -75,7 +75,7 @@ namespace CSR.Core.Structure
     }
 
     // Сильно связные компоненты (Тарьян, без рекурсии)
-    public static class StrongComponents
+    public static class StrongComponentTool
     {
         public static List<List<string>> Find(IReadOnlyList<string> nodes, IReadOnlyDictionary<string, List<string>> outgoing)
         {

@@ -110,7 +110,7 @@ namespace CSR.Workspace.Rename
                     {
                         var span = new TextSpan(literal.SpanStart + match.Index, match.Length);
                         var location = Location.Create(tree, span);
-                        var place = SourceLocations.Create(location, root);
+                        var place = SourceLocationTools.Create(location, root);
                         matches.Add(new StringMatch
                         {
                             Kind = "literal",
@@ -178,7 +178,7 @@ namespace CSR.Workspace.Rename
             if (!text.Contains(name, StringComparison.Ordinal))
                 return;
 
-            var relative = SourceLocations.GetRelativePath(root, file);
+            var relative = SourceLocationTools.GetRelativePath(root, file);
             var lines = text.Split('\n');
             for (var i = 0; i < lines.Length; i++)
             {

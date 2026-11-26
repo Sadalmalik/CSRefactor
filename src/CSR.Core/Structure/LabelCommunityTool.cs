@@ -5,7 +5,7 @@ namespace CSR.Core.Structure
     // Сообщества внутреннего графа пакета: распространение меток по ребрам без направления (узел берет самую частую
     // метку соседей, при равенстве - меньшую), порядок обхода - по ключу, не больше Iterations проходов.
     // Модулярность Ньюмана: Q = сумма по сообществам (внутренних ребер / m - (степеней / 2m)^2)
-    public static class LabelCommunities
+    public static class LabelCommunityTool
     {
         private const int Iterations = 20;
 

@@ -28,7 +28,7 @@ namespace CSR
             Parallel.ForEach(files, file =>
             {
                 var source = File.ReadAllText(file);
-                trees.Add(CSharpSyntaxTree.ParseText(source, project.ParseOptions, SourceFiles.GetDisplayPath(file)));
+                trees.Add(CSharpSyntaxTree.ParseText(source, project.ParseOptions, SourceFileTools.GetDisplayPath(file)));
             });
 
             return trees.OrderBy(tree => tree.FilePath, StringComparer.Ordinal).ToList();

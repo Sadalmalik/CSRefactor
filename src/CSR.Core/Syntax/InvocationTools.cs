@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CSR.Core.Syntax
 {
-    public static class Invocations
+    public static class InvocationTools
     {
         // Текст вызываемого выражения без пробелов и аргументов типа: Debug.Log, Log.Default.Error
         public static string GetTargetText(InvocationExpressionSyntax invocation)

@@ -24,7 +24,7 @@ namespace CSR.Workspace.Tests
         {
             using var sample = SampleSolution.Create();
             var loaded = await sample.LoadAsync();
-            var server = new WorkspaceServer(loaded, WorkspaceCommands.ExecuteAsync, TimeSpan.Zero, TextWriter.Null);
+            var server = new WorkspaceServer(loaded, WorkspaceCommandTools.ExecuteAsync, TimeSpan.Zero, TextWriter.Null);
             using var cancellation = new CancellationTokenSource(TimeSpan.FromMinutes(3));
             var running = server.RunAsync(cancellation.Token);
 
@@ -58,7 +58,7 @@ namespace CSR.Workspace.Tests
         {
             using var sample = SampleSolution.Create();
             var loaded = await sample.LoadAsync();
-            var server = new WorkspaceServer(loaded, WorkspaceCommands.ExecuteAsync, TimeSpan.Zero, TextWriter.Null);
+            var server = new WorkspaceServer(loaded, WorkspaceCommandTools.ExecuteAsync, TimeSpan.Zero, TextWriter.Null);
             using var cancellation = new CancellationTokenSource(TimeSpan.FromMinutes(3));
             var running = server.RunAsync(cancellation.Token);
             await PingAsync(sample);

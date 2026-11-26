@@ -9,11 +9,11 @@ namespace CSR.Core.Metrics
     {
         public static int Calculate(SyntaxNode function)
         {
-            BlockSyntax? body = Functions.GetBody(function);
+            BlockSyntax? body = FunctionTools.GetBody(function);
             if (body == null)
                 return 0;
 
-            return body.DescendantNodes(node => node == function || !Functions.IsFunction(node))
+            return body.DescendantNodes(node => node == function || !FunctionTools.IsFunction(node))
                 .Where(node => node is StatementSyntax and not BlockSyntax)
                 .Select(node => node.Ancestors().TakeWhile(ancestor => ancestor != body).Count(IsNestingStatement))
                 .DefaultIfEmpty(0)

@@ -34,7 +34,7 @@ namespace CSR.Core.Style.Checks
             bool trailingComma = context.Settings.GetBool("trailingComma");
             foreach (var initializer in context.Root.DescendantNodes().OfType<InitializerExpressionSyntax>())
             {
-                if (!IsChecked(initializer) || TextLines.HasCommentOrDirective(initializer))
+                if (!IsChecked(initializer) || LineWrapTools.HasCommentOrDirective(initializer))
                     continue;
 
                 var problem = GetProblem(context.Text, initializer, max, trailingComma);

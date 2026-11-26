@@ -20,7 +20,7 @@ namespace CSR.Workspace.Server
         private int m_Active;
 
         // idleTimeout: остановка после простоя; TimeSpan.Zero - без остановки
-        // handler - выполнение команды над решением (CLI: WorkspaceCommands.ExecuteAsync)
+        // handler - выполнение команды над решением (CLI: WorkspaceCommandTools.ExecuteAsync)
         public WorkspaceServer(
             LoadedSolution loaded,
             Func<LoadedSolution, WorkspaceRequest, CancellationToken, Task<WorkspaceResponse>> handler,

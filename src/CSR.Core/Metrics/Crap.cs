@@ -56,7 +56,7 @@ namespace CSR.Core.Metrics
             {
                 var percent = Round(coverage?.GetPercent(function.Line, function.EndLine) ?? 0.0);
                 function.Coverage = percent;
-                function.Crap = Round(Score(function.Values[MetricKeys.Cyclomatic], percent));
+                function.Crap = Round(Score(function.Values[MetricKey.Cyclomatic], percent));
             }
         }
     }

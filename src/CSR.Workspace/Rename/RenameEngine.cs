@@ -72,7 +72,7 @@ namespace CSR.Workspace.Rename
                 new SymbolRenameOptions(),
                 newName,
                 cancellation);
-            var changes = await FileChanges.CollectAsync(solution, renamed, loaded.Root, cancellation);
+            var changes = await FileChangeTools.CollectAsync(solution, renamed, loaded.Root, cancellation);
             var renameTime = stopwatch.Elapsed;
             var compile = settings.Verify
                 ? await CompileCheck.RunAsync(solution, renamed, loaded.Root, cancellation)
@@ -110,7 +110,7 @@ namespace CSR.Workspace.Rename
             if (plan.Solution == null)
                 throw new InvalidOperationException("в плане нет правок");
 
-            FileChanges.Apply(plan.Changes);
+            FileChangeTools.Apply(plan.Changes);
 
             loaded.Update(plan.Solution);
         }
@@ -189,7 +189,7 @@ namespace CSR.Workspace.Rename
                 if (Path.GetFileNameWithoutExtension(path) != type.Name)
                     continue;
 
-                var file = SourceLocations.GetRelativePath(root, path);
+                var file = SourceLocationTools.GetRelativePath(root, path);
                 notes.Add($"файл {file} назван по типу - переименовать вручную{(unity ? UnityFileNote : "")}");
             }
 

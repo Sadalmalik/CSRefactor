@@ -41,7 +41,7 @@ namespace CSR.Core.Style.Checks
             {
                 bool isSignature = list.Parent
                     is BaseMethodDeclarationSyntax or LocalFunctionStatementSyntax or DelegateDeclarationSyntax;
-                if (!isSignature || list.Parameters.Count == 0 || TextLines.HasCommentOrDirective(list))
+                if (!isSignature || list.Parameters.Count == 0 || LineWrapTools.HasCommentOrDirective(list))
                     continue;
 
                 var tails = GetTails(context.Text, list, initializerOnOwnLine);
@@ -126,7 +126,7 @@ namespace CSR.Core.Style.Checks
         {
             var text = context.Text;
             var member = list.Parent!;
-            var indent = TextLayout.GetIndent(text, SyntaxParts.GetDeclarationStart(member));
+            var indent = TextLayout.GetIndent(text, SyntaxTools.GetDeclarationStart(member));
             var inner = TextLayout.Deeper(indent);
             var openLine = text.Lines.GetLineFromPosition(list.OpenParenToken.SpanStart);
             var closeLine = text.Lines.GetLineFromPosition(list.CloseParenToken.SpanStart);

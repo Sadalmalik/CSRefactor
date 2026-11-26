@@ -113,7 +113,7 @@ namespace CSR.Core.Tests.Similar
         [Test]
         public void ExtensionHosts_Inventory()
         {
-            var entry = ExtensionHosts.Find(Build(Library, Motors), 2).Single();
+            var entry = ExtensionHostTool.Find(Build(Library, Motors), 2).Single();
             Assert.That(entry.Host.Name, Is.EqualTo("ProjectileMotors"));
             Assert.That(entry.ExtensionPoint.Name, Is.EqualTo("ProjectileMotor"));
             Assert.That(entry.IsCollection, Is.True);
@@ -127,7 +127,7 @@ namespace CSR.Core.Tests.Similar
         public void TwoSystemsOfOneDesign_Cluster()
         {
             var options = new SimilarOptions { Kinds = [UnitKind.System], MinSystemTypes = 3 };
-            var units = SystemUnits.Collect(Build(Library, Motions, Motors), options);
+            var units = SystemUnitTool.Collect(Build(Library, Motions, Motors), options);
             Assert.That(units.Select(unit => unit.Member), Is.EquivalentTo(new[] { "MotionGroup", "ProjectileMotors" }));
 
             var result = SimilarSearch.Run(units, options);
@@ -149,7 +149,7 @@ namespace CSR.Core.Tests.Similar
                     private Engine[] m_Spares;
                 }
                 """;
-            Assert.That(ExtensionHosts.Find(Build(source), 2), Is.Empty);
+            Assert.That(ExtensionHostTool.Find(Build(source), 2), Is.Empty);
         }
 
         [Test]
@@ -164,7 +164,7 @@ namespace CSR.Core.Tests.Similar
                     public MotionFrame Tick(float time) => default;
                 }
                 """;
-            var units = SystemUnits.Collect(Build(Library, Motions, host), options);
+            var units = SystemUnitTool.Collect(Build(Library, Motions, host), options);
             Assert.That(units, Has.Count.EqualTo(2));
             Assert.That(SimilarSearch.Run(units, options).Pairs, Is.Empty);
         }

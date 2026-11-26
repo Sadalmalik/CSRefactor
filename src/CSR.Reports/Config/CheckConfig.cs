@@ -78,7 +78,7 @@ namespace CSR.Reports.Config
             var value = property.Value;
             object parsed = parameter.Kind switch
             {
-                ParameterKind.Int => OptionKinds.Integer.ReadJson(value, path),
+                ParameterKind.Int => OptionKind.Integer.ReadJson(value, path),
                 ParameterKind.Bool => JsonConfig.ReadBool(value, path),
                 ParameterKind.String => ReadChoice(parameter, value, path),
                 ParameterKind.Strings => JsonConfig.ReadStrings(value, path),
@@ -145,7 +145,7 @@ namespace CSR.Reports.Config
                 {
                     JsonValueKind.String => property.Value.GetString()!,
                     JsonValueKind.True or JsonValueKind.False => property.Value.GetBoolean(),
-                    JsonValueKind.Number => OptionKinds.Integer.ReadJson(property.Value, fieldPath),
+                    JsonValueKind.Number => OptionKind.Integer.ReadJson(property.Value, fieldPath),
                     JsonValueKind.Array => JsonConfig.ReadStrings(property.Value, fieldPath),
                     JsonValueKind.Object => ReadRecord(property.Value, fieldPath, property.Name),
                     _ => throw new ConfigException($"{fieldPath}: ожидается строка, число, bool, список строк или объект"),

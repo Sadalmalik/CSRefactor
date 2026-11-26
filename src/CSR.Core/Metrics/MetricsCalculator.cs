@@ -19,15 +19,15 @@ namespace CSR.Core.Metrics
                 .ToList();
 
             var functions = root.DescendantNodes()
-                .Where(Functions.IsFunction)
+                .Where(FunctionTools.IsFunction)
                 .Select(function => MeasureFunction(function, text, tree.FilePath))
                 .ToList();
 
             var fileValues = new Dictionary<string, int>
             {
-                [MetricKeys.Lines] = text.Lines.Count,
-                [MetricKeys.CodeLines] = LineCounter.CountCode(root, text),
-                [MetricKeys.Types] = types.Count,
+                [MetricKey.Lines] = text.Lines.Count,
+                [MetricKey.CodeLines] = LineCounter.CountCode(root, text),
+                [MetricKey.Types] = types.Count,
             };
 
             var file = new MetricItem
@@ -52,21 +52,21 @@ namespace CSR.Core.Metrics
         {
             var values = new Dictionary<string, int>
             {
-                [MetricKeys.Cyclomatic] = CyclomaticComplexity.Calculate(function),
-                [MetricKeys.Cognitive] = CognitiveComplexity.Calculate(function),
-                [MetricKeys.Lines] = LineCounter.CountPhysical(function),
-                [MetricKeys.CodeLines] = LineCounter.CountCode(function, text),
-                [MetricKeys.Nesting] = NestingDepth.Calculate(function),
-                [MetricKeys.Parameters] = Functions.GetParameters(function)?.Parameters.Count ?? 0,
+                [MetricKey.Cyclomatic] = CyclomaticComplexity.Calculate(function),
+                [MetricKey.Cognitive] = CognitiveComplexity.Calculate(function),
+                [MetricKey.Lines] = LineCounter.CountPhysical(function),
+                [MetricKey.CodeLines] = LineCounter.CountCode(function, text),
+                [MetricKey.Nesting] = NestingDepth.Calculate(function),
+                [MetricKey.Parameters] = FunctionTools.GetParameters(function)?.Parameters.Count ?? 0,
             };
 
             var container = GetContainer(function);
-            var name = Functions.GetName(function);
+            var name = FunctionTools.GetName(function);
             var span = function.GetLocation().GetLineSpan();
             return new MetricItem
             {
                 Level = MetricLevel.Function,
-                Kind = Functions.GetKind(function),
+                Kind = FunctionTools.GetKind(function),
                 Name = container.Length == 0 ? name : container + "." + name,
                 Namespace = GetNamespace(function),
                 Owner = GetOwnerTypes(function),
@@ -79,23 +79,23 @@ namespace CSR.Core.Metrics
 
         private static MetricItem MeasureType(BaseTypeDeclarationSyntax type, SourceText text, string path)
         {
-            var members = TypeMembers.Count(type);
+            var members = MemberKind.Count(type);
             int regions = type.DescendantTrivia().Count(trivia => trivia.IsKind(SyntaxKind.RegionDirectiveTrivia));
             var values = new Dictionary<string, int>
             {
-                [MetricKeys.Lines] = LineCounter.CountPhysical(type),
-                [MetricKeys.CodeLines] = LineCounter.CountCode(type, text),
-                [MetricKeys.Members] = members.Values.Sum(),
-                [MetricKeys.Regions] = regions,
+                [MetricKey.Lines] = LineCounter.CountPhysical(type),
+                [MetricKey.CodeLines] = LineCounter.CountCode(type, text),
+                [MetricKey.Members] = members.Values.Sum(),
+                [MetricKey.Regions] = regions,
             };
 
             var container = GetContainer(type);
-            var name = TypeMembers.GetName(type);
+            var name = MemberKind.GetName(type);
             var span = type.GetLocation().GetLineSpan();
             return new MetricItem
             {
                 Level = MetricLevel.Type,
-                Kind = TypeMembers.GetKind(type),
+                Kind = MemberKind.GetKind(type),
                 Name = container.Length == 0 ? name : container + "." + name,
                 Namespace = GetNamespace(type),
                 File = path,
@@ -113,9 +113,9 @@ namespace CSR.Core.Metrics
             foreach (var ancestor in node.Ancestors())
             {
                 if (ancestor is BaseTypeDeclarationSyntax type)
-                    parts.Add(TypeMembers.GetName(type));
-                else if (Functions.IsFunction(ancestor))
-                    parts.Add(Functions.GetName(ancestor));
+                    parts.Add(MemberKind.GetName(type));
+                else if (FunctionTools.IsFunction(ancestor))
+                    parts.Add(FunctionTools.GetName(ancestor));
             }
 
             parts.Reverse();
@@ -127,7 +127,7 @@ namespace CSR.Core.Metrics
         {
             var names = node.Ancestors()
                 .OfType<BaseTypeDeclarationSyntax>()
-                .Select(TypeMembers.GetName)
+                .Select(MemberKind.GetName)
                 .Reverse();
 
             return string.Join(".", names);

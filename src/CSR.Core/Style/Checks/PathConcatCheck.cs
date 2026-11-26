@@ -183,7 +183,7 @@ namespace CSR.Core.Style.Checks
             var text = name.Identifier.Text;
             var member = name.Ancestors().OfType<MemberDeclarationSyntax>().FirstOrDefault(
                 item => item is not BaseTypeDeclarationSyntax);
-            var declarations = member == null ? new List<TypeSyntax?>() : LocalNames.FindDeclarationTypes(member, text);
+            var declarations = member == null ? new List<TypeSyntax?>() : LocalNameTools.FindDeclarationTypes(member, text);
             if (declarations.Count > 0)
                 return declarations.All(IsStringType);
 

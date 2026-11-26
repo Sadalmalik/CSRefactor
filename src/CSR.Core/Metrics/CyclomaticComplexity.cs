@@ -10,8 +10,8 @@ namespace CSR.Core.Metrics
     {
         public static int Calculate(SyntaxNode function)
         {
-            int decisions = Functions.OwnNodes(function).Count(IsDecision);
-            int operators = Functions.OwnTokens(function).Count(IsDecisionToken);
+            int decisions = FunctionTools.OwnNodes(function).Count(IsDecision);
+            int operators = FunctionTools.OwnTokens(function).Count(IsDecisionToken);
             return 1 + decisions + operators;
         }
 

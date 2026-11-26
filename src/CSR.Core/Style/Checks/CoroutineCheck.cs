@@ -42,7 +42,7 @@ namespace CSR.Core.Style.Checks
                     LocalFunctionStatementSyntax local => (local.ReturnType, local.Identifier),
                     _ => (null, default(SyntaxToken)),
                 };
-                if (returnType == null || !returnTypes.IsMatch(TypeNames.GetRightName(returnType)))
+                if (returnType == null || !returnTypes.IsMatch(TypeNameTools.GetRightName(returnType)))
                     continue;
 
                 if (identifier.Text == "GetEnumerator")
@@ -52,7 +52,7 @@ namespace CSR.Core.Style.Checks
                     continue;
 
                 var message = $"корутина '{identifier.Text}' ({returnType})";
-                context.Report(identifier.Span, ForbiddenNames.WithUse(message, use));
+                context.Report(identifier.Span, ForbiddenNameTool.WithUse(message, use));
             }
         }
 

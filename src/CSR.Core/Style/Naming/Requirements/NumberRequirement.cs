@@ -24,8 +24,8 @@ namespace CSR.Core.Style.Naming.Requirements
 
         public string? Check(NameSymbol symbol)
         {
-            var word = NameWords.GetLastWord(symbol.Name);
-            bool isPlural = NameWords.IsPlural(word, m_PluralWords, m_SingularEndings);
+            var word = NameWordTools.GetLastWord(symbol.Name);
+            bool isPlural = NameWordTools.IsPlural(word, m_PluralWords, m_SingularEndings);
             if (isPlural == m_IsPlural)
                 return null;
 

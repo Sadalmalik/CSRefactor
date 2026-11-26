@@ -7,12 +7,12 @@ namespace CSR.Core.Metrics
         File,
     }
 
-    // Измеренный элемент: функция, тип или файл. Значения метрик - по ключам MetricKeys
+    // Измеренный элемент: функция, тип или файл. Значения метрик - по ключам MetricKey
     public class MetricItem
     {
         public required MetricLevel Level { get; init; }
 
-        // method, constructor, accessor, class, struct, file и т. д. - Functions.GetKind, TypeMembers.GetKind
+        // method, constructor, accessor, class, struct, file и т. д. - FunctionTools.GetKind, MemberKind.GetKind
         public required string Kind { get; init; }
 
         // Имя без пространства имен: Outer.Inner.Method, Outer.Property.get; у файла - путь
@@ -35,7 +35,7 @@ namespace CSR.Core.Metrics
 
         public required IReadOnlyDictionary<string, int> Values { get; init; }
 
-        // Только у типа: число членов по видам - TypeMembers
+        // Только у типа: число членов по видам - MemberKind
         public IReadOnlyDictionary<string, int>? Members { get; init; }
 
         // Только у функции, если задано покрытие: доля покрытых точек в процентах и CRAP; null - покрытия нет

@@ -119,7 +119,7 @@ namespace CSR.Core.Arch.Checks
                     case LocalDeclarationStatementSyntax local when local.IsConst:
                         return true;
                     case BaseMethodDeclarationSyntax or PropertyDeclarationSyntax or IndexerDeclarationSyntax:
-                        var name = SyntaxParts.GetEnclosingMemberName(literal);
+                        var name = SyntaxTools.GetEnclosingMemberName(literal);
                         return name != null && ignoredMethods.IsMatch(name);
                 }
             }

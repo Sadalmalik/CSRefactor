@@ -62,7 +62,7 @@ namespace CSR.Core.Arch.Checks
                     _ => null,
                 };
 
-                if (declaration == null || !TypeNames.IsNumericType(declaration.Type))
+                if (declaration == null || !TypeNameTools.IsNumericType(declaration.Type))
                     continue;
 
                 foreach (var variable in declaration.Variables)
@@ -75,9 +75,9 @@ namespace CSR.Core.Arch.Checks
             VariableDeclarationSyntax declaration,
             VariableDeclaratorSyntax variable)
         {
-            var words = NameWords.GetWords(variable.Identifier.Text);
+            var words = NameWordTools.GetWords(variable.Identifier.Text);
             var hint = context.Settings.GetStrings("hints")
-                .FirstOrDefault(phrase => NameWords.ContainsPhrase(words, phrase));
+                .FirstOrDefault(phrase => NameWordTools.ContainsPhrase(words, phrase));
             if (hint == null)
                 return;
 

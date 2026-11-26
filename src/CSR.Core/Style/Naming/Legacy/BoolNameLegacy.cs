@@ -8,7 +8,7 @@ namespace CSR.Core.Style.Naming.Legacy
         public static readonly CheckAlias Check = new(
             "bool-name",
             "отрицание в имени bool (устарела: naming)",
-            LegacyRules.Replacement,
+            LegacyRuleTools.Replacement,
             [
                 CheckParameter.Strings(
                     "members",
@@ -29,15 +29,15 @@ namespace CSR.Core.Style.Naming.Legacy
                     "приставки отрицания: слово имени, которое с нее начинается (Dis - Disabled)"),
                 CheckParameter.Strings("ignoreWords", "слова с приставкой из negationPrefixes, которые не отрицание (Display)"),
             ],
-            settings => LegacyRules.Analyze(Translate(settings)));
+            settings => LegacyRuleTools.Analyze(Translate(settings)));
 
         private static IReadOnlyList<NamingRule> Translate(CheckSettings settings)
         {
             var fields = new Dictionary<string, object>
             {
-                ["symbols"] = LegacyRules.Symbols(new()
+                ["symbols"] = LegacyRuleTools.Symbols(new()
                 {
-                    ["kinds"] = LegacyRules.KnownKinds(settings.GetStrings("members")),
+                    ["kinds"] = LegacyRuleTools.KnownKinds(settings.GetStrings("members")),
                     ["types"] = new[] { "bool", "Boolean" },
                 }),
                 ["forbiddenWords"] = settings.GetStrings("forbiddenWords"),
@@ -46,7 +46,7 @@ namespace CSR.Core.Style.Naming.Legacy
                 ["negation"] = true,
                 ["subject"] = "bool",
             };
-            return [LegacyRules.Rule(fields)];
+            return [LegacyRuleTools.Rule(fields)];
         }
     }
 }

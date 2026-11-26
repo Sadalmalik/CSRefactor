@@ -42,7 +42,7 @@ namespace CSR.Core.Style.Checks
                 var line = text.Lines[group.Key];
                 // длину портит выровненный отступ продолжения, а не вызов: с нормальным отступом (+4) строка
                 // может поместиться - тогда переносить нечего (отступ - condition-wrap или агент)
-                var excess = TextLines.GetContinuationExcess(context.Root, text, group.Key);
+                var excess = LineWrapTools.GetContinuationExcess(context.Root, text, group.Key);
                 if (line.Span.Length - excess <= max)
                     continue;
 
@@ -109,7 +109,7 @@ namespace CSR.Core.Style.Checks
 
         private static bool IsChecked(CheckContext context, ArgumentListSyntax list)
         {
-            if (TextLines.HasCommentOrDirective(list))
+            if (LineWrapTools.HasCommentOrDirective(list))
                 return false;
 
             if (list.Parent is InvocationExpressionSyntax invocation

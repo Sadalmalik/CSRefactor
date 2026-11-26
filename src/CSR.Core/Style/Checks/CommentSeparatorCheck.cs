@@ -24,7 +24,7 @@ namespace CSR.Core.Style.Checks
         {
             var run = context.Settings.GetInt("minRun");
             var pattern = new Regex($"^[-=*_#~+/]{{{run},}}", RegexOptions.CultureInvariant);
-            foreach (var comment in Comments.GetLineComments(context.Root, context.Text))
+            foreach (var comment in CommentTools.GetLineComments(context.Root, context.Text))
             {
                 if (comment.IsFullLine && pattern.IsMatch(comment.Content))
                     context.Report(comment.Span, "комментарий-разделитель");

@@ -22,7 +22,7 @@ namespace CSR.Core.Arch.Checks
         {
             foreach (var attribute in context.Root.DescendantNodes().OfType<AttributeSyntax>())
             {
-                if (TypeNames.GetAttributeName(attribute.Name) != "Obsolete" || HasReason(attribute))
+                if (TypeNameTools.GetAttributeName(attribute.Name) != "Obsolete" || HasReason(attribute))
                     continue;
 
                 var owner = attribute.Parent?.Parent;

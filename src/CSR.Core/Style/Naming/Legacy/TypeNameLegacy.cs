@@ -10,7 +10,7 @@ namespace CSR.Core.Style.Naming.Legacy
         public static readonly CheckAlias Check = new(
             "type-name",
             "префиксы интерфейсов и параметров-типов, имена наследников (устарела: naming)",
-            LegacyRules.Replacement,
+            LegacyRuleTools.Replacement,
             [
                 CheckParameter.Text("interfacePrefix", "I", "префикс интерфейса перед заглавной буквой; пусто - не проверять"),
                 CheckParameter.Text(
@@ -22,7 +22,7 @@ namespace CSR.Core.Style.Naming.Legacy
                     new Dictionary<string, string>(),
                     "маска имени базового типа -> маска имени наследника (\"*Command\": \"*Command\")"),
             ],
-            settings => LegacyRules.Analyze(Translate(settings)));
+            settings => LegacyRuleTools.Analyze(Translate(settings)));
 
         private static IReadOnlyList<NamingRule> Translate(CheckSettings settings)
         {
@@ -30,9 +30,9 @@ namespace CSR.Core.Style.Naming.Legacy
             var interfacePrefix = settings.GetString("interfacePrefix");
             if (interfacePrefix.Length > 0)
             {
-                rules.Add(LegacyRules.Rule(new()
+                rules.Add(LegacyRuleTools.Rule(new()
                 {
-                    ["symbols"] = LegacyRules.Symbols(new() { ["kinds"] = new[] { "interface" } }),
+                    ["symbols"] = LegacyRuleTools.Symbols(new() { ["kinds"] = new[] { "interface" } }),
                     ["prefix"] = interfacePrefix,
                     ["prefixStyle"] = "word",
                 }));
@@ -41,9 +41,9 @@ namespace CSR.Core.Style.Naming.Legacy
             var typeParameterPrefix = settings.GetString("typeParameterPrefix");
             if (typeParameterPrefix.Length > 0)
             {
-                rules.Add(LegacyRules.Rule(new()
+                rules.Add(LegacyRuleTools.Rule(new()
                 {
-                    ["symbols"] = LegacyRules.Symbols(new() { ["kinds"] = new[] { "typeParameter" } }),
+                    ["symbols"] = LegacyRuleTools.Symbols(new() { ["kinds"] = new[] { "typeParameter" } }),
                     ["prefix"] = typeParameterPrefix,
                     ["prefixStyle"] = "word",
                     ["prefixAlone"] = true,
@@ -52,9 +52,9 @@ namespace CSR.Core.Style.Naming.Legacy
 
             foreach (var pair in settings.GetMap("derivedNames"))
             {
-                rules.Add(LegacyRules.Rule(new()
+                rules.Add(LegacyRuleTools.Rule(new()
                 {
-                    ["symbols"] = LegacyRules.Symbols(new() { ["kinds"] = TypeKinds, ["bases"] = new[] { pair.Key } }),
+                    ["symbols"] = LegacyRuleTools.Symbols(new() { ["kinds"] = TypeKinds, ["bases"] = new[] { pair.Key } }),
                     ["allowed"] = new[] { pair.Value },
                 }));
             }

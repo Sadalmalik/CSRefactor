@@ -9,12 +9,12 @@ namespace CSR.Core.Style.Naming.Legacy
         public static readonly CheckAlias Check = new(
             "enum-plural",
             "число в имени enum по [Flags] (устарела: naming)",
-            LegacyRules.Replacement,
+            LegacyRuleTools.Replacement,
             [
                 CheckParameter.Strings("pluralWords", "слова во множественном числе без 's' на конце", "Mask"),
                 CheckParameter.Strings("singularEndings", "окончания на 's' в единственном числе", "ss", "us", "is"),
             ],
-            settings => LegacyRules.Analyze(Translate(settings)));
+            settings => LegacyRuleTools.Analyze(Translate(settings)));
 
         private static IReadOnlyList<NamingRule> Translate(CheckSettings settings)
         {
@@ -27,9 +27,9 @@ namespace CSR.Core.Style.Naming.Legacy
 
         private static NamingRule Rule(CheckSettings settings, Dictionary<string, object> symbols, string number)
         {
-            return LegacyRules.Rule(new()
+            return LegacyRuleTools.Rule(new()
             {
-                ["symbols"] = LegacyRules.Symbols(symbols),
+                ["symbols"] = LegacyRuleTools.Symbols(symbols),
                 ["number"] = number,
                 ["pluralWords"] = settings.GetStrings("pluralWords"),
                 ["singularEndings"] = settings.GetStrings("singularEndings"),

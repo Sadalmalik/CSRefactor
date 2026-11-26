@@ -86,7 +86,7 @@ namespace CSR.Reports.Similar
         private static void WriteCluster(Utf8JsonWriter writer, SimilarCluster cluster)
         {
             writer.WriteStartObject();
-            writer.WriteString("kind", UnitKinds.GetKey(cluster.Kind));
+            writer.WriteString("kind", UnitKindTool.GetKey(cluster.Kind));
             writer.WriteNumber("pairs", cluster.PairCount);
             writer.WriteNumber("maxScore", Math.Round(cluster.MaxScore, 3));
             writer.WriteNumber("minScore", Math.Round(cluster.MinScore, 3));
@@ -108,7 +108,7 @@ namespace CSR.Reports.Similar
         private static void WritePair(Utf8JsonWriter writer, SimilarPair pair)
         {
             writer.WriteStartObject();
-            writer.WriteString("kind", UnitKinds.GetKey(pair.Left.Kind));
+            writer.WriteString("kind", UnitKindTool.GetKey(pair.Left.Kind));
             writer.WriteNumber("score", Math.Round(pair.Score, 3));
             writer.WriteNumber("windows", pair.Windows);
             writer.WritePropertyName("left");

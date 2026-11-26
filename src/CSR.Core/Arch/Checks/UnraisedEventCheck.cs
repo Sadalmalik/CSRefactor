@@ -90,7 +90,7 @@ namespace CSR.Core.Arch.Checks
 
             var location = type.Locations.First(candidate => candidate.IsInSource);
             var handlers = references
-                .Where(reference => !SyntaxParts.IsInside(reference.Node, type))
+                .Where(reference => !SyntaxTools.IsInside(reference.Node, type))
                 .Select(GetOwnerName)
                 .Where(name => name != null)
                 .Select(name => name!)
@@ -194,7 +194,7 @@ namespace CSR.Core.Arch.Checks
         // Тип, в котором стоит ссылка; null - вне типов
         private static string? GetOwnerName(SymbolReference reference)
         {
-            var declaration = SyntaxParts.GetEnclosingType(reference.Node);
+            var declaration = SyntaxTools.GetEnclosingType(reference.Node);
             return declaration?.Identifier.Text;
         }
     }

@@ -12,14 +12,14 @@ namespace CSR.Core.Style.Forbidden
             "запрещенный вызов или член (устарела: forbidden)",
             "calls",
             "маска Тип.Член (* - любые символы) и чем заменить",
-            ForbiddenKinds.Call);
+            ForbiddenKind.Call);
 
         public static readonly CheckAlias Types = Create(
             "forbidden-type",
             "запрещенный тип (устарела: forbidden)",
             "types",
             "маска имени типа (* - любые символы) и чем заменить",
-            ForbiddenKinds.Type);
+            ForbiddenKind.Type);
 
         private static CheckAlias Create(
             string name,

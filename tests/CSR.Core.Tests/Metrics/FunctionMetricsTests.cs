@@ -8,17 +8,17 @@ namespace CSR.Core.Tests.Metrics
 
         [Test]
         public void Nesting_FlatBody_IsZero()
-            => Assert.That(TestCode.Method("Call();", MetricKeys.Nesting), Is.EqualTo(0));
+            => Assert.That(TestCode.Method("Call();", MetricKey.Nesting), Is.EqualTo(0));
 
         [Test]
         public void Nesting_StatementInsideIf_IsOne()
-            => Assert.That(TestCode.Method("if (c) Call();", MetricKeys.Nesting), Is.EqualTo(1));
+            => Assert.That(TestCode.Method("if (c) Call();", MetricKey.Nesting), Is.EqualTo(1));
 
         [Test]
         public void Nesting_ElseIfChain_SameLevel()
         {
             const string body = "if (c) Call(); else if (d) Call(); else if (c) Call(); else Call();";
-            Assert.That(TestCode.Method(body, MetricKeys.Nesting), Is.EqualTo(1));
+            Assert.That(TestCode.Method(body, MetricKey.Nesting), Is.EqualTo(1));
         }
 
         [Test]
@@ -45,21 +45,21 @@ namespace CSR.Core.Tests.Metrics
                     finally { }
                 }
                 """;
-            Assert.That(TestCode.Method(body, MetricKeys.Nesting), Is.EqualTo(5));
+            Assert.That(TestCode.Method(body, MetricKey.Nesting), Is.EqualTo(5));
         }
 
         [Test]
         public void Nesting_LambdaBody_CountsEnclosingStatements()
         {
             const string body = "if (c) { System.Action f = () => { if (d) Call(); }; }";
-            Assert.That(TestCode.Method(body, MetricKeys.Nesting), Is.EqualTo(2));
+            Assert.That(TestCode.Method(body, MetricKey.Nesting), Is.EqualTo(2));
         }
 
         [Test]
         public void Nesting_ExpressionBody_IsZero()
         {
             const string source = "class Sample { int Method(bool c) => c ? 1 : 0; }";
-            Assert.That(TestCode.Function(source, "Sample.Method", MetricKeys.Nesting), Is.EqualTo(0));
+            Assert.That(TestCode.Function(source, "Sample.Method", MetricKey.Nesting), Is.EqualTo(0));
         }
 
 #endregion
@@ -92,8 +92,8 @@ namespace CSR.Core.Tests.Metrics
             var method = TestCode.Function(source, "Sample.Method");
             Assert.That(method.Line, Is.EqualTo(3));
             Assert.That(method.EndLine, Is.EqualTo(14));
-            Assert.That(method.Values[MetricKeys.Lines], Is.EqualTo(12));
-            Assert.That(method.Values[MetricKeys.CodeLines], Is.EqualTo(6));
+            Assert.That(method.Values[MetricKey.Lines], Is.EqualTo(12));
+            Assert.That(method.Values[MetricKey.CodeLines], Is.EqualTo(6));
         }
 
         [Test]
@@ -110,7 +110,7 @@ namespace CSR.Core.Tests.Metrics
                             """;
                 }
                 """";
-            Assert.That(TestCode.Function(source, "Sample.Method", MetricKeys.CodeLines), Is.EqualTo(6));
+            Assert.That(TestCode.Function(source, "Sample.Method", MetricKey.CodeLines), Is.EqualTo(6));
         }
 
 #endregion
@@ -122,7 +122,7 @@ namespace CSR.Core.Tests.Metrics
         public void Parameters_CountsAll()
         {
             const string source = "class Sample { void Method(int a, ref int b, params int[] c) { } }";
-            Assert.That(TestCode.Function(source, "Sample.Method", MetricKeys.Parameters), Is.EqualTo(3));
+            Assert.That(TestCode.Function(source, "Sample.Method", MetricKey.Parameters), Is.EqualTo(3));
         }
 
         [Test]
@@ -137,7 +137,7 @@ namespace CSR.Core.Tests.Metrics
                 """;
             var file = TestCode.Measure(source);
             Assert.That(
-                file.Functions.Select(function => function.Values[MetricKeys.Parameters]),
+                file.Functions.Select(function => function.Values[MetricKey.Parameters]),
                 Is.EqualTo(new[] { 2, 2, 1 }));
         }
 
@@ -163,16 +163,16 @@ namespace CSR.Core.Tests.Metrics
                 "accessor Sample.Plain.get",
                 "accessor Sample.Plain.set",
             }));
-            Assert.That(file.Functions[0].Values[MetricKeys.Cyclomatic], Is.EqualTo(2));
-            Assert.That(file.Functions[1].Values[MetricKeys.Cognitive], Is.EqualTo(1));
-            Assert.That(file.Functions[1].Values[MetricKeys.Nesting], Is.EqualTo(0));
+            Assert.That(file.Functions[0].Values[MetricKey.Cyclomatic], Is.EqualTo(2));
+            Assert.That(file.Functions[1].Values[MetricKey.Cognitive], Is.EqualTo(1));
+            Assert.That(file.Functions[1].Values[MetricKey.Nesting], Is.EqualTo(0));
         }
 
         [Test]
         public void Parameters_AccessorIsZero()
         {
             const string source = "class Sample { int Value { get; set; } }";
-            Assert.That(TestCode.Function(source, "Sample.Value.set", MetricKeys.Parameters), Is.EqualTo(0));
+            Assert.That(TestCode.Function(source, "Sample.Value.set", MetricKey.Parameters), Is.EqualTo(0));
         }
 
         [Test]

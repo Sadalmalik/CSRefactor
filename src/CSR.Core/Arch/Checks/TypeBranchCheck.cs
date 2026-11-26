@@ -49,7 +49,7 @@ namespace CSR.Core.Arch.Checks
                     groups[group] = types;
                 }
 
-                var name = TypeNames.GetTypeText(type);
+                var name = TypeNameTools.GetTypeText(type);
                 if (!types.Contains(name))
                     types.Add(name);
             }
@@ -107,8 +107,8 @@ namespace CSR.Core.Arch.Checks
             if (type is PredefinedTypeSyntax or NullableTypeSyntax { ElementType: PredefinedTypeSyntax })
                 return false;
 
-            var name = TypeNames.GetSimpleTypeName(type);
-            if (context.Settings.GetBool("ignoreInterfaces") && TypeNames.IsInterfaceName(name))
+            var name = TypeNameTools.GetSimpleTypeName(type);
+            if (context.Settings.GetBool("ignoreInterfaces") && TypeNameTools.IsInterfaceName(name))
                 return false;
 
             if (IsTypeParameter(node, name))
@@ -117,7 +117,7 @@ namespace CSR.Core.Arch.Checks
             if (NameMask.Get(context.Settings.GetStrings("ignoreTypes")).IsMatch(name))
                 return false;
 
-            var member = SyntaxParts.GetEnclosingMemberName(node);
+            var member = SyntaxTools.GetEnclosingMemberName(node);
             return member == null || !NameMask.Get(context.Settings.GetStrings("ignoreMethods")).IsMatch(member);
         }
 

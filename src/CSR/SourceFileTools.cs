@@ -1,7 +1,7 @@
 namespace CSR
 {
     // Файлы .cs из списка файлов и папок. В папках пропускаются bin, obj и скрытые папки (имя с точки)
-    public static class SourceFiles
+    public static class SourceFileTools
     {
         private static readonly HashSet<string> SkippedFolders = new(StringComparer.OrdinalIgnoreCase) { "bin", "obj" };
 

@@ -7,7 +7,7 @@ namespace CSR.Workspace.Refactor
 {
     // Правки решения в памяти как правки файлов: измененные, добавленные и удаленные документы с диффом;
     // запись на диск - только Apply
-    public static class FileChanges
+    public static class FileChangeTools
     {
         public static async Task<List<FileChange>> CollectAsync(
             Solution before,
@@ -100,7 +100,7 @@ namespace CSR.Workspace.Refactor
             var textChanges = (await changed.GetTextChangesAsync(original, cancellation))
                 .OrderBy(change => change.Span.Start)
                 .ToList();
-            var file = SourceLocations.GetRelativePath(root, original.FilePath!);
+            var file = SourceLocationTools.GetRelativePath(root, original.FilePath!);
             return new FileChange
             {
                 Path = original.FilePath!,
@@ -114,7 +114,7 @@ namespace CSR.Workspace.Refactor
         private static async Task<FileChange> GetAddedAsync(Document added, string root, CancellationToken cancellation)
         {
             var text = await added.GetTextAsync(cancellation);
-            var file = SourceLocations.GetRelativePath(root, added.FilePath!);
+            var file = SourceLocationTools.GetRelativePath(root, added.FilePath!);
             return new FileChange
             {
                 Kind = FileChangeKind.Added,
@@ -133,7 +133,7 @@ namespace CSR.Workspace.Refactor
             CancellationToken cancellation)
         {
             var text = await removed.GetTextAsync(cancellation);
-            var file = SourceLocations.GetRelativePath(root, removed.FilePath!);
+            var file = SourceLocationTools.GetRelativePath(root, removed.FilePath!);
             return new FileChange
             {
                 Kind = FileChangeKind.Removed,

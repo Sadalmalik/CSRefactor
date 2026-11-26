@@ -46,23 +46,23 @@ namespace CSR.Tests
             folder.Write("src/.hidden/Skip.cs", "");
             folder.Write("src/Notes.txt", "");
 
-            var files = SourceFiles.Collect([System.IO.Path.Combine(folder.Path, "src"), single]);
+            var files = SourceFileTools.Collect([System.IO.Path.Combine(folder.Path, "src"), single]);
             Assert.That(files, Is.EquivalentTo(new[] { kept, single }));
         }
 
         [Test]
         public void Collect_MissingPath_Throws()
-            => Assert.Throws<UsageException>(() => SourceFiles.Collect(["no-such-folder-csr"]));
+            => Assert.Throws<UsageException>(() => SourceFileTools.Collect(["no-such-folder-csr"]));
 
         [Test]
         public void DisplayPath_InsideCurrentFolderRelative_OutsideFull()
         {
             var inside = Path.Combine(Environment.CurrentDirectory, "sub", "A.cs");
-            Assert.That(SourceFiles.GetDisplayPath(inside), Is.EqualTo("sub/A.cs"));
+            Assert.That(SourceFileTools.GetDisplayPath(inside), Is.EqualTo("sub/A.cs"));
 
             using var folder = new TempFolder();
             var outside = Path.Combine(folder.Path, "A.cs");
-            Assert.That(SourceFiles.GetDisplayPath(outside), Is.EqualTo(outside.Replace('\\', '/')));
+            Assert.That(SourceFileTools.GetDisplayPath(outside), Is.EqualTo(outside.Replace('\\', '/')));
         }
     }
 

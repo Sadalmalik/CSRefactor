@@ -66,7 +66,7 @@ namespace CSR.Core.Style.Checks
                 var arrow = clause.ArrowToken;
                 var text = context.Text;
                 var arrowLine = TextLayout.GetLineNumber(text, arrow.SpanStart);
-                var start = SyntaxParts.GetDeclarationStart(clause.Parent!);
+                var start = SyntaxTools.GetDeclarationStart(clause.Parent!);
                 var indent = TextLayout.Deeper(TextLayout.GetIndent(text, start));
                 if (TextLayout.GetLineNumber(text, clause.Expression.SpanStart) > arrowLine)
                 {

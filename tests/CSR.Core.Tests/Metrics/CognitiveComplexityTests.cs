@@ -5,7 +5,7 @@ namespace CSR.Core.Tests.Metrics
     public class CognitiveComplexityTests
     {
         private static int Measure(string body)
-            => TestCode.Method(body, MetricKeys.Cognitive);
+            => TestCode.Method(body, MetricKey.Cognitive);
 
         [Test]
         public void EmptyMethod_IsZero()
@@ -147,7 +147,7 @@ namespace CSR.Core.Tests.Metrics
                         => n <= 1 ? 1 : n * Factorial(n - 1);
                 }
                 """;
-            Assert.That(TestCode.Function(source, "Sample.Factorial", MetricKeys.Cognitive), Is.EqualTo(2));
+            Assert.That(TestCode.Function(source, "Sample.Factorial", MetricKey.Cognitive), Is.EqualTo(2));
         }
 
         [Test]
@@ -162,7 +162,7 @@ namespace CSR.Core.Tests.Metrics
                     void Draw(int a, int b) { }
                 }
                 """;
-            Assert.That(TestCode.Measure(source).Functions[0].Values[MetricKeys.Cognitive], Is.EqualTo(0));
+            Assert.That(TestCode.Measure(source).Functions[0].Values[MetricKey.Cognitive], Is.EqualTo(0));
         }
 
         [Test]
@@ -182,8 +182,8 @@ namespace CSR.Core.Tests.Metrics
                     }
                 }
                 """;
-            Assert.That(TestCode.Function(source, "Sample.Method", MetricKeys.Cognitive), Is.EqualTo(1));
-            Assert.That(TestCode.Function(source, "Sample.Method.Local", MetricKeys.Cognitive), Is.EqualTo(3));
+            Assert.That(TestCode.Function(source, "Sample.Method", MetricKey.Cognitive), Is.EqualTo(1));
+            Assert.That(TestCode.Function(source, "Sample.Method.Local", MetricKey.Cognitive), Is.EqualTo(3));
         }
     }
 }

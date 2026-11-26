@@ -7,7 +7,7 @@ namespace CSR.Core.Similar
     // событие с add / remove, локальная функция, лямбда и анонимный метод с блоком; форма - вся декларация без
     // атрибутов и модификаторов. Фрагмент - окно из fragmentStatements подряд идущих операторов одного блока;
     // окно, равное всему телу члена, не берется (это сам член)
-    public static class MemberUnits
+    public static class MemberUnitTool
     {
         public static List<SimilarUnit> Collect(SyntaxTree tree, SimilarOptions options)
         {

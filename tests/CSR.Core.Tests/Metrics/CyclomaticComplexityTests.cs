@@ -5,7 +5,7 @@ namespace CSR.Core.Tests.Metrics
     public class CyclomaticComplexityTests
     {
         private static int Measure(string body)
-            => TestCode.Method(body, MetricKeys.Cyclomatic);
+            => TestCode.Method(body, MetricKey.Cyclomatic);
 
         [Test]
         public void EmptyMethod_IsOne()
@@ -103,8 +103,8 @@ namespace CSR.Core.Tests.Metrics
                     }
                 }
                 """;
-            Assert.That(TestCode.Function(source, "Sample.Method", MetricKeys.Cyclomatic), Is.EqualTo(2));
-            Assert.That(TestCode.Function(source, "Sample.Method.Local", MetricKeys.Cyclomatic), Is.EqualTo(3));
+            Assert.That(TestCode.Function(source, "Sample.Method", MetricKey.Cyclomatic), Is.EqualTo(2));
+            Assert.That(TestCode.Function(source, "Sample.Method.Local", MetricKey.Cyclomatic), Is.EqualTo(3));
         }
 
         [Test]
@@ -122,8 +122,8 @@ namespace CSR.Core.Tests.Metrics
                     }
                 }
                 """;
-            Assert.That(TestCode.Function(source, "Sample.Value.get", MetricKeys.Cyclomatic), Is.EqualTo(2));
-            Assert.That(TestCode.Function(source, "Sample.Value.set", MetricKeys.Cyclomatic), Is.EqualTo(2));
+            Assert.That(TestCode.Function(source, "Sample.Value.get", MetricKey.Cyclomatic), Is.EqualTo(2));
+            Assert.That(TestCode.Function(source, "Sample.Value.set", MetricKey.Cyclomatic), Is.EqualTo(2));
         }
     }
 }

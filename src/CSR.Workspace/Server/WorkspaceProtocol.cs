@@ -35,7 +35,7 @@ namespace CSR.Workspace.Server
         private const int MaxMessageSize = 256 * 1024 * 1024;
 
         public static string GetPipeName(string solutionPath)
-            => "csr-" + CachePaths.GetKey(solutionPath);
+            => "csr-" + CachePathTool.GetKey(solutionPath);
 
         public static async Task WriteAsync<T>(Stream stream, T message, CancellationToken cancellation)
         {

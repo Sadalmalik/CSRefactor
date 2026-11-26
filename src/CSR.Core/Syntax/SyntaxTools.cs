@@ -6,7 +6,7 @@ using CSR.Core.Checks;
 namespace CSR.Core.Syntax
 {
     // Общие разборы синтаксиса для проверок style и arch: видимость, базовые типы, атрибуты, охватывающий член
-    public static class SyntaxParts
+    public static class SyntaxTools
     {
         // Член виден снаружи типа: public или internal, член интерфейса без private
         public static bool IsApi(MemberDeclarationSyntax member)
@@ -24,7 +24,7 @@ namespace CSR.Core.Syntax
             if (type.BaseList == null)
                 return false;
 
-            return type.BaseList.Types.Any(baseType => baseTypes.IsMatch(TypeNames.GetSimpleTypeName(baseType.Type)));
+            return type.BaseList.Types.Any(baseType => baseTypes.IsMatch(TypeNameTools.GetSimpleTypeName(baseType.Type)));
         }
 
         // Имя метода, конструктора, свойства или локальной функции, в которых находится узел; null - вне членов
@@ -57,7 +57,7 @@ namespace CSR.Core.Syntax
         {
             return member.AttributeLists
                 .SelectMany(list => list.Attributes)
-                .Any(attribute => names.Contains(TypeNames.GetAttributeName(attribute.Name)));
+                .Any(attribute => names.Contains(TypeNameTools.GetAttributeName(attribute.Name)));
         }
 
         // Начало объявления после атрибутов: первый модификатор или тип; от его строки считается отступ

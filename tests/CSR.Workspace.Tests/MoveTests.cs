@@ -124,7 +124,7 @@ namespace CSR.Workspace.Tests
             Assert.That(plan.Diff, Does.Contain("rename from Game/Misc.cs\nrename to Game/Wallet.cs\n"));
             Assert.That(plan.Diff, Does.Contain("rename from Game/Misc.cs.meta\nrename to Game/Wallet.cs.meta\n"));
 
-            FileChanges.Apply(plan.Changes);
+            FileChangeTools.Apply(plan.Changes);
             Assert.That(File.Exists(sample.GetPath("Game/Misc.cs")), Is.False);
             Assert.That(File.ReadAllText(sample.GetPath("Game/Wallet.cs")), Is.EqualTo(Wallet));
             Assert.That(File.ReadAllText(sample.GetPath("Game/Wallet.cs.meta")), Is.EqualTo(Meta), "GUID сохранен");

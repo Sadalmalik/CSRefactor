@@ -55,7 +55,7 @@ namespace CSR.Workspace.References
         {
             var declarations = symbol.Locations
                 .Where(location => location.IsInSource)
-                .Select(location => SourceLocations.Create(location, root))
+                .Select(location => SourceLocationTools.Create(location, root))
                 .ToList();
             var ordered = places
                 .OrderBy(place => place.File, StringComparer.Ordinal)
@@ -78,7 +78,7 @@ namespace CSR.Workspace.References
             Dictionary<DocumentId, SemanticModel?> models,
             CancellationToken cancellation)
         {
-            var location = SourceLocations.Create(reference.Location, root);
+            var location = SourceLocationTools.Create(reference.Location, root);
             if (!models.TryGetValue(reference.Document.Id, out SemanticModel? model))
             {
                 model = await reference.Document.GetSemanticModelAsync(cancellation);

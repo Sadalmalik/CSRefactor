@@ -29,19 +29,19 @@ namespace CSR.Core.Style.Forbidden
         public static void Run(CheckContext context, IReadOnlyList<ForbiddenEntry> entries)
         {
             var active = entries.Where(entry => !entry.IsExcluded(context.Tree.FilePath)).ToList();
-            foreach (var kind in ForbiddenKinds.All)
+            foreach (var kind in ForbiddenKind.All)
             {
                 var kindEntries = active.Where(entry => entry.Kind == kind).ToList();
                 if (kindEntries.Count == 0)
                     continue;
 
-                foreach (var use in ForbiddenKinds.Find(kind, context.Root))
+                foreach (var use in ForbiddenKind.Find(kind, context.Root))
                 {
                     var entry = kindEntries.FirstOrDefault(candidate => candidate.IsMatch(use.Name));
                     if (entry == null)
                         continue;
 
-                    var message = ForbiddenNames.WithUse($"{ForbiddenKinds.GetSubject(kind)} '{use.Name}'", entry.Use);
+                    var message = ForbiddenNameTool.WithUse($"{ForbiddenKind.GetSubject(kind)} '{use.Name}'", entry.Use);
                     context.Report(use.Span, message, entry.Severity ?? context.Severity, entry.Rule ?? context.Rule);
                 }
             }

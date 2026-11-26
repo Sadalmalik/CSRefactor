@@ -190,7 +190,7 @@ namespace CSR.Core.Tests.Similar
                 }
                 """;
             var options = new SimilarOptions { Threshold = 0.5, MinLines = 1, MinNodes = 1, MinShapes = 1 };
-            var units = MemberUnits.Collect(Parse("Host.cs", source), options);
+            var units = MemberUnitTool.Collect(Parse("Host.cs", source), options);
             Assert.That(units.Select(unit => unit.Member), Is.EqualTo(new[] { "Host.Run", "Host.Run (лямбда)" }));
             Assert.That(SimilarSearch.Run(units, options).Pairs, Is.Empty);
         }
@@ -238,8 +238,8 @@ namespace CSR.Core.Tests.Similar
             Assert.That(Search(In("First.cs", first), In("Second.cs", second)).Pairs, Is.Empty);
 
             var options = new SimilarOptions { MinShapes = 0 };
-            var units = MemberUnits.Collect(Parse("First.cs", first), options)
-                .Concat(MemberUnits.Collect(Parse("Second.cs", second), options))
+            var units = MemberUnitTool.Collect(Parse("First.cs", first), options)
+                .Concat(MemberUnitTool.Collect(Parse("Second.cs", second), options))
                 .ToList();
             Assert.That(SimilarSearch.Run(units, options).Pairs, Is.Not.Empty);
         }
@@ -250,7 +250,7 @@ namespace CSR.Core.Tests.Similar
         private static List<SimilarUnit> Collect(params SourceFile[] files)
         {
             var options = new SimilarOptions();
-            return files.SelectMany(file => MemberUnits.Collect(Parse(file.Path, file.Text), options)).ToList();
+            return files.SelectMany(file => MemberUnitTool.Collect(Parse(file.Path, file.Text), options)).ToList();
         }
 
         private static SourceFile In(string path, string text)

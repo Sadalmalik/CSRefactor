@@ -41,7 +41,7 @@ namespace CSR.Core.Style.Checks
             var prefer = context.Settings.GetString("prefer");
             var letters = context.Settings.GetMap("letters");
             bool standaloneOnly = context.Settings.GetBool("standaloneOnly");
-            var comments = Comments.GetLineComments(context.Root, context.Text);
+            var comments = CommentTools.GetLineComments(context.Root, context.Text);
             var fullLines = new HashSet<int>(comments
                 .Where(comment => comment.IsFullLine)
                 .Select(comment => comment.Line));

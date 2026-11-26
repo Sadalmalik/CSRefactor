@@ -12,7 +12,7 @@ namespace CSR.Core.Style.Naming.Legacy
         public static readonly CheckAlias Check = new(
             "field-prefix",
             "префиксы полей и регистр констант (устарела: naming)",
-            LegacyRules.Replacement,
+            LegacyRuleTools.Replacement,
             [
                 CheckParameter.Text("instancePrefix", "m_", "префикс закрытого поля экземпляра; пусто - без префикса"),
                 CheckParameter.Text("staticPrefix", "s_", "префикс закрытого статического поля; пусто - без префикса"),
@@ -34,7 +34,7 @@ namespace CSR.Core.Style.Naming.Legacy
                 CheckParameter.Bool("pascalAfterPrefix", true, "после префикса - заглавная буква (m_Name, не m_name)"),
                 CheckParameter.Bool("properties", true, "свойства без префиксов полей"),
             ],
-            settings => LegacyRules.Analyze(Translate(settings)));
+            settings => LegacyRuleTools.Analyze(Translate(settings)));
 
         private static IReadOnlyList<NamingRule> Translate(CheckSettings settings)
         {
@@ -43,7 +43,7 @@ namespace CSR.Core.Style.Naming.Legacy
             var constants = settings.GetString("constants");
             var constant = new Dictionary<string, object>
             {
-                ["symbols"] = LegacyRules.Symbols(new() { ["kinds"] = FieldKinds, ["modifiers"] = new[] { "const" } }),
+                ["symbols"] = LegacyRuleTools.Symbols(new() { ["kinds"] = FieldKinds, ["modifiers"] = new[] { "const" } }),
             };
             if (constants == "any")
             {
@@ -55,7 +55,7 @@ namespace CSR.Core.Style.Naming.Legacy
                 constant["skip"] = new[] { "prefix" };
             }
 
-            var rules = new List<NamingRule> { LegacyRules.Rule(constant) };
+            var rules = new List<NamingRule> { LegacyRuleTools.Rule(constant) };
             var openAccess = AllAccess.Where(access => !prefixedAccess.Contains(access)).ToArray();
             if (openAccess.Length > 0)
                 rules.Add(Unprefixed(new() { ["kinds"] = FieldKinds, ["access"] = openAccess }, known, "поле"));
@@ -87,9 +87,9 @@ namespace CSR.Core.Style.Naming.Legacy
             if (prefix.Length == 0)
                 return Unprefixed(symbols, known, null);
 
-            return LegacyRules.Rule(new()
+            return LegacyRuleTools.Rule(new()
             {
-                ["symbols"] = LegacyRules.Symbols(symbols),
+                ["symbols"] = LegacyRuleTools.Symbols(symbols),
                 ["prefix"] = prefix,
                 ["pascalAfterPrefix"] = settings.GetBool("pascalAfterPrefix"),
             });
@@ -99,14 +99,14 @@ namespace CSR.Core.Style.Naming.Legacy
         {
             var fields = new Dictionary<string, object>
             {
-                ["symbols"] = LegacyRules.Symbols(symbols),
+                ["symbols"] = LegacyRuleTools.Symbols(symbols),
                 ["prefix"] = "",
                 ["knownPrefixes"] = known,
             };
             if (subject != null)
                 fields["subject"] = subject;
 
-            return LegacyRules.Rule(fields);
+            return LegacyRuleTools.Rule(fields);
         }
     }
 }

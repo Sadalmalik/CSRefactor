@@ -35,7 +35,7 @@ namespace CSR.Commands
         private static readonly Regex RangePattern = new(@"^(?<file>.+):(?<start>\d+)-(?<end>\d+)$");
 
         public static int Run(IEnumerable<string> args)
-            => WorkspaceCommands.Run("extract", args, OptionNames, FlagNames, Validate);
+            => WorkspaceCommandTools.Run("extract", args, OptionNames, FlagNames, Validate);
 
         private static void Validate(CommandLine commandLine)
         {

@@ -182,7 +182,7 @@ namespace CSR.Core.Tests.Style
         }
 
         private static List<NameSymbol> Collect(string source)
-            => NameSymbols.Collect(CSharpSyntaxTree.ParseText(source).GetRoot()).ToList();
+            => NameSymbolTool.Collect(CSharpSyntaxTree.ParseText(source).GetRoot()).ToList();
 
         private static List<Finding> Run(IReadOnlyList<NamingRule> rules)
         {

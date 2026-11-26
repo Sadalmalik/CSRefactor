@@ -10,19 +10,19 @@ namespace CSR.Core.Style.Naming.Legacy
         public static readonly CheckAlias Check = new(
             "namespace-name",
             "корень, слова и глубина пространства имен (устарела: naming)",
-            LegacyRules.Replacement,
+            LegacyRuleTools.Replacement,
             [
                 CheckParameter.Strings("roots", "допустимые корни (Company.Product); пусто - не проверять"),
                 CheckParameter.Strings("forbiddenWords", "запрещенные слова в частях пространства (без учета регистра)"),
                 CheckParameter.Int("maxDepth", 0, "предельное число частей; 0 - не проверять"),
             ],
-            settings => LegacyRules.Analyze(Translate(settings)));
+            settings => LegacyRuleTools.Analyze(Translate(settings)));
 
         private static IReadOnlyList<NamingRule> Translate(CheckSettings settings)
         {
             var namespaces = new Dictionary<string, object>
             {
-                ["symbols"] = LegacyRules.Symbols(new() { ["kinds"] = new[] { "namespace" } }),
+                ["symbols"] = LegacyRuleTools.Symbols(new() { ["kinds"] = new[] { "namespace" } }),
             };
             var roots = settings.GetStrings("roots");
             if (roots.Count > 0)
@@ -38,13 +38,13 @@ namespace CSR.Core.Style.Naming.Legacy
 
             var rules = new List<NamingRule>();
             if (namespaces.Count > 1)
-                rules.Add(LegacyRules.Rule(namespaces));
+                rules.Add(LegacyRuleTools.Rule(namespaces));
 
             if (roots.Count > 0)
             {
-                rules.Add(LegacyRules.Rule(new()
+                rules.Add(LegacyRuleTools.Rule(new()
                 {
-                    ["symbols"] = LegacyRules.Symbols(new() { ["kinds"] = TypeKinds }),
+                    ["symbols"] = LegacyRuleTools.Symbols(new() { ["kinds"] = TypeKinds }),
                     ["inNamespace"] = true,
                     ["subject"] = "тип",
                 }));

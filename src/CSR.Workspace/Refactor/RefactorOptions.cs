@@ -35,15 +35,15 @@ namespace CSR.Workspace.Refactor
     public static class RefactorConfig
     {
         private static readonly OptionTable<RefactorOptions> Serialization = new OptionTable<RefactorOptions>()
-            .Add("attributes", OptionKinds.Strings, (options, value) => options.SerializationAttributes = value);
+            .Add("attributes", OptionKind.Strings, (options, value) => options.SerializationAttributes = value);
 
         private static readonly OptionTable<RefactorOptions> Strings = new OptionTable<RefactorOptions>()
-            .Add("extensions", OptionKinds.Strings, (options, value) => options.StringExtensions = value)
-            .Add("unityExtensions", OptionKinds.Strings, (options, value) => options.UnityExtensions = value)
-            .Add("roots", OptionKinds.Strings, (options, value) => options.StringRoots = value)
-            .Add("exclude", OptionKinds.Strings, (options, value) => options.StringExclude = value)
-            .Add("maxFileSizeKb", OptionKinds.Count, (options, value) => options.MaxFileSizeKb = value)
-            .Add("maxMatches", OptionKinds.Count, (options, value) => options.MaxStringMatches = value);
+            .Add("extensions", OptionKind.Strings, (options, value) => options.StringExtensions = value)
+            .Add("unityExtensions", OptionKind.Strings, (options, value) => options.UnityExtensions = value)
+            .Add("roots", OptionKind.Strings, (options, value) => options.StringRoots = value)
+            .Add("exclude", OptionKind.Strings, (options, value) => options.StringExclude = value)
+            .Add("maxFileSizeKb", OptionKind.Count, (options, value) => options.MaxFileSizeKb = value)
+            .Add("maxMatches", OptionKind.Count, (options, value) => options.MaxStringMatches = value);
 
         private static readonly OptionTable<RefactorOptions> Table = new OptionTable<RefactorOptions>()
             .AddSection("serialization", Serialization, options => options)

@@ -124,7 +124,7 @@ namespace CSR.Core.Arch.Checks
         private static void CheckMember(SolutionCheckContext context, ISymbol member, bool isData)
         {
             var references = context.Index.GetReferences(member)
-                .Where(reference => !SyntaxParts.IsInside(reference.Node, member))
+                .Where(reference => !SyntaxTools.IsInside(reference.Node, member))
                 .ToList();
             var name = $"{member.ContainingType.Name}.{member.Name}";
             var location = member.Locations.First(candidate => candidate.IsInSource);
@@ -230,7 +230,7 @@ namespace CSR.Core.Arch.Checks
                 : Enumerable.Empty<AttributeData>();
 
             return own.Concat(backing).Any(attribute => attribute.AttributeClass != null
-                && attributes.IsMatch(TypeNames.TrimAttributeSuffix(attribute.AttributeClass.Name)));
+                && attributes.IsMatch(TypeNameTools.TrimAttributeSuffix(attribute.AttributeClass.Name)));
         }
 
         private static string GetAccessibility(ISymbol member)

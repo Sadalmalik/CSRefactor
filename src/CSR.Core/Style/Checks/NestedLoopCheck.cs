@@ -43,9 +43,9 @@ namespace CSR.Core.Style.Checks
                 if (outer == null)
                     continue;
 
-                var outerNames = LocalNames.GetDeclared(outer);
-                outerNames.ExceptWith(LocalNames.GetDeclared(inner));
-                if (LocalNames.GetUsed(collection).Any(outerNames.Contains))
+                var outerNames = LocalNameTools.GetDeclared(outer);
+                outerNames.ExceptWith(LocalNameTools.GetDeclared(inner));
+                if (LocalNameTools.GetUsed(collection).Any(outerNames.Contains))
                     continue;
 
                 var message = $"вложенный цикл по '{collection}' внутри цикла {Describe(outer)}: O(N²)";
