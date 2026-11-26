@@ -60,7 +60,7 @@ namespace CSR.Commands
             Validate(commandLine);
             var format = commandLine.GetOption("--format") ?? "diff";
 
-            var options = LoadOptions(commandLine.GetOption("--config"), context);
+            var options = LoadOptions(commandLine, context);
             var settings = new RenameSettings
             {
                 Migrate = commandLine.HasFlag("--migrate"),
@@ -110,17 +110,11 @@ namespace CSR.Commands
         }
 
         // Явный --config (от папки вызова), иначе .csr/refactor.jsonc от папки решения, иначе config/ у csr.exe
-        internal static RefactorOptions LoadOptions(string? path, WorkspaceContext context)
+        internal static RefactorOptions LoadOptions(CommandLine commandLine, WorkspaceContext context)
         {
-            var found = ConfigFiles.Find(path, "refactor.jsonc", context.Solution.Root);
-            if (found == null)
-                return new RefactorOptions();
-
-            var full = Path.GetFullPath(Path.Combine(context.WorkingDirectory, found));
-            if (!File.Exists(full))
-                throw new UsageException($"нет файла конфига: {path}");
-
-            return RefactorConfig.Parse(File.ReadAllText(full));
+            var configs = new CommandConfigs(commandLine, context.WorkingDirectory, context.Solution.Root, context.Error);
+            var text = configs.Read("refactor.jsonc");
+            return text == null ? new RefactorOptions() : RefactorConfig.Parse(text);
         }
     }
 }

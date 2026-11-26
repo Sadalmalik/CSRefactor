@@ -20,14 +20,6 @@ namespace CSR.Reports.Config
                 throw new ConfigException($"{path}: ожидается объект");
         }
 
-        public static int ReadInt(JsonElement element, string path)
-        {
-            if (element.ValueKind != JsonValueKind.Number || !element.TryGetInt32(out int value))
-                throw new ConfigException($"{path}: ожидается целое число");
-
-            return value;
-        }
-
         public static bool ReadBool(JsonElement element, string path)
         {
             if (element.ValueKind is not (JsonValueKind.True or JsonValueKind.False))

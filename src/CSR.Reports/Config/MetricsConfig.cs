@@ -62,7 +62,7 @@ namespace CSR.Reports.Config
                     case "threshold":
                         int? threshold = property.Value.ValueKind == JsonValueKind.Null
                             ? null
-                            : JsonConfig.ReadInt(property.Value, path);
+                            : OptionKinds.Integer.ReadJson(property.Value, path);
                         options.SetThreshold(metric, threshold);
                         break;
                     default:
