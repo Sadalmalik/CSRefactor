@@ -27,11 +27,16 @@ namespace CSR.Workspace.Refactor
             return DiffWriter.Write($"a/{path}", $"b/{path}", oldLines, newLines, blocks);
         }
 
-        // Новый файл: все строки добавлены
+        // Новый файл: заголовок git (без него git apply не создаст пустой файл) и все строки добавлены
         public static string BuildAdded(string path, SourceText text)
         {
+            var header = $"diff --git a/{path} b/{path}\nnew file mode 100644\n";
             var lines = GetLines(text);
-            return DiffWriter.Write("/dev/null", $"b/{path}", [], lines, [new DiffBlock(0, 0, 0, lines.Count)]);
+            if (lines.Count == 0)
+                return header;
+
+            var block = new DiffBlock(0, 0, 0, lines.Count);
+            return header + DiffWriter.Write("/dev/null", $"b/{path}", [], lines, [block]);
         }
 
         // Удаленный файл: все строки удалены

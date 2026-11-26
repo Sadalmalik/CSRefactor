@@ -227,7 +227,7 @@ namespace CSR.Workspace.Tests
                 "json");
 
             Assert.That(preview.ExitCode, Is.Zero, preview.Error);
-            Assert.That(preview.Output, Does.Contain("--- /dev/null\n+++ b/Game/Item.cs\n"));
+            Assert.That(preview.Output, Does.Contain("new file mode 100644\n--- /dev/null\n+++ b/Game/Item.cs\n"));
             Assert.That(File.Exists(sample.GetPath("Game/Item.cs")), Is.False);
             Assert.That(refused.ExitCode, Is.EqualTo(1));
             Assert.That(refused.Error, Does.Contain("отказ: тип уже в файле со своим именем"));

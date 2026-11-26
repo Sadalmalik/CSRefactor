@@ -110,6 +110,24 @@ namespace CSR.Workspace.Tests
         public void Diff_NoChanges()
             => Assert.That(TextDiff.Build("f.cs", SourceText.From("a"), SourceText.From("a"), []), Is.Empty);
 
+        [Test]
+        public void Diff_AddedFile_GitHeader()
+        {
+            var diff = TextDiff.BuildAdded("f.cs", SourceText.From("a\n"));
+
+            var expected = "diff --git a/f.cs b/f.cs\nnew file mode 100644\n--- /dev/null\n+++ b/f.cs\n@@ -0,0 +1,1 @@\n+a\n";
+            Assert.That(diff, Is.EqualTo(expected));
+        }
+
+        // Пустой новый файл: только заголовок git - git apply создает файл
+        [Test]
+        public void Diff_AddedEmptyFile_HeaderOnly()
+        {
+            var diff = TextDiff.BuildAdded("f.cs", SourceText.From(""));
+
+            Assert.That(diff, Is.EqualTo("diff --git a/f.cs b/f.cs\nnew file mode 100644\n"));
+        }
+
 #endregion
 
 
