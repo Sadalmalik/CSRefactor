@@ -67,6 +67,49 @@ namespace CSR.Tests
             Assert.That(markdown, Does.Contain("- `All`: 2 **глубже порога**: Game -> Core -> Tools"));
         }
 
+        // Проект Unity (Assets рядом с ProjectSettings): код без asmdef - предопределенные сборки, asmdef выше - своя
+        [Test]
+        public void Assemblies_UnityPredefined()
+        {
+            using var folder = new TempFolder();
+            folder.Write("ProjectSettings/ProjectVersion.txt", "m_EditorVersion: 6000.0.0f1");
+            folder.Write("Assembly-CSharp.csproj", "<Project />");
+            folder.Write("Assembly-CSharp-Editor.csproj", "<Project />");
+            folder.Write("Assets/Scripts/Player.cs", "public class Player { }");
+            folder.Write("Assets/Scripts/Editor/PlayerEditor.cs", "public class PlayerEditor { }");
+            folder.Write("Assets/Plugins/Pool.cs", "public class Pool { }");
+            folder.Write("Assets/Plugins/Tools/Editor/PoolEditor.cs", "public class PoolEditor { }");
+            folder.Write("Assets/Standard Assets/Camera.cs", "public class FollowCamera { }");
+            folder.Write("Assets/Game/Plugins/Local.cs", "public class Local { }");
+            folder.Write("Assets/Core/Core.asmdef", "{ \"name\": \"Core\" }");
+            folder.Write("Assets/Core/Editor/CoreEditor.cs", "public class CoreEditor { }");
+            folder.Write("Assets/Linked/Linked.asmref", "{ \"reference\": \"GUID:0\" }");
+            folder.Write("Assets/Linked/Part.cs", "public class Part { }");
+
+            Assert.That(GetAssemblies(folder), Is.EqualTo(new Dictionary<string, int>
+            {
+                ["Assembly-CSharp"] = 2,
+                ["Assembly-CSharp-Editor"] = 1,
+                ["Assembly-CSharp-Editor-firstpass"] = 1,
+                ["Assembly-CSharp-firstpass"] = 2,
+                ["Core"] = 1,
+            }));
+        }
+
+        // Без ProjectSettings папка Assets - обычная: корень с двумя .csproj - вне сборок, как до правил Unity
+        [Test]
+        public void Assemblies_AssetsWithoutProjectSettings_NoUnityRules()
+        {
+            using var folder = new TempFolder();
+            folder.Write("One.csproj", "<Project />");
+            folder.Write("Two.csproj", "<Project />");
+            folder.Write("Assets/Scripts/Player.cs", "public class Player { }");
+            folder.Write("Tools/Tools.csproj", "<Project />");
+            folder.Write("Tools/Editor/Helper.cs", "public class Helper { }");
+
+            Assert.That(GetAssemblies(folder), Is.EqualTo(new Dictionary<string, int> { ["Tools"] = 1 }));
+        }
+
         [Test]
         public void Layers_ValueNotArray_ExitTwo()
         {
@@ -115,6 +158,17 @@ namespace CSR.Tests
             var result = Cli.Run("structure", folder.Path, "--config", config);
             Assert.That(result.ExitCode, Is.EqualTo(2));
             Assert.That(result.Error, Does.Contain("неизвестный ключ 'depth'"));
+        }
+
+        // Сборки отчета: имя -> число типов
+        private static Dictionary<string, int> GetAssemblies(TempFolder folder)
+        {
+            var config = folder.Write("structure.jsonc", """{ "minAssemblyLines": 1 }""");
+            var result = Cli.Run("structure", folder.Path, "--config", config);
+            Assert.That(result.ExitCode, Is.EqualTo(0), result.Error);
+            using var document = JsonDocument.Parse(result.Output);
+            return document.RootElement.GetProperty("assemblies").GetProperty("items").EnumerateArray()
+                .ToDictionary(item => item.GetProperty("name").GetString()!, item => item.GetProperty("types").GetInt32());
         }
     }
 }
