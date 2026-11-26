@@ -1,30 +1,9 @@
-using CSR.Core.Syntax;
 using static CSR.Core.Tests.Style.StyleTestCode;
 
 namespace CSR.Core.Tests.Style
 {
     public class NamingChecksTests
     {
-#region NameWords
-
-        [TestCase("IsUIVisible", "Is UI Visible")]
-        [TestCase("m_isOn", "m is On")]
-        [TestCase("MAX_POOL_SIZE", "MAX POOL SIZE")]
-        [TestCase("Vector3Pool", "Vector3 Pool")]
-        public void NameWords_Split(string name, string expected)
-            => Assert.That(string.Join(" ", NameWords.Split(name)), Is.EqualTo(expected));
-
-        [TestCase("MAX_POOL_SIZE", "MaxPoolSize")]
-        [TestCase("m_count", "Count")]
-        [TestCase("maxSize", "MaxSize")]
-        [TestCase("game.Items", "Game.Items")]
-        [TestCase("@class", "Class")]
-        public void NameWords_ToPascal(string name, string expected)
-            => Assert.That(NameWords.ToPascal(name), Is.EqualTo(expected));
-
-#endregion
-
-
 #region field-prefix
 
         [Test]

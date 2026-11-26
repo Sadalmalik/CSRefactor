@@ -122,6 +122,30 @@ namespace CSR.Workspace.Tests
             Assert.That(files, Is.EquivalentTo(new[] { "Assets/Player.prefab", "Scripts/player.lua" }));
         }
 
+        // Файл в LF, строки using UnityEngine и [SerializeField] - CRLF: вставки берут перевод своей строки
+        [Test]
+        public async Task Unity_MigrateMixedLineBreaks()
+        {
+            using var sample = SampleSolution.Create();
+            var path = sample.GetPath("Game/Player.cs");
+            var source = File.ReadAllText(path).ReplaceLineEndings("\n")
+                .Replace("using UnityEngine;\n", "using UnityEngine;\r\n")
+                .Replace("        [SerializeField]\n", "        [SerializeField]\r\n");
+            File.WriteAllText(path, source);
+            using var loaded = await sample.LoadAsync();
+            var query = SymbolQuery.Parse("Sample.Units.Player.m_Speed");
+            var symbols = await SymbolResolver.ResolveAsync(loaded, query, loaded.Root, false);
+            var settings = new RenameSettings { Migrate = true };
+
+            var plan = await RenameEngine.PlanAsync(loaded, symbols[0], "m_Velocity", settings, Options);
+
+            var after = plan.Changes.Single(change => change.File == "Game/Player.cs").After.ToString();
+            Assert.That(after, Does.Contain("using UnityEngine;\r\nusing UnityEngine.Serialization;\r\n\nnamespace"));
+            var attributes = "        [FormerlySerializedAs(\"m_Speed\")]\r\n        [SerializeField]\r\n";
+            Assert.That(after, Does.Contain(attributes + "        private float m_Velocity = 5;\n"));
+            Assert.That(after.Replace("\r\n", "").Contains('\r'), Is.False);
+        }
+
         [Test]
         public async Task Unity_PublicFieldOfMonoBehaviour()
         {
