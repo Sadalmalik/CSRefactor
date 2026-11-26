@@ -3,7 +3,8 @@ namespace CSR
     // Сборка файла: ближайшая папка вверх с манифестом *.asmdef или *.csproj (вложенная сборка - своя), имя -
     // имя манифеста без расширения; без манифеста выше или в папке несколько манифестов одного вида (корень Unity
     // со сгенерированными .csproj) - файл вне сборок. Файл в Assets проекта Unity без asmdef выше - предопределенная
-    // сборка Unity (UnityAssemblyTool); папка с *.asmref (ссылка на asmdef по GUID) - вне сборок
+    // сборка Unity (UnityAssemblyTool); вне Assets без asmdef (Packages) и папка с *.asmref (ссылка на asmdef по GUID) -
+    // вне сборок: поиск останавливается на корне проекта Unity
     public class AssemblyFiles
     {
         private static readonly string[] Manifests = ["*.asmdef", "*.csproj"];
@@ -37,6 +38,7 @@ namespace CSR
                 .FirstOrDefault(found => found.Count > 0);
             var owner = manifests switch
             {
+                _ when UnityAssemblyTool.IsProjectRoot(folder) => default,
                 null when Directory.EnumerateFiles(folder, "*.asmref").Any() => default,
                 null when UnityAssemblyTool.IsAssetsRoot(folder) => new Owner(null, folder),
                 null => Find(Path.GetDirectoryName(folder)),

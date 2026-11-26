@@ -6,13 +6,17 @@ namespace CSR
     {
         private static readonly string[] FirstPassFolders = ["Plugins", "Standard Assets", "Pro Standard Assets"];
 
-        // Корень Assets проекта Unity: папка Assets, рядом с ней папка ProjectSettings
+        // Корень проекта Unity: в папке есть Assets и ProjectSettings
+        public static bool IsProjectRoot(string folder)
+            => Directory.Exists(Path.Combine(folder, "Assets")) && Directory.Exists(Path.Combine(folder, "ProjectSettings"));
+
+        // Папка Assets проекта Unity
         public static bool IsAssetsRoot(string folder)
         {
             var parent = Path.GetDirectoryName(folder);
             return parent != null
                 && string.Equals(Path.GetFileName(folder), "Assets", StringComparison.OrdinalIgnoreCase)
-                && Directory.Exists(Path.Combine(parent, "ProjectSettings"));
+                && IsProjectRoot(parent);
         }
 
         // folder - папка файла внутри assets

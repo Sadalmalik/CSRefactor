@@ -85,15 +85,34 @@ namespace CSR.Tests
             folder.Write("Assets/Core/Editor/CoreEditor.cs", "public class CoreEditor { }");
             folder.Write("Assets/Linked/Linked.asmref", "{ \"reference\": \"GUID:0\" }");
             folder.Write("Assets/Linked/Part.cs", "public class Part { }");
+            folder.Write("Assets/Linked/Inner/InnerPart.cs", "public class InnerPart { }");
+            folder.Write("Assets/Boot.cs", "public class Boot { }");
+            folder.Write("Assets/plugins/editor/PluginMenu.cs", "public class PluginMenu { }");
+            folder.Write("Packages/Local/Package.cs", "public class Package { }");
 
             Assert.That(GetAssemblies(folder), Is.EqualTo(new Dictionary<string, int>
             {
-                ["Assembly-CSharp"] = 2,
+                ["Assembly-CSharp"] = 3,
                 ["Assembly-CSharp-Editor"] = 1,
-                ["Assembly-CSharp-Editor-firstpass"] = 1,
+                ["Assembly-CSharp-Editor-firstpass"] = 2,
                 ["Assembly-CSharp-firstpass"] = 2,
                 ["Core"] = 1,
             }));
+        }
+
+        // asmdef в самой Assets - весь код в ней; корень проекта с одним .csproj не забирает Packages
+        [Test]
+        public void Assemblies_UnityAsmdefInAssets()
+        {
+            using var folder = new TempFolder();
+            folder.Write("ProjectSettings/ProjectVersion.txt", "m_EditorVersion: 6000.0.0f1");
+            folder.Write("Assembly-CSharp.csproj", "<Project />");
+            folder.Write("Assets/Game.asmdef", "{ \"name\": \"Game\" }");
+            folder.Write("Assets/Plugins/Editor/Menu.cs", "public class Menu { }");
+            folder.Write("Assets/Player.cs", "public class Player { }");
+            folder.Write("Packages/Local/Package.cs", "public class Package { }");
+
+            Assert.That(GetAssemblies(folder), Is.EqualTo(new Dictionary<string, int> { ["Game"] = 2 }));
         }
 
         // Без ProjectSettings папка Assets - обычная: корень с двумя .csproj - вне сборок, как до правил Unity
