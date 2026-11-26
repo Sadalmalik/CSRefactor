@@ -85,9 +85,9 @@ namespace CSR.Core.Arch.Checks
         {
             var operations = part.Where(graph.IsOperation).Select(member => member.Name).Distinct().ToList();
             var fields = part.Where(member => !graph.IsOperation(member)).Select(member => member.Name).ToList();
-            var text = SyntaxParts.JoinNames(operations, 4);
+            var text = FindingTextTools.JoinNames(operations, 4);
             if (fields.Count > 0)
-                text += $" | поля {SyntaxParts.JoinNames(fields, 3)}";
+                text += $" | поля {FindingTextTools.JoinNames(fields, 3)}";
 
             var syntax = part.Where(graph.IsOperation)
                 .SelectMany(member => member.DeclaringSyntaxReferences)
@@ -99,17 +99,17 @@ namespace CSR.Core.Arch.Checks
                 .Distinct()
                 .ToList();
             if (regionNames.Count > 0)
-                text += $" | регион {SyntaxParts.JoinNames(regionNames, 2)}";
+                text += $" | регион {FindingTextTools.JoinNames(regionNames, 2)}";
 
             if (isSplit)
             {
                 var files = syntax.Select(node => Path.GetFileName(node.SyntaxTree.FilePath)).Distinct().ToList();
-                text += $" | {SyntaxParts.JoinNames(files, 2)}";
+                text += $" | {FindingTextTools.JoinNames(files, 2)}";
             }
 
             var consumers = graph.GetConsumers(part);
             if (consumers.Count > 0)
-                text += $" | потребители {SyntaxParts.JoinNames(consumers, 3)}";
+                text += $" | потребители {FindingTextTools.JoinNames(consumers, 3)}";
 
             return text;
         }

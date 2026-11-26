@@ -79,7 +79,7 @@ namespace CSR.Core.Arch.Checks
 
                 var value = Normalize(literal, operand != literal);
                 if (!neutral.IsMatch(value))
-                    context.Report(operand.Span, $"число {operand} в '{SyntaxParts.Shorten(expression!, 60)}'");
+                    context.Report(operand.Span, $"число {operand} в '{FindingTextTools.Shorten(expression!, 60)}'");
             }
         }
 

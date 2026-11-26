@@ -34,7 +34,7 @@ namespace CSR.Core.Style.Checks
             {
                 var first = lines.GetLineFromPosition(invocation.SpanStart).LineNumber;
                 var last = lines.GetLineFromPosition(invocation.Span.End).LineNumber;
-                if (!Invocations.IsLoggerCall(context, invocation))
+                if (!LoggerCallTool.IsLoggerCall(context, invocation))
                     continue;
 
                 if (first == last)

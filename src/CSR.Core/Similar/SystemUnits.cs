@@ -1,3 +1,4 @@
+using CSR.Core.Checks;
 using CSR.Core.Graph;
 
 namespace CSR.Core.Similar
@@ -119,10 +120,7 @@ namespace CSR.Core.Similar
 
         // Имена через запятую, не больше ShownNames
         private static string JoinNames(IReadOnlyList<TypeNode> nodes)
-        {
-            var names = string.Join(", ", nodes.Take(ShownNames).Select(node => node.Name));
-            return nodes.Count > ShownNames ? $"{names} и еще {nodes.Count - ShownNames}" : names;
-        }
+            => FindingTextTools.JoinNames(nodes.Select(node => node.Name).ToList(), ShownNames);
 
         // Число вариантов по ступеням: 2-3, 4-9, 10 и больше
         private static string GetVariantStep(int count)

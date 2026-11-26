@@ -61,7 +61,7 @@ namespace CSR.Core.Arch.Checks
         private static List<string> GetMethodReasons(CheckContext context, MethodDeclarationSyntax method)
         {
             var reasons = GetParameterReasons(context, method.ParameterList);
-            if (!SyntaxParts.IsIntegerType(method.ReturnType))
+            if (!TypeNames.IsIntegerType(method.ReturnType))
                 return reasons;
 
             if (IsIndexName(context, method.Identifier.Text))
@@ -79,7 +79,7 @@ namespace CSR.Core.Arch.Checks
             int outInts = 0;
             foreach (var parameter in parameters.Parameters)
             {
-                if (parameter.Type == null || !SyntaxParts.IsIntegerType(parameter.Type))
+                if (parameter.Type == null || !TypeNames.IsIntegerType(parameter.Type))
                     continue;
 
                 if (parameter.Modifiers.Any(SyntaxKind.OutKeyword))
@@ -99,7 +99,7 @@ namespace CSR.Core.Arch.Checks
         private static List<string> GetPropertyReasons(CheckContext context, PropertyDeclarationSyntax property)
         {
             var reasons = new List<string>();
-            if (SyntaxParts.IsIntegerType(property.Type) && IsIndexName(context, property.Identifier.Text))
+            if (TypeNames.IsIntegerType(property.Type) && IsIndexName(context, property.Identifier.Text))
                 reasons.Add($"свойство {property.Type} {property.Identifier.Text}");
 
             return reasons;
@@ -112,7 +112,7 @@ namespace CSR.Core.Arch.Checks
             bool isConstant = modifiers.Any(SyntaxKind.ConstKeyword)
                 || (modifiers.Any(SyntaxKind.StaticKeyword) && modifiers.Any(SyntaxKind.ReadOnlyKeyword));
             if (!context.Settings.GetBool("notFoundMarker") || !isConstant
-                || !SyntaxParts.IsIntegerType(field.Declaration.Type))
+                || !TypeNames.IsIntegerType(field.Declaration.Type))
                 return reasons;
 
             foreach (var variable in field.Declaration.Variables)

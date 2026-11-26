@@ -105,7 +105,7 @@ namespace CSR.Core.Arch.Checks
                 return;
 
             var baseName = type.BaseList!.Types.First().Type.ToString();
-            var names = SyntaxParts.JoinNames(own);
+            var names = FindingTextTools.JoinNames(own);
             var message = $"{baseName} '{type.Identifier.Text}': своих методов {own.Count} (порог {maxMethods}): {names}";
             context.Report(type.Identifier.Span, message);
         }
@@ -121,7 +121,7 @@ namespace CSR.Core.Arch.Checks
 
                 var name = GetMethodName(invocation.Expression);
                 if (name != null && lookups.Contains(name))
-                    context.Report(invocation.Span, $"'{name}' вне компонента сцены: {SyntaxParts.Shorten(invocation)}");
+                    context.Report(invocation.Span, $"'{name}' вне компонента сцены: {FindingTextTools.Shorten(invocation)}");
             }
         }
 

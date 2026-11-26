@@ -174,7 +174,7 @@ namespace CSR.Core.Style.Naming
                 Access = GetAccess(type, modifiers),
                 Modifiers = GetModifiers(modifiers),
                 Attributes = GetAttributes(attributes),
-                Bases = bases?.Types.Select(item => SyntaxParts.GetSimpleTypeName(item.Type)).ToList() ?? [],
+                Bases = bases?.Types.Select(item => TypeNames.GetSimpleTypeName(item.Type)).ToList() ?? [],
             };
         }
 
@@ -287,7 +287,7 @@ namespace CSR.Core.Style.Naming
             return lists
                 .Where(list => list.Target == null)
                 .SelectMany(list => list.Attributes)
-                .Select(attribute => SyntaxParts.GetAttributeName(attribute.Name))
+                .Select(attribute => TypeNames.GetAttributeName(attribute.Name))
                 .ToList();
         }
 

@@ -55,7 +55,7 @@ namespace CSR.Core.Arch.Checks
                 var fields = NameMask.Get(mechanism.Fields);
                 var field = type.Members
                     .OfType<FieldDeclarationSyntax>()
-                    .Select(declaration => SyntaxParts.GetTypeText(declaration.Declaration.Type))
+                    .Select(declaration => TypeNames.GetTypeText(declaration.Declaration.Type))
                     .FirstOrDefault(fields.IsMatch);
                 if (field == null)
                     return null;
@@ -96,7 +96,7 @@ namespace CSR.Core.Arch.Checks
                 var text = node switch
                 {
                     InvocationExpressionSyntax invocation => Matched(calls, Invocations.GetTargetText(invocation)),
-                    ObjectCreationExpressionSyntax creation => Matched(creates, SyntaxParts.GetTypeText(creation.Type)),
+                    ObjectCreationExpressionSyntax creation => Matched(creates, TypeNames.GetTypeText(creation.Type)),
                     _ => null,
                 };
 

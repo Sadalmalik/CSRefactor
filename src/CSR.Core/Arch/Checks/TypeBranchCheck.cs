@@ -49,7 +49,7 @@ namespace CSR.Core.Arch.Checks
                     groups[group] = types;
                 }
 
-                var name = SyntaxParts.GetTypeText(type);
+                var name = TypeNames.GetTypeText(type);
                 if (!types.Contains(name))
                     types.Add(name);
             }
@@ -107,8 +107,8 @@ namespace CSR.Core.Arch.Checks
             if (type is PredefinedTypeSyntax or NullableTypeSyntax { ElementType: PredefinedTypeSyntax })
                 return false;
 
-            var name = SyntaxParts.GetSimpleTypeName(type);
-            if (context.Settings.GetBool("ignoreInterfaces") && SyntaxParts.IsInterfaceName(name))
+            var name = TypeNames.GetSimpleTypeName(type);
+            if (context.Settings.GetBool("ignoreInterfaces") && TypeNames.IsInterfaceName(name))
                 return false;
 
             if (IsTypeParameter(node, name))
@@ -173,14 +173,14 @@ namespace CSR.Core.Arch.Checks
         private static string GetMessage(SyntaxNode node, List<string> types)
         {
             if (node is SwitchStatementSyntax or SwitchExpressionSyntax)
-                return $"switch по типам: {SyntaxParts.JoinNames(types)}";
+                return $"switch по типам: {FindingTextTools.JoinNames(types)}";
 
             var pattern = node.FirstAncestorOrSelf<IsPatternExpressionSyntax>();
             var subject = node is BinaryExpressionSyntax binary ? binary.Left : pattern?.Expression;
             if (subject is ThisExpressionSyntax)
                 return $"проверка this на тип '{types[0]}': базовый класс знает наследника?";
 
-            return $"проверка на тип '{types[0]}': {SyntaxParts.Shorten(pattern ?? node)}";
+            return $"проверка на тип '{types[0]}': {FindingTextTools.Shorten(pattern ?? node)}";
         }
     }
 }

@@ -148,10 +148,10 @@ namespace CSR.Core.Style.Checks
             foreach (var ancestor in token.Parent!.Ancestors())
             {
                 if (ancestor is AttributeSyntax attribute)
-                    return attributes.Contains(SyntaxParts.GetAttributeName(attribute.Name));
+                    return attributes.Contains(TypeNames.GetAttributeName(attribute.Name));
 
                 bool isLog = ancestor is InvocationExpressionSyntax invocation
-                    && Invocations.IsLoggerCall(context, invocation);
+                    && LoggerCallTool.IsLoggerCall(context, invocation);
                 if (logs && isLog)
                     return true;
 

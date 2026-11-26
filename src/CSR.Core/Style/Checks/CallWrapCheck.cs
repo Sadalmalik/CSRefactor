@@ -113,7 +113,7 @@ namespace CSR.Core.Style.Checks
                 return false;
 
             if (list.Parent is InvocationExpressionSyntax invocation
-                && (Invocations.IsLoggerCall(context, invocation) || IsNameof(invocation)))
+                && (LoggerCallTool.IsLoggerCall(context, invocation) || IsNameof(invocation)))
                 return false;
 
             foreach (var ancestor in list.Ancestors())

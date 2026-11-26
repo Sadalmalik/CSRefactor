@@ -107,7 +107,7 @@ namespace CSR.Core.Arch.Checks
                 var names = largest.Select(pair => pair.Method.Identifier.Text).Distinct().ToList();
                 var kind = isStaticClass ? "static class" : "статические методы";
                 var message = $"{kind} '{type.Identifier.Text}': {largest.Count()} из {methods.Count} методов "
-                    + $"принимают первым '{largest.Key}': {SyntaxParts.JoinNames(names)}";
+                    + $"принимают первым '{largest.Key}': {FindingTextTools.JoinNames(names)}";
                 context.Report(type.Identifier.Span, message);
                 return;
             }
@@ -120,7 +120,7 @@ namespace CSR.Core.Arch.Checks
 
             var types = groups.Select(group => $"{group.Key} {group.Count()}").ToList();
             var mixed = $"static class '{type.Identifier.Text}': {dataMethods} из {methods.Count} методов "
-                + $"принимают данные первым параметром, типов {groups.Count}: {SyntaxParts.JoinNames(types)}";
+                + $"принимают данные первым параметром, типов {groups.Count}: {FindingTextTools.JoinNames(types)}";
             context.Report(type.Identifier.Span, mixed);
         }
 
@@ -145,7 +145,7 @@ namespace CSR.Core.Arch.Checks
             if (type is PredefinedTypeSyntax or NullableTypeSyntax { ElementType: PredefinedTypeSyntax })
                 return null;
 
-            var text = SyntaxParts.GetTypeText(type);
+            var text = TypeNames.GetTypeText(type);
             var typeParameters = method.TypeParameterList?.Parameters;
             if (typeParameters != null && typeParameters.Value.Any(parameter => parameter.Identifier.Text == text))
                 return null;

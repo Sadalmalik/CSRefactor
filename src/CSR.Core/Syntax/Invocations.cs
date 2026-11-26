@@ -1,4 +1,3 @@
-using CSR.Core.Checks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -23,9 +22,6 @@ namespace CSR.Core.Syntax
 
             return builder.ToString();
         }
-
-        public static bool IsLoggerCall(CheckContext context, InvocationExpressionSyntax invocation)
-            => context.Project.IsLoggerMethod(GetTargetText(invocation));
 
         // Текстовые аргументы сообщения: литерал, интерполяция или сложение со строкой
         public static bool IsStringLike(ExpressionSyntax expression)

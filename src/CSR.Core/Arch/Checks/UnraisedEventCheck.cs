@@ -99,7 +99,7 @@ namespace CSR.Core.Arch.Checks
                 .ToList();
             var message = handlers.Count == 0
                 ? $"событие '{type.Name}' никто не поднимает и не обрабатывает"
-                : $"событие '{type.Name}' никто не поднимает; обрабатывают: {SyntaxParts.JoinNames(handlers)}";
+                : $"событие '{type.Name}' никто не поднимает; обрабатывают: {FindingTextTools.JoinNames(handlers)}";
             context.Report(location, message);
         }
 

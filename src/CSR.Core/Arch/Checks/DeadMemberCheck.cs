@@ -230,7 +230,7 @@ namespace CSR.Core.Arch.Checks
                 : Enumerable.Empty<AttributeData>();
 
             return own.Concat(backing).Any(attribute => attribute.AttributeClass != null
-                && attributes.IsMatch(SyntaxParts.TrimAttributeSuffix(attribute.AttributeClass.Name)));
+                && attributes.IsMatch(TypeNames.TrimAttributeSuffix(attribute.AttributeClass.Name)));
         }
 
         private static string GetAccessibility(ISymbol member)

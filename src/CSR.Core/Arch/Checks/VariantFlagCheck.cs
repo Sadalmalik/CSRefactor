@@ -58,7 +58,7 @@ namespace CSR.Core.Arch.Checks
                     .OrderBy(file => file, StringComparer.Ordinal)
                     .ToList();
                 var message = $"флаг '{flag.Symbol.ContainingType.Name}.{flag.Symbol.Name}' ветвит код других типов: "
-                    + $"мест {flag.Uses} в {flag.Files.Count} файлах: {SyntaxParts.JoinNames(files)}";
+                    + $"мест {flag.Uses} в {flag.Files.Count} файлах: {FindingTextTools.JoinNames(files)}";
                 context.Report(flag.Symbol.Locations.First(location => location.IsInSource), message);
             }
         }

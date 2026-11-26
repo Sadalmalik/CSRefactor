@@ -5,51 +5,9 @@ using CSR.Core.Checks;
 
 namespace CSR.Core.Syntax
 {
-    // Общие разборы синтаксиса для проверок style и arch: имена типов и атрибутов, видимость, базовые типы
+    // Общие разборы синтаксиса для проверок style и arch: видимость, базовые типы, атрибуты, охватывающий член
     public static class SyntaxParts
     {
-        // Имя типа без пространства имен, аргументов типа и '?': List<int> -> List, A.B -> B
-        public static string GetSimpleTypeName(TypeSyntax type)
-        {
-            return type switch
-            {
-                QualifiedNameSyntax qualified => qualified.Right.Identifier.Text,
-                AliasQualifiedNameSyntax alias => alias.Name.Identifier.Text,
-                SimpleNameSyntax simple => simple.Identifier.Text,
-                NullableTypeSyntax nullable => GetSimpleTypeName(nullable.ElementType),
-                _ => type.ToString(),
-            };
-        }
-
-        // Текст типа без пробелов и без '?' в конце
-        public static string GetTypeText(TypeSyntax type)
-        {
-            var text = new string(type.ToString().Where(symbol => !char.IsWhiteSpace(symbol)).ToArray());
-            return text.TrimEnd('?');
-        }
-
-        // Имя по соглашению об интерфейсах: I и заглавная буква
-        public static bool IsInterfaceName(string name)
-            => name.Length > 1 && name[0] == 'I' && char.IsUpper(name[1]);
-
-        public static bool IsIntegerType(TypeSyntax type)
-        {
-            var element = type is NullableTypeSyntax nullable ? nullable.ElementType : type;
-            return element is PredefinedTypeSyntax predefined && predefined.Keyword.Kind() is SyntaxKind.IntKeyword
-                or SyntaxKind.UIntKeyword or SyntaxKind.LongKeyword or SyntaxKind.ULongKeyword
-                or SyntaxKind.ShortKeyword or SyntaxKind.UShortKeyword or SyntaxKind.ByteKeyword
-                or SyntaxKind.SByteKeyword;
-        }
-
-        public static bool IsNumericType(TypeSyntax type)
-        {
-            if (IsIntegerType(type))
-                return true;
-
-            return type is PredefinedTypeSyntax predefined && predefined.Keyword.Kind() is SyntaxKind.FloatKeyword
-                or SyntaxKind.DoubleKeyword or SyntaxKind.DecimalKeyword;
-        }
-
         // Член виден снаружи типа: public или internal, член интерфейса без private
         public static bool IsApi(MemberDeclarationSyntax member)
         {
@@ -66,7 +24,7 @@ namespace CSR.Core.Syntax
             if (type.BaseList == null)
                 return false;
 
-            return type.BaseList.Types.Any(baseType => baseTypes.IsMatch(GetSimpleTypeName(baseType.Type)));
+            return type.BaseList.Types.Any(baseType => baseTypes.IsMatch(TypeNames.GetSimpleTypeName(baseType.Type)));
         }
 
         // Имя метода, конструктора, свойства или локальной функции, в которых находится узел; null - вне членов
@@ -94,35 +52,12 @@ namespace CSR.Core.Syntax
         public static TypeDeclarationSyntax? GetEnclosingType(SyntaxNode node)
             => node.Ancestors().OfType<TypeDeclarationSyntax>().FirstOrDefault();
 
-        // Перечисление имен для сообщения: не больше limit, остальное - числом
-        public static string JoinNames(IReadOnlyList<string> names, int limit = 8)
-        {
-            if (names.Count <= limit)
-                return string.Join(", ", names);
-
-            return string.Join(", ", names.Take(limit)) + $" и еще {names.Count - limit}";
-        }
-
-        // Текст узла в одну строку, не длиннее limit
-        public static string Shorten(SyntaxNode node, int limit = 80)
-        {
-            var text = string.Join(" ", node.ToString().Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
-            return text.Length <= limit ? text : text.Substring(0, limit - 3) + "...";
-        }
-
-        // Имя атрибута без пространства имен и суффикса Attribute
-        public static string GetAttributeName(NameSyntax name)
-            => TrimAttributeSuffix(GetSimpleTypeName(name));
-
-        public static string TrimAttributeSuffix(string name)
-            => name.EndsWith("Attribute", StringComparison.Ordinal) ? name.Substring(0, name.Length - 9) : name;
-
         // У члена есть атрибут с одним из имен (без суффикса Attribute)
         public static bool HasAttribute(MemberDeclarationSyntax member, IReadOnlyList<string> names)
         {
             return member.AttributeLists
                 .SelectMany(list => list.Attributes)
-                .Any(attribute => names.Contains(GetAttributeName(attribute.Name)));
+                .Any(attribute => names.Contains(TypeNames.GetAttributeName(attribute.Name)));
         }
 
         // Начало объявления после атрибутов: первый модификатор или тип; от его строки считается отступ

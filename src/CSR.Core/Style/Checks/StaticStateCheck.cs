@@ -124,7 +124,7 @@ namespace CSR.Core.Style.Checks
             if (!context.Settings.GetBool("singleton"))
                 return false;
 
-            return SyntaxParts.GetSimpleTypeName(type) == owner.Identifier.Text;
+            return TypeNames.GetSimpleTypeName(type) == owner.Identifier.Text;
         }
 
         private static bool IsIgnored(CheckContext context, MemberDeclarationSyntax member, TypeDeclarationSyntax owner)
@@ -133,7 +133,7 @@ namespace CSR.Core.Style.Checks
             var attributeNames = member.AttributeLists
                 .Concat(owner.AttributeLists)
                 .SelectMany(list => list.Attributes)
-                .Select(attribute => SyntaxParts.GetAttributeName(attribute.Name));
+                .Select(attribute => TypeNames.GetAttributeName(attribute.Name));
             if (attributeNames.Any(attributes.IsMatch))
                 return true;
 

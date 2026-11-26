@@ -35,7 +35,7 @@ namespace CSR.Core.Style.Checks
             {
                 var arguments = node switch
                 {
-                    InvocationExpressionSyntax invocation when Invocations.IsLoggerCall(context, invocation)
+                    InvocationExpressionSyntax invocation when LoggerCallTool.IsLoggerCall(context, invocation)
                         => invocation.ArgumentList,
                     BaseObjectCreationExpressionSyntax creation when exceptions && IsThrownException(creation)
                         => creation.ArgumentList,
