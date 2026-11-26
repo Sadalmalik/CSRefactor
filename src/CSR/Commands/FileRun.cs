@@ -56,6 +56,7 @@ namespace CSR.Commands
                 Changed = scope == "changed-lines" ? changed : null,
             };
         }
+
         // Находки проверок по файлам параллельно; в changed-lines - только на измененных строках
         public List<Finding> Analyze(CheckOptions options)
         {

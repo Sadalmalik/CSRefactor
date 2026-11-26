@@ -134,7 +134,7 @@ namespace CSR.Workspace.Tests
             File.WriteAllText(path, source);
             using var loaded = await sample.LoadAsync();
             var query = SymbolQuery.Parse("Sample.Units.Player.m_Speed");
-            var symbols = await SymbolResolver.ResolveAsync(loaded, query, loaded.Root, false);
+            var symbols = await SymbolResolver.ResolveAsync(loaded, query, loaded.Root, allowOverloads: false);
             var settings = new RenameSettings { Migrate = true };
 
             var plan = await RenameEngine.PlanAsync(loaded, symbols[0], "m_Velocity", settings, Options);

@@ -35,8 +35,7 @@ namespace CSR.Workspace.Refactor
             if (lines.Count == 0)
                 return header;
 
-            var block = new DiffBlock(0, 0, 0, lines.Count);
-            return header + DiffWriter.Write("/dev/null", $"b/{path}", [], lines, [block]);
+            return header + DiffWriter.Write("/dev/null", $"b/{path}", [], lines, [new DiffBlock(0, 0, 0, lines.Count)]);
         }
 
         // Удаленный файл: все строки удалены

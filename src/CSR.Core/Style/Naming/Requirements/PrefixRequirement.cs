@@ -69,7 +69,9 @@ namespace CSR.Core.Style.Naming.Requirements
             if (prefix.Length == 0)
             {
                 var found = FindFieldPrefix(name);
-                return found == null ? null : $"'{name}': {symbol.Label} без префикса '{found}' - '{NameWordTools.ToPascal(name)}'";
+                return found == null
+                    ? null
+                    : $"'{name}': {symbol.Label} без префикса '{found}' - '{NameWordTools.ToPascal(name)}'";
             }
 
             var expected = prefix + NameWordTools.ToPascal(name);

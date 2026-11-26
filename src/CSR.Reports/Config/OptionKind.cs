@@ -16,7 +16,7 @@ namespace CSR.Reports.Config
     {
         private const string ShareText = "число от 0 до 1";
 
-        // Целое любого знака: параметры проверок и пороги метрик
+        // Целое любого знака
         public static readonly OptionKind<int> Integer = CreateInt(int.MinValue, "целое число");
 
         public static readonly OptionKind<int> Count = CreateInt(0, "неотрицательное целое");

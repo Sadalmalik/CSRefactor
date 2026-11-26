@@ -54,8 +54,7 @@ namespace CSR.Workspace.Refactor
             };
         }
 
-        // Тип-приемник из компиляции члена: в проекте с несколькими платформами член и приемник могут прийти
-        // из компиляций разных платформ, и сравнение символов не находит совпадений
+        // Тип-приемник из компиляции члена: у проекта с несколькими платформами символы разных компиляций не совпадают
         private static async Task<INamedTypeSymbol> GetInMemberCompilationAsync(
             Solution solution,
             ISymbol member,
@@ -211,8 +210,7 @@ namespace CSR.Workspace.Refactor
 
 #region Проверки
 
-            // Ссылки вне объявления самого члена (рекурсивный вызов в теле переносится вместе с ним). Проект
-            // с несколькими платформами дает ссылку в копии файла каждой платформы - остается одна на место в файле
+            // Ссылки вне объявления самого члена (рекурсивный вызов в теле переносится вместе с ним), по одной на место в файле
             private async Task<List<Location>> GetReferencesAsync(CancellationToken cancellation)
             {
                 var found = await SymbolFinder.FindReferencesAsync(m_Member, m_Solution, cancellation);
@@ -315,8 +313,7 @@ namespace CSR.Workspace.Refactor
                     return;
                 }
 
-                // Тип-приемник из компиляции документа: в проекте другой платформы это другой символ. Не найден - проект
-                // документа не видит приемник: квалификатор не скомпилируется, это покажет проверка компиляцией
+                // Приемник из компиляции документа: у другой платформы - другой символ; не найден - покажет проверка компиляции
                 var targetType = SymbolFinder.FindSimilarSymbols(m_Target, model.Compilation).FirstOrDefault() ?? m_Target;
                 var target = targetType.ToMinimalDisplayString(model, name.SpanStart);
                 switch (name.Parent)
@@ -469,8 +466,7 @@ namespace CSR.Workspace.Refactor
 
 #region Директивы using
 
-            // Перенос в другой файл: в файл приемника - директивы исходного файла, нужные члену; из исходного -
-            // ставшие лишними. В том же файле директивы не меняются
+            // В файл приемника - директивы исходного файла, нужные члену; из исходного - ставшие лишними
             private void EditUsings(DocumentEdit targetEdit, DocumentEdit sourceEdit)
             {
                 var sourceRoot = (CompilationUnitSyntax)m_Declaration.SyntaxTree.GetRoot();

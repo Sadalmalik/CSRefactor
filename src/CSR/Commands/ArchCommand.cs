@@ -1,10 +1,8 @@
 using System.Diagnostics;
 using CSR.Core.Arch;
 using CSR.Core.Checks;
-using CSR.Core.Config;
 using CSR.Reports.Arch;
 using CSR.Reports.Checks;
-using CSR.Reports.Config;
 using Microsoft.CodeAnalysis;
 
 namespace CSR.Commands

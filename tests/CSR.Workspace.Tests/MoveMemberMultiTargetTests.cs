@@ -66,7 +66,7 @@ namespace CSR.Workspace.Tests
             var member = await ResolveAsync("Sample.Items.Rates.Rate");
             var target = (INamedTypeSymbol)await ResolveAsync("Sample.Items.Inventory");
 
-            var plan = await MemberMover.PlanAsync(m_Solution, member, target, new RefactorOptions(), true);
+            var plan = await MemberMover.PlanAsync(m_Solution, member, target, new RefactorOptions(), verify: true);
 
             Assert.That(plan.Refusal, Is.Null);
             var rates = GetText(plan, "Game/Rates.cs");
@@ -83,7 +83,7 @@ namespace CSR.Workspace.Tests
                 m_Solution,
                 SymbolQuery.Parse(name),
                 m_Solution.Root,
-                false);
+                allowOverloads: false);
             return symbols[0];
         }
 

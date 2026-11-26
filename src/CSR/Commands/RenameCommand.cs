@@ -1,4 +1,3 @@
-using CSR.Workspace.Refactor;
 using CSR.Workspace.Rename;
 using CSR.Workspace.Symbols;
 
