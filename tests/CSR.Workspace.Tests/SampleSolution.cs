@@ -66,7 +66,7 @@ namespace CSR.Workspace.Tests
             return await s_Shared.LoadAsync();
         }
 
-        private void Restore()
+        public void Restore()
         {
             var info = new ProcessStartInfo("dotnet")
             {

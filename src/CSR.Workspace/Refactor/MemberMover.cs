@@ -179,16 +179,22 @@ namespace CSR.Workspace.Refactor
                 targetEdit.Insert(insertion, BuildMemberText(targetModel, insertion, targetEdit.Text));
                 EditUsings(targetEdit, sourceEdit, sourceDocument.Id == targetDocument.Id);
 
+                // Связанные документы (тот же файл в проекте другой платформы) получают тот же текст
                 var after = m_Solution;
                 foreach (var (id, edit) in m_Edits)
-                    after = after.WithDocumentText(id, edit.Apply());
+                {
+                    var text = edit.Apply();
+                    foreach (var linked in m_Solution.GetDocument(id)!.GetLinkedDocumentIds().Prepend(id))
+                        after = after.WithDocumentText(linked, text);
+                }
 
                 return after;
             }
 
 #region Проверки
 
-            // Ссылки вне объявления самого члена (рекурсивный вызов в теле переносится вместе с ним)
+            // Ссылки вне объявления самого члена (рекурсивный вызов в теле переносится вместе с ним). Проект
+            // с несколькими платформами дает ссылку в копии файла каждой платформы - остается одна на место в файле
             private async Task<List<Location>> GetReferencesAsync(CancellationToken cancellation)
             {
                 var found = await SymbolFinder.FindReferencesAsync(m_Member, m_Solution, cancellation);
@@ -197,12 +203,13 @@ namespace CSR.Workspace.Refactor
                     .Where(location => !location.IsImplicit && location.Location.IsInSource)
                     .Select(location => location.Location)
                     .Where(location => !IsInDeclaration(location))
+                    .DistinctBy(location => (location.SourceTree!.FilePath, location.SourceSpan))
                     .ToList();
             }
 
             private bool IsInDeclaration(Location location)
             {
-                return location.SourceTree == m_Declaration.SyntaxTree
+                return location.SourceTree!.FilePath == m_Declaration.SyntaxTree.FilePath
                     && m_Declaration.Span.Contains(location.SourceSpan);
             }
 
@@ -290,7 +297,9 @@ namespace CSR.Workspace.Refactor
                     return;
                 }
 
-                var target = m_Target.ToMinimalDisplayString(model, name.SpanStart);
+                // Тип-приемник из компиляции документа: в проекте другой платформы это другой символ
+                var targetType = SymbolFinder.FindSimilarSymbols(m_Target, model.Compilation).FirstOrDefault() ?? m_Target;
+                var target = targetType.ToMinimalDisplayString(model, name.SpanStart);
                 switch (name.Parent)
                 {
                     case MemberAccessExpressionSyntax access when access.Name == name:
@@ -304,7 +313,7 @@ namespace CSR.Workspace.Refactor
 
                 bool isInTarget = name.Ancestors()
                     .OfType<TypeDeclarationSyntax>()
-                    .Any(type => SymbolEqualityComparer.Default.Equals(model.GetDeclaredSymbol(type), m_Target));
+                    .Any(type => SymbolEqualityComparer.Default.Equals(model.GetDeclaredSymbol(type), targetType));
                 if (!isInTarget)
                     edit.Insert(name.SpanStart, target + ".");
             }
@@ -502,12 +511,14 @@ namespace CSR.Workspace.Refactor
 
 #endregion
 
+            // Одна правка на файл: связанные документы (копии файла в проектах других платформ) делят правку
             private async Task<DocumentEdit> GetEditAsync(Document document, CancellationToken cancellation)
             {
-                if (m_Edits.TryGetValue(document.Id, out DocumentEdit? edit))
-                    return edit;
+                var id = document.GetLinkedDocumentIds().Prepend(document.Id).FirstOrDefault(m_Edits.ContainsKey);
+                if (id != null)
+                    return m_Edits[id];
 
-                edit = new DocumentEdit(await document.GetTextAsync(cancellation));
+                var edit = new DocumentEdit(await document.GetTextAsync(cancellation));
                 m_Edits[document.Id] = edit;
                 return edit;
             }
